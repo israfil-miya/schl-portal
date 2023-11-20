@@ -65,6 +65,19 @@
     --ring: 212.7 26.8% 83.9%;
   }
 }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  /* Use Helvetica for a modern look */
+  font-family: "Lato", sans-serif !important;
+  text-transform: capitalize;
+  /* or Use Georgia for a classic look */
+  /* font-family: Georgia, serif; */
+}
  
 @layer base {
   * {

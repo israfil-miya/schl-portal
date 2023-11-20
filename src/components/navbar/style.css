@@ -47,3 +47,17 @@
     background-color: #7aa63e;
     color: white;
   }
+
+  .customcard {
+    overflow: hidden;
+    word-wrap: break-word;
+    word-break: normal;
+    hyphens: auto;
+    border-radius: 0 0 20px 0;
+  }
+
+  .customcardheader {
+    font-size: 14px;
+    color: white;
+    border-radius: 5px 0 0 0;
+  }
