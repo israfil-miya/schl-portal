@@ -9,7 +9,18 @@ import { useState, useEffect } from "react";
 import styles from "./style.css";
 import { Button } from "@/components/ui/button"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
+import { faRightFromBracket, faCircleUser } from '@fortawesome/free-solid-svg-icons'
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuIndicator,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
+} from "@/components/ui/navigation-menu"
+
 
 
 
@@ -43,7 +54,7 @@ export default function Navbar({ navFor, shortNote }) {
 
   useEffect(() => {
     // Set up the media query
-    const mediaQuery = window.matchMedia("(min-width: 1300px)");
+    const mediaQuery = window.matchMedia("(min-width: 1400px)");
     setIsDesktop(mediaQuery.matches); // Initial state
 
     // Attach event listener for media query changes
@@ -61,7 +72,7 @@ export default function Navbar({ navFor, shortNote }) {
       return (
         <ul className="flex items-center space-x-2">
           {cities.map((city, index) => (
-            <li className="mx-1" key={index}>
+            <li className="mx-1 w-30" key={index}>
               <TimeCard city={city} />
             </li>
           ))}
@@ -73,7 +84,7 @@ export default function Navbar({ navFor, shortNote }) {
 
   return (
     <>
-      <nav className="bg-body-tertiary drop-shadow-md">
+      <nav className="bg-inherit drop-shadow-md">
         <div className="p-2 justify-between flex flex-columm">
           <Link className="flex items-center" href="/" passHref>
 
@@ -90,14 +101,22 @@ export default function Navbar({ navFor, shortNote }) {
           </Link>
 
           {renderTimeCards()}
+          <div className="flex gap-x-0.5">
+            <Button asChild
+              className="mt-4 ml-3"
+            >
+              <Link href="/account"><FontAwesomeIcon className="px-1" size="xl" icon={faCircleUser} /></Link>
+            </Button>
+            <Button
+              onClick={signOutHandle}
+              variant="destructive"
+              className="mt-4 ml-3"
+            >
+              <FontAwesomeIcon className="px-1" icon={faRightFromBracket} /> Logout
+            </Button>
 
-          <Button
-            onClick={signOutHandle}
-            variant="destructive"
-            className="mt-4 ml-3"
-          >
-            <FontAwesomeIcon className="px-1" icon={faRightFromBracket} /> Logout
-          </Button>
+          </div>
+
         </div>
       </nav>
 
@@ -317,6 +336,48 @@ export default function Navbar({ navFor, shortNote }) {
           </div>
         )}
       </div>
+
+
+
+
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink>Link</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink>Link</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink>Link</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink>Link</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <NavigationMenuLink>Link</NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+
+
+
+
       <style jsx>
         {`
           @media (min-width: 992px) {
