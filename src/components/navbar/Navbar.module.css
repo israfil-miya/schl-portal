@@ -4,11 +4,11 @@
     padding: 0;
   
     display: flex;
-    background-color: #343a40;
     /* Dark background color */
   }
   
   .navitem {
+    font-size: 15px;
     font-weight: 600;
     text-transform: uppercase;
   
@@ -58,6 +58,5 @@
 
   .customcardheader {
     font-size: 14px;
-    color: white;
     border-radius: 5px 0 0 0;
   }

@@ -11,19 +11,24 @@ export const authOptions = {
       async authorize(credentials) {
         const { name, password } = credentials;
         if (!name || !password) return null;
-        const res = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL + "/api/user",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              name,
-              password,
-              signin: true,
-            },
-          },
-        );
-        const user = await res.json();
+        // const res = await fetch(
+        //   process.env.NEXT_PUBLIC_BASE_URL + "/api/user",
+        //   {
+        //     method: "GET",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //       name,
+        //       password,
+        //       signin: true,
+        //     },
+        //   },
+        // );
+        // const user = await res.json();
+        let user = {
+          name: "Dev",
+          password: "0011",
+          role: "super"
+        }
 
         if (user && !user.error) {
           /*

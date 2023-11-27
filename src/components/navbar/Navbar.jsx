@@ -6,20 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import TimeCard from "./Timecard";
 import { useState, useEffect } from "react";
-import styles from "./style.css";
+import styles from "./Navbar.module.css";
 import { Button } from "@/components/ui/button"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRightFromBracket, faCircleUser } from '@fortawesome/free-solid-svg-icons'
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuIndicator,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
 
 
 
@@ -104,12 +94,15 @@ export default function Navbar({ navFor, shortNote }) {
           <div className="flex gap-x-0.5">
             <Button asChild
               className="mt-4 ml-3"
+              variant="default"
+              size="default"
             >
-              <Link href="/account"><FontAwesomeIcon className="px-1" size="xl" icon={faCircleUser} /></Link>
+              <Link href="/account"><FontAwesomeIcon className="px-1" icon={faCircleUser} /> Account</Link>
             </Button>
             <Button
               onClick={signOutHandle}
               variant="destructive"
+              size="default"
               className="mt-4 ml-3"
             >
               <FontAwesomeIcon className="px-1" icon={faRightFromBracket} /> Logout
@@ -120,14 +113,14 @@ export default function Navbar({ navFor, shortNote }) {
         </div>
       </nav>
 
-      <div className={`px-5 navigation ${styles.nav}`}>
+      <div className={`px-5 navigation bg-foreground ${styles["nav"]}`}>
         {session.user.role !== "marketer" ? (
           <Link
-            className={`${styles.navitem} ${navFor === "tasks" ? styles.active : ""
+            className={`${styles.navitem} ${navFor === "orders" ? styles.active : ""
               }`}
             href="/"
           >
-            Tasks
+            Orders
           </Link>
         ) : null}
 
@@ -327,53 +320,16 @@ export default function Navbar({ navFor, shortNote }) {
         ) : null}
 
         {shortNote ? (
-          <div style={{ color: "white" }} className="pt-2 ms-auto">
+          <div style={{ color: "white" }} className="pt-2 px-2 text-right ml-auto">
             {shortNote}
           </div>
         ) : (
-          <div style={{ color: "white" }} className="pt-2 ms-auto">
+          <div style={{ color: "white" }} className="pt-2 px-2 text-right ml-auto">
             Have a good day!
           </div>
         )}
       </div>
 
-
-
-
-      <NavigationMenu>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink>Link</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink>Link</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink>Link</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink>Link</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Item One</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <NavigationMenuLink>Link</NavigationMenuLink>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
 
 
 
