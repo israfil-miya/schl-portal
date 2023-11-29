@@ -11,6 +11,20 @@ import { Button } from "@/components/ui/button"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRightFromBracket, faCircleUser } from '@fortawesome/free-solid-svg-icons'
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 
@@ -57,7 +71,6 @@ export default function Navbar({ navFor, shortNote }) {
   }, []);
 
   const renderTimeCards = () => {
-    // Render time cards only if it's a desktop screen
     if (isDesktop) {
       return (
         <ul className="flex items-center space-x-2">
@@ -89,7 +102,6 @@ export default function Navbar({ navFor, shortNote }) {
             <h1 style={{ fontSize: "18px" }} className="mt-3 font-semibold">Studio Click House Ltd.</h1>
 
           </Link>
-
           {renderTimeCards()}
           <div className="flex gap-x-0.5">
             <Button asChild
@@ -109,215 +121,136 @@ export default function Navbar({ navFor, shortNote }) {
             </Button>
 
           </div>
-
         </div>
       </nav>
 
-      <div className={`px-5 navigation bg-foreground ${styles["nav"]}`}>
-        {session.user.role !== "marketer" ? (
-          <Link
-            className={`${styles.navitem} ${navFor === "orders" ? styles.active : ""
-              }`}
-            href="/"
-          >
+      <div className={`px-5 navigation bg-foreground ${styles.nav}`}>
+        {session.user.role !== "marketer" && (
+          <Link className={`${styles.navitem} ${navFor === "orders" ? styles.active : ""}`} href="/">
             Orders
           </Link>
-        ) : null}
+        )}
 
-        {session.user.role !== "user" && session.user.role !== "marketer" ? (
-          <Link
-            className={`${styles.navitem} ${navFor === "browse" ? styles.active : ""
-              }`}
-            href="/browse"
-          >
+        {(session.user.role !== "user" && session.user.role !== "marketer") && (
+          <Link className={`${styles.navitem} ${navFor === "browse" ? styles.active : ""}`} href="/browse">
             Browse
           </Link>
-        ) : null}
+        )}
 
-        {session.user.role === "admin" || session.user.role === "super" ? (
-          <li
-            className={`${styles.navitem} ${navFor === "admin" ? styles.active : ""
-              } `}
-          >
-            <li
-              className="nav-link dropdown-toggle"
-              id="navbarDropdownMenuLink"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              Admin
-            </li>
-            <ul
-              className="dropdown-menu"
-              aria-labelledby="navbarDropdownMenuLink"
-            >
-              <li>
-                <Link
-                  className={`dropdown-item ${styles.dropitem}`}
-                  href="/admin/users"
-                >
-                  Users
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className={`dropdown-item ${styles.dropitem}`}
-                  href="/admin/tasks"
-                >
-                  Tasks
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className={`dropdown-item ${styles.dropitem}`}
-                  href="/admin/clients"
-                >
-                  Clients
-                </Link>
-              </li>
-            </ul>
-          </li>
-        ) : null}
+        {(session.user.role === "admin" || session.user.role === "super") && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`${styles.navitem} ${navFor === "admin" && styles.active} `} asChild>
+              <div>
+                Admin
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-foreground">
+              <DropdownMenuGroup>
+                <DropdownMenuItem className={`${styles.dropitem}`}>
+                  <Link href="/admin/users">
+                    Users
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className={`${styles.dropitem}`}>
+                  <Link href="/admin/tasks">
+                    Tasks
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className={`${styles.dropitem}`}>
+                  <Link href="/admin/clients">
+                    Clients
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
-        {session.user.role === "super" ? (
-          <li
-            className={`${styles.navitem} ${navFor === "dashboard" ? styles.active : ""
-              } `}
-          >
-            <li
-              className="nav-link dropdown-toggle"
-              id="navbarDropdownMenuLink"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              Dashboard
-            </li>
-            <ul
-              className="dropdown-menu"
-              aria-labelledby="navbarDropdownMenuLink"
-            >
-              <li>
-                <Link
-                  className={`dropdown-item ${styles.dropitem}`}
-                  href="/dashboard/approvals"
-                >
-                  Approvals
-                </Link>
-              </li>
-              <li className="dropdown-submenu">
-                <li
-                  className={`dropdown-item dropdown-toggle ${styles.dropitem}`}
-                >
-                  Invoice
-                </li>
-                <ul className="dropdown-menu">
-                  <li>
-                    <Link
-                      className={`dropdown-item ${styles.dropitem}`}
-                      href="/dashboard/invoice/create"
-                    >
-                      Create
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      className={`dropdown-item ${styles.dropitem}`}
-                      href="/dashboard/invoice/browse"
-                    >
-                      Browse
-                    </Link>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-        ) : null}
+        {(session.user.role === "super") && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`${styles.navitem} ${navFor === "dashboard" ? styles.active : ""} `} asChild>
+              <div >
+                Dashboard
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-foreground">
+              <DropdownMenuGroup>
+                <DropdownMenuItem className={`${styles.dropitem}`}>
+                  <Link href="/dashboard/approvals">
+                    Approvals
+                  </Link>
+                </DropdownMenuItem>
 
-        {session.user.role === "admin" || session.user.role === "super" ? (
-          <Link
-            className={`${styles.navitem} ${navFor === "fileflow" ? styles.active : ""
-              }`}
-            href="/file-flow"
-          >
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className={`data-[state=open]:bg-primary ${styles.dropitem}`}>
+                    <div>
+                      Invoice
+                    </div>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent className="bg-foreground">
+                      <DropdownMenuItem className={`${styles.dropitem}`}>
+                        <Link href="/dashboard/invoice/create">
+                          Create
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className={`${styles.dropitem}`}>
+                        <Link href="/dashboard/invoice/browse">
+                          Browse
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {(session.user.role === "admin" || session.user.role === "super") && (
+          <Link className={`${styles.navitem} ${navFor === "fileflow" ? styles.active : ""}`} href="/file-flow">
             File Flow
           </Link>
-        ) : null}
+        )}
 
-        {session.user.role === "admin" || session.user.role === "super" ? (
-          <li
-            className={`${styles.navitem} ${navFor === "crm" ? styles.active : ""
-              } `}
-          >
-            <li
-              className="nav-link dropdown-toggle"
-              id="navbarDropdownMenuLink"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <Link
-                href={
-                  session.user.role === "marketer"
-                    ? `/crm/marketers`
-                    : "/crm/marketers"
-                }
-              >
-                CRM
-              </Link>
-            </li>
+        {(session.user.role === "admin" || session.user.role === "super") && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`${styles.navitem} ${navFor === "crm" && styles.active} `} asChild>
+                <div>
+                  CRM
+                </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-foreground">
+              <DropdownMenuGroup>
+                <DropdownMenuItem className={`${styles.dropitem}`}>
+                  <Link href="/crm/marketers">
+                    Marketers
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className={`${styles.dropitem}`}>
+                  <Link href="/crm/reports-database">
+                    Call Reports
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
-            <ul
-              className="dropdown-menu"
-              aria-labelledby="navbarDropdownMenuLink"
-            >
-              <li>
-                <Link
-                  className={`dropdown-item ${styles.dropitem}`}
-                  href="/crm/marketers"
-                >
-                  Marketers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className={`dropdown-item ${styles.dropitem}`}
-                  href="/crm/reports-database"
-                >
-                  Call Reports
-                </Link>
-              </li>
-            </ul>
-          </li>
-        ) : null}
-
-        {session.user.role === "marketer" ? (
+        {(session.user.role === "marketer") && (
           <>
-            <Link
-              className={`${styles.navitem} ${navFor === "marketers" ? styles.active : ""
-                }`}
-              href="/crm/marketers"
-            >
+            <Link className={`${styles.navitem} ${navFor === "marketers" ? styles.active : ""}`} href="/crm/marketers">
               Marketers
             </Link>
-            <Link
-              className={`${styles.navitem} ${navFor === "call-reports" ? styles.active : ""
-                }`}
-              href="/crm/reports-database"
-            >
+            <Link className={`${styles.navitem} ${navFor === "call-reports" ? styles.active : ""}`} href="/crm/reports-database">
               Call Reports
             </Link>
-
-            <Link
-              className={`${styles.navitem} ${navFor === "call-report-submit" ? styles.active : ""
-                }`}
-              href={`/crm/marketer/report?name=${session.user.name}`}
-            >
+            <Link className={`${styles.navitem} ${navFor === "call-report-submit" ? styles.active : ""}`} href={`/crm/marketer/report?name=${session.user.name}`}>
               Call Report Submit
             </Link>
           </>
-        ) : null}
+        )}
 
         {shortNote ? (
           <div style={{ color: "white" }} className="pt-2 px-2 text-right ml-auto">
@@ -328,42 +261,8 @@ export default function Navbar({ navFor, shortNote }) {
             Have a good day!
           </div>
         )}
+
       </div>
-
-
-
-
-
-      <style jsx>
-        {`
-          @media (min-width: 992px) {
-            .navbar-nav.time-cards-list {
-              margin: none;
-            }
-          }
-
-          li:hover > ul.dropdown-menu {
-            display: block;
-            color: white;
-          }
-          div.navigation ul.dropdown-menu {
-            background-color: #343a40;
-          }
-          .dropdown-submenu {
-            position: relative;
-          }
-          .dropdown-submenu > .dropdown-menu {
-            top: 0;
-            left: 100%;
-            margin-top: -6px;
-          }
-
-          .dropdown-menu > li > a:hover:after {
-            text-decoration: underline;
-            transform: rotate(-90deg);
-          }
-        `}
-      </style>
     </>
   );
 }

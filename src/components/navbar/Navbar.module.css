@@ -2,42 +2,32 @@
     list-style-type: none;
     margin: 0;
     padding: 0;
-  
     display: flex;
-    /* Dark background color */
   }
   
   .navitem {
     font-size: 15px;
     font-weight: 600;
     text-transform: uppercase;
-  
-    /* Equal width for each link */
     text-align: center;
-    /* Center align text */
     text-decoration: none;
     color: white;
-    /* Text color */
     padding: 10px;
-    /* Adjust padding for each link */
     transition: background-color 0.3s ease;
-    /* Smooth background color transition */
     margin-right: 10px;
-    /* Add margin to create spacing between links */
   }
   
   .navitem:hover {
     color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
   }
   
-  /* Remove margin from the last link to avoid extra spacing */
   .navitem:last-child {
     margin-right: 0;
   }
   
   .active {
     background-color: #7aa63e;
-    /* Active link background color */
   }
   
   .dropitem {

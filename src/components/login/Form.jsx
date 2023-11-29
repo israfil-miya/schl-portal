@@ -114,7 +114,7 @@ export default function SignInForm() {
     return (
         <>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(signinSubmit)} className="max-w-md mx-auto my-8 p-6 rounded shadow-md space-y-8">
+                <form onSubmit={form.handleSubmit(signinSubmit)} className="max-w-md mx-auto my-8 p-6 rounded shadow-md space-y-8 bg-white">
                     <FormField
                         control={form.control}
                         name="name"
