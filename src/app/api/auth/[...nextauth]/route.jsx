@@ -14,11 +14,13 @@ export const authOptions = {
         const res = await fetch(
           process.env.NEXT_PUBLIC_BASE_URL + "/api/user/signin",
           {
-            method: "GET",
+            method: "POST",
+            body: JSON.stringify({
+              name,
+              password
+            }),
             headers: {
               "Content-Type": "application/json",
-              name,
-              password,
             },
           },
         );

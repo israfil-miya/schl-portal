@@ -1,6 +1,6 @@
 import User from "@/db/Users";
 import dbConnect from "@/lib/dbConnect";
-import {prepareResponse, accessHeaders} from "@/lib/utils"
+import { prepareResponse, accessHeaders } from "@/lib/utils"
 
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
@@ -8,9 +8,8 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 
 async function handleSignin(req) {
-  const { name, password } = accessHeaders(req, ["name", "password"])
-
   try {
+    const { name, password } = req.body
     const userData = await User.findOne({
       name: name,
       password: password,
@@ -28,19 +27,20 @@ async function handleSignin(req) {
 }
 
 async function handleNewUser(req) {
-  const data = req.body;
-
-  let insertdata = {
-    name: data.name,
-    password: data.password,
-    role: data.role,
-    phone: data.phone,
-    email: data.email,
-    company_provided_name: data.company_provided_name,
-    joining_date: data.joining_date
-  };
-
   try {
+    const data = req.body;
+    let insertdata = {
+      name: data.name,
+      password: data.password,
+      role: data.role,
+      phone: data.phone,
+      email: data.email,
+      company_provided_name: data.company_provided_name,
+      joining_date: data.joining_date
+    };
+
+
+
     const userData = await User.findOneAndUpdate(
       { name: data.name },
       insertdata,
@@ -61,7 +61,7 @@ async function handleNewUser(req) {
   }
 }
 
-async function handleGetAllUser(req) {
+async function handleGetAllUsers(req) {
   try {
     const usersData = await User.find({});
     return prepareResponse(200, usersData);
@@ -71,15 +71,14 @@ async function handleGetAllUser(req) {
   }
 }
 
-async function handleGetUsersById(req) {
+async function handleGetUserById(req) {
   try {
     let { id } = accessHeaders(req, ["id"])
 
-    const users = await User.findById(id)
+    const userData = await User.findById(id)
 
-
-    if (users) {
-      return prepareResponse(200, users);
+    if (userData) {
+      return prepareResponse(200, userData);
     } else {
       return prepareResponse(400, "NO USER FOUND WITH THE ID")
     }
@@ -90,8 +89,8 @@ async function handleGetUsersById(req) {
 }
 
 async function handleEditUser(req) {
-  const data = req.body;
   try {
+    const data = req.body;
     const userData = await User.findByIdAndUpdate(data._id, data, {
       new: true,
     });
@@ -110,9 +109,8 @@ async function handleEditUser(req) {
 }
 
 async function handleDeleteUser(req) {
-  let { id } = accessHeaders(req, ["id"])
-
   try {
+    let { id } = req.body
 
     const userData = await User.findByIdAndDelete(id);
     return prepareResponse(200, userData);
@@ -135,8 +133,8 @@ export async function GET(req, { params }) {
 
 
   switch (reqType) {
-    case "signin":
-      break;
+    // case "signin":
+    //   break;
     // add more request type cases to not check the session for that request type 
     default:
       session = await getServerSession(authOptions)
@@ -147,20 +145,12 @@ export async function GET(req, { params }) {
 
 
   switch (reqType) {
-    case "signin":
-      res = await handleSignin(req)
-      return new Response(res.message, { status: res.status })
-
     case "getalluser":
-      res = await handleGetAllUser(req)
+      res = await handleGetAllUsers(req)
       return new Response(res.message, { status: res.status })
 
     case "getusersbyid":
-      res = await handleGetUsersById(req)
-      return new Response(res.message, { status: res.status })
-
-    case "deleteuser":
-      res = await handleDeleteUser(req)
+      res = await handleGetUserById(req)
       return new Response(res.message, { status: res.status })
 
     default:
@@ -188,12 +178,20 @@ export async function POST(req, { params }) {
   }
 
   switch (reqType) {
+    case "signin":
+      res = await handleSignin(req)
+      return new Response(res.message, { status: res.status })
+
     case "newuser":
       res = await handleNewUser(req)
       return new Response(res.message, { status: res.status })
 
     case "edituser":
       res = await handleEditUser(req)
+      return new Response(res.message, { status: res.status })
+
+    case "deleteuser":
+      res = await handleDeleteUser(req)
       return new Response(res.message, { status: res.status })
     default:
       return new Response("UNKNOWN POST REQUEST", { status: 400 })

@@ -1,92 +1,90 @@
 import Order from "@/db/Orders";
 import Client from "@/db/Clients";
 import dbConnect from "@/lib/dbConnect";
-import {prepareResponse, accessHeaders, ddMmYyyyToIsoDate} from "@/lib/utils"
-import {getDatesInRange, getDateRange, calculateTimeDifference} from "./utils"
+
+import { prepareResponse, accessHeaders, ddMmYyyyToIsoDate } from "@/lib/utils"
+import { getDatesInRange, getDateRange, calculateTimeDifference } from "./utils"
+
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 
 
-async function handleNewOrder(req, res) {
+async function handleNewOrder(req) {
   try {
     const data = req.body;
-    const resData = await Order.create(data);
+    const orderData = await Order.create(data);
 
-    if (resData) {
-      res.status(200).json(resData);
+    if (orderData) {
+      return prepareResponse(200, orderData);
     } else {
-      sendError(res, 400, "No order found");
+      return prepareResponse(400, "UNABLE TO CREATE NEW ORDER")
     }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetOrdersUnFinished(req, res) {
+async function handleGetOrdersUnfinished(req) {
   try {
-    const orders = await Order.find({
+
+    const ordersData = await Order.find({
       status: { $nin: ["Finished", "Correction"] },
       type: { $ne: "Test" },
     }).lean();
 
-    if (!orders) res.status(200).json([]);
+    if (ordersData) {
+      const sortedOrdersDataByTimeRemaining = ordersData
+        .map((order) => ({
+          ...order,
+          timeDifference: calculateTimeDifference(
+            order.delivery_date,
+            order.delivery_bd_time,
+          ),
+        }))
+        .sort((a, b) => a.timeDifference - b.timeDifference);
 
-    const sortedOrders = orders
-      .map((order) => ({
-        ...order,
-        timeDifference: calculateTimeDifference(
-          order.delivery_date,
-          order.delivery_bd_time,
-        ),
-      }))
-      .sort((a, b) => a.timeDifference - b.timeDifference);
-
-    res.status(200).json(sortedOrders);
+      return prepareResponse(200, sortedOrdersDataByTimeRemaining)
+    }
+    else {
+      return prepareResponse(200, [])
+    }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, ["An error occurred"]);
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetOrdersRedo(req, res) {
+async function handleGetOrdersRedo(req) {
   try {
-    const orders = await Order.find({
+    const ordersData = await Order.find({
       $or: [{ type: "Test" }, { status: "Correction" }],
       status: { $ne: "Finished" },
     }).lean();
 
-    const sortedOrders = orders
-      .map((order) => ({
-        ...order,
-        timeDifference: calculateTimeDifference(
-          order.delivery_date,
-          order.delivery_bd_time,
-        ),
-      }))
-      .sort((a, b) => a.timeDifference - b.timeDifference);
-
-    res.status(200).json(sortedOrders);
+    if (ordersData) {
+      return prepareResponse(200, ordersData)
+    }
+    else {
+      return prepareResponse(200, [])
+    }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetAllOrderPaginated(req, res) {
-  const ITEMS_PER_PAGE = 50;
-  const page = req.headers.page || 1;
-
-  // Put all your query params in here
-  const query = {};
-
-  
-
+async function handleGetAllOrders(req) {
   try {
-    const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
+    const ITEMS_PER_PAGE = parseInt(accessHeaders(req, ["itemsperpage"])) || 50;
+    const page = accessHeaders(req, ["page"]) || 1;
+    const skip = (page - 1) * ITEMS_PER_PAGE;
 
-    // Add a new field "customSortField" based on your custom sorting criteria
+    const query = {};
+
     const pipeline = [
-      { $match: query }, // Apply the query filter
+      { $match: query },
       {
         $addFields: {
           customSortField: {
@@ -130,94 +128,64 @@ async function handleGetAllOrderPaginated(req, res) {
           },
         },
       },
-      { $sort: { customSortField: 1, createdAt: -1 } }, // Sort the documents based on "customSortField"
-      { $skip: skip }, // Skip items for pagination
-      { $limit: ITEMS_PER_PAGE }, // Limit the number of items per page
+      { $sort: { customSortField: 1, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: ITEMS_PER_PAGE },
     ];
 
     const count = await Order.estimatedDocumentCount(query);
+    const pageCount = Math.ceil(count / ITEMS_PER_PAGE);
 
-    // Execute the aggregation pipeline and convert the result to an array
-    const orders = await Order.aggregate(pipeline).exec();
+    const ordersData = await Order.aggregate(pipeline).exec();
 
-    const pageCount = Math.ceil(count / ITEMS_PER_PAGE); // Calculate the total number of pages
-
-    // Send the response with pagination information and sorted, paginated data
-    res.status(200).json({
+    return prepareResponse(200, {
       pagination: {
         count,
         pageCount,
       },
-      items: orders,
-    });
+      items: ordersData,
+    })
+
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetOrdersById(req, res) {
+async function handleGetOrdersByFilter(req) {
   try {
-    let data = req.headers;
-    const orders = await Order.findById(data.id).lean();
+    const { fromtime, totime, folder, clientcode, task, type, status } = accessHeaders(req, ["fromtime", "totime", "folder", "clientcode", "task", "type", "status"]);
+    const page = accessHeaders(req, ["page"]) || 1;
+    const ITEMS_PER_PAGE = parseInt(accessHeaders(req, ["itemsperpage"])) || 50;
+    const skip = (page - 1) * ITEMS_PER_PAGE;
 
-    if (!orders) sendError(res, 400, "No order found with the id");
-    else res.status(200).json(orders);
-  } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
-  }
-}
-
-async function handleGetOrdersByFilter(req, res) {
-  try {
-    const { fromtime, totime, folder, client, task, typefilter, forinvoice } =
-      req.headers;
-    const page = req.headers.page || 1;
-    const ITEMS_PER_PAGE = parseInt(req.headers.ordersnumber) ?? 20; // Number of items per page
-
-    console.log(
-      "Received request with parameters:",
-      fromtime,
-      totime,
-      folder,
-      client,
-      task,
-      typefilter,
-      forinvoice,
-      page,
-    );
+    const NOT_PAGINATED = accessHeaders(req, ["notpaginated"]) || false
 
     let query = {};
-    if (forinvoice) query.status = "Finished";
+    if (status) query.status = status;
     if (folder) query.folder = folder;
-    if (client) query.client_code = client;
+    if (clientcode) query.client_code = clientcode;
     if (task) query.task = task;
-    if (typefilter) query.type = typefilter;
+    if (type) query.type = type;
+
     if (fromtime || totime) {
       query.createdAt = {};
       if (fromtime) {
-        // Set the $gte filter for the start of the day
         query.createdAt.$gte = new Date(ddMmYyyyToIsoDate(fromtime));
       }
       if (totime) {
-        // Set the $lte filter for the end of the day
         const toTimeDate = new Date(ddMmYyyyToIsoDate(totime));
         toTimeDate.setHours(23, 59, 59, 999); // Set to end of the day
         query.createdAt.$lte = toTimeDate;
       }
     }
 
-    console.log(query);
-
-    if (Object.keys(query).length === 0 && query.constructor === Object)
-      sendError(res, 400, "No filter applied");
+    if (Object.keys(query).length === 0 && query.constructor === Object) {
+      return prepareResponse(400, "NO FILTER APPLIED")
+    }
     else {
-      // Calculate the number of documents to skip based on the current page
-      const skip = (page - 1) * ITEMS_PER_PAGE;
-
       let pipeline = [
-        { $match: query }, // Apply the query filter
+        { $match: query },
         {
           $addFields: {
             customSortField: {
@@ -261,178 +229,245 @@ async function handleGetOrdersByFilter(req, res) {
             },
           },
         },
-        { $sort: { customSortField: 1 } }, // Sort the documents based on "customSortField"
-        // Limit the number of items per page
+        { $sort: { customSortField: 1 } },
       ];
 
-      if (!req.headers.not_paginated) {
+      if (!NOT_PAGINATED) {
         pipeline = [
           ...pipeline,
           { $sort: { createdAt: -1 } },
-          { $skip: skip }, // Skip items for pagination
+          { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
         ];
       } else {
         pipeline = [...pipeline, { $sort: { createdAt: 1 } }];
       }
 
-      console.log(pipeline);
+      const count = await Order.estimatedDocumentCount(query);
+      const pageCount = Math.ceil(count / ITEMS_PER_PAGE);
 
-      const count = await Order.countDocuments(query); // Count the total matching documents
+      const ordersData = await Order.aggregate(pipeline).exec();
 
-      const orders = await Order.aggregate(pipeline).exec();
-
-      console.log("FILTERED ORDERS: ", orders.length);
-
-      const pageCount = Math.ceil(count / ITEMS_PER_PAGE); // Calculate the total number of pages
-
-      res.status(200).json({
+      return prepareResponse(200, {
         pagination: {
           count,
           pageCount,
         },
-        items: orders,
-      });
+        items: ordersData,
+      })
     }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetOnlyTime(req, res) {
+async function handleGetTimeRemainingForOrders(req) {
   try {
-    const orders = await Order.find(
+    const ordersData = await Order.find(
       { status: { $nin: ["Finished", "Correction"] }, type: { $ne: "Test" } },
       { delivery_date: 1, delivery_bd_time: 1 },
     ).lean();
 
-    const sortedOrders = orders
-      .map((order) => ({
-        timeDifference: calculateTimeDifference(
-          order.delivery_date,
-          order.delivery_bd_time,
-        ),
-      }))
-      .sort((a, b) => a.timeDifference - b.timeDifference);
+    if (ordersData) {
+      const sortedOrdersDataByTimeRemaining = ordersData
+        .map((order) => ({
+          timeDifference: calculateTimeDifference(
+            order.delivery_date,
+            order.delivery_bd_time,
+          ),
+        }))
+        .sort((a, b) => a.timeDifference - b.timeDifference);
 
-    res.status(200).json(sortedOrders);
+      return prepareResponse(200, sortedOrdersDataByTimeRemaining)
+    } else {
+      return prepareResponse(200, [])
+    }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleEditOrder(req, res) {
+async function handleEditOrder(req) {
   try {
     let data = req.body;
-    const updated_by = req.headers.name;
+    const updated_by = accessHeaders(req, ["updatedby"])
     data = { ...data, updated_by };
 
-    const resData = await Order.findByIdAndUpdate(data._id, data, {
+    const orderData = await Order.findByIdAndUpdate(data._id, data, {
       new: true,
     });
 
-    if (resData) {
-      res.status(200).json(resData);
+    if (orderData) {
+      return prepareResponse(200, orderData)
     } else {
-      sendError(res, 400, "No order found");
+      return prepareResponse(400, "UNABLE TO EDIT THE ORDER")
     }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleDeleteOrder(req, res) {
+async function handleDeleteOrder(req) {
   try {
-    const data = req.headers;
-    console.log("Received edit request with data:", data);
+    let { id } = req.body
 
-    const resData = await Order.findByIdAndDelete(data.id, {
-      new: true,
-    });
+    const orderData = await Order.findByIdAndDelete(id);
 
-    if (resData) {
-      res.status(200).json(resData);
+    if (orderData) {
+      return prepareResponse(200, orderData)
     } else {
-      sendError(res, 400, "No order found");
+      return prepareResponse(400, "UNABLE TO DELETE THE ORDER")
     }
+
   } catch (e) {
     console.error(e);
-    sendError(res, 500, "An error occurred");
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleFinishOrder(req, res) {
+async function handleFinishOrder(req) {
   try {
-    const data = req.headers;
-    console.log("Received edit request with data:", data);
+    let { id } = req.body;
+    const updated_by = accessHeaders(req, ["updatedby"])
 
-    const resData = await Order.findByIdAndUpdate(
-      data.id,
-      { status: "Finished" },
+    const orderData = await Order.findByIdAndUpdate(id,
+      { status: "Finished", updated_by },
       {
         new: true,
-      },
-    );
-
-    if (resData) {
-      res.status(200).json(resData);
+      });
+    if (orderData) {
+      return prepareResponse(200, orderData)
     } else {
-      sendError(res, 400, "No order found");
+      return prepareResponse(400, "UNABLE TO CHANGE THE ORDER STATUS TO FINISHED")
     }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleRedoOrder(req, res) {
+async function handleRedoOrder(req) {
   try {
-    const data = req.headers;
-    console.log("Received edit request with data:", data);
+    let { id } = req.body;
+    const updated_by = accessHeaders(req, ["updatedby"])
 
-    const resData = await Order.findByIdAndUpdate(
-      data.id,
-      { status: "Correction" },
+    const orderData = await Order.findByIdAndUpdate(id,
+      { status: "Correction", updated_by },
       {
         new: true,
-      },
-    );
-
-    if (resData) {
-      res.status(200).json(resData);
+      });
+    if (orderData) {
+      return prepareResponse(200, orderData)
     } else {
-      sendError(res, 400, "No order found");
+      return prepareResponse(400, "UNABLE TO CHANGE THE ORDER STATUS TO CORRECTION")
     }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetAllOrdersOfClient(req, res) {
+async function handleGetAllOrdersOfClient(req) {
   try {
-    const data = req.headers;
-    console.log("Received edit request with data of Client:", data);
+    const { clientcode } = accessHeaders(req, ["clientcode"])
 
-    const resData = await Order.find({ client_code: data.client_code });
+    const ordersData = await Order.find({ client_code: clientcode });
 
-    console.log(resData);
-
-    if (resData) {
-      res.status(200).json(resData);
+    if (ordersData) {
+      return prepareResponse(200, ordersData)
     } else {
-      sendError(res, 400, "No order found");
+      return prepareResponse(200, [])
     }
   } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
   }
 }
 
-async function handleGetOrdersByFilterStat(req, res) {
+async function handleGetOrdersByCountry(req) {
+  try {
+    let { country, fromtime, totime } = accessHeaders(req, ["country", "fromtime", "totime"])
+    let countriesList = ["Australia", "Denmark", "Finland", "Norway", "Sweden"];
+
+    if (!country) {
+      return prepareResponse(400, "NO COUNTRY NAME PROVIDED")
+    } else {
+
+      let query = { type: { $ne: "Test" } };
+
+      if (fromtime || totime) {
+        query.createdAt = {};
+        if (fromtime) {
+          query.createdAt.$gte = new Date(ddMmYyyyToIsoDate(fromtime));
+        }
+        if (totime) {
+          const toTimeDate = new Date(ddMmYyyyToIsoDate(totime));
+          toTimeDate.setHours(23, 59, 59, 999);
+          query.createdAt.$lte = toTimeDate;
+        }
+      }
+
+      let countryFilter = country;
+      if (country == "Others") countryFilter = { $nin: countriesList };
+  
+      const clientsData = await Client.find(
+        { country: countryFilter },
+        { client_code: 1, country: 1 },
+      );
+
+      let returnData = {
+        details: [],
+        totalFiles: 0,
+      };
+  
+      clientsData.map((clientData) => {
+        Order.find({ ...query, client_code: clientData.client_code })
+          .lean()
+          .then((ordersOfClient) => {
+            if (ordersOfClient.length === 0) return;
+  
+            ordersOfClient.forEach((data) => {
+              returnData.details.push({ ...data, country: clientData.country });
+              returnData.totalFiles += data.quantity;
+            });
+          }).catch(e => {
+            console.error(e)
+            return;
+          })
+      });
+
+      return prepareResponse(200, returnData)
+    }
+  } catch (e) {
+    console.error(e)
+    return prepareResponse(400, "AN ERROR OCCURED")
+  }
+}
+
+async function handleGetOrderById(req) {
+  try {
+    let { id } = accessHeaders(req, ["id"])
+    const orderData = await Order.findById(id).lean();
+
+    if (orderData) {
+      return prepareResponse(200, orderData)
+    }
+    else {
+      return prepareResponse(400, "NO ORDER FOUND WITH THE ID")
+    }
+  } catch (e) {
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED")
+  }
+}
+
+
+
+
+async function handleGetOrdersByFilterOfStats(req, res) {
   try {
     const { fromtime, totime } = req.headers;
     const fromStatus = getDateRange().from;
@@ -701,119 +736,116 @@ async function handleGetOrdersByFilterStat(req, res) {
   }
 }
 
-async function handleGetOrdersByCountry(req, res) {
-  try {
-    let { country, fromtime, totime } = req.headers;
-    if (!country) sendError(res, 400, "Country must be provided");
 
-    let countriesList = ["Australia", "Denmark", "Finland", "Norway", "Sweden"];
 
-    let query = { type: { $ne: "Test" } };
 
-    if (fromtime || totime) {
-      query.createdAt = {};
-      if (fromtime) {
-        // Set the $gte filter for the start of the day
-        query.createdAt.$gte = new Date(ddMmYyyyToIsoDate(fromtime));
+
+export async function GET(req, { params }) {
+
+  const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
+  dbConnect();
+  let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
+  let session = null
+
+
+  switch (reqType) {
+    // case "signin":
+    //   break;
+    // add more request type cases to not check the session for that request type 
+    default:
+      session = await getServerSession(authOptions)
+      if (!session) {
+        return new Response('SESSION NOT FOUND', { status: 401 })
       }
-      if (totime) {
-        // Set the $lte filter for the end of the day
-        const toTimeDate = new Date(ddMmYyyyToIsoDate(totime));
-        toTimeDate.setHours(23, 59, 59, 999); // Set to end of the day
-        query.createdAt.$lte = toTimeDate;
-      }
-    }
-
-    let countryFilter = country;
-    if (country == "Others") countryFilter = { $nin: countriesList };
-
-    const clientsAll = await Client.find(
-      { country: countryFilter },
-      { client_code: 1, country: 1 },
-    );
-
-    let returnData = {
-      details: [],
-      totalFiles: 0,
-    };
-
-    // Create an array of promises for Order.find operations
-    const promises = clientsAll.map((clientData) => {
-      return Order.find({ ...query, client_code: clientData.client_code })
-        .lean()
-        .then((ordersOfClient) => {
-          if (ordersOfClient.length === 0) return;
-
-          ordersOfClient.forEach((data) => {
-            returnData.details.push({ ...data, country: clientData.country });
-            returnData.totalFiles += data.quantity;
-          });
-        });
-    });
-
-    Promise.all(promises)
-      .then(() => {
-        res.status(200).json(returnData);
-      })
-      .catch((error) => {
-        console.log(error);
-        sendError(res, 400, "Something went wrong");
-      });
-  } catch (e) {
-    console.error(e);
-    sendError(res, 500, "An error occurred");
   }
-}
 
 
+  switch (reqType) {
+    case "getallorders":
+      res = await handleGetAllOrders(req)
+      return new Response(res.message, { status: res.status })
 
+    case "gettimeremainingfororders":
+      res = await handleGetTimeRemainingForOrders(req)
+      return new Response(res.message, { status: res.status })
 
-export default async function handle(req, res) {
-  const { method } = req;
+    case "getordersbyfilter":
+      res = await handleGetOrdersByFilter(req)
+      return new Response(res.message, { status: res.status })
 
-  switch (method) {
-    case "GET":
-      if (req.headers.getallorders) {
-        await handleGetAllOrderPaginated(req, res);
-      } else if (req.headers.getonlytime) {
-        await handleGetOnlyTime(req, res);
-      } else if (req.headers.deleteorder) {
-        await handleDeleteOrder(req, res);
-      } else if (req.headers.getordersbyfilter) {
-        await handleGetOrdersByFilter(req, res);
-      } else if (req.headers.getordersunfinished) {
-        await handleGetOrdersUnFinished(req, res);
-      } else if (req.headers.getordersredo) {
-        await handleGetOrdersRedo(req, res);
-      } else if (req.headers.finishorder) {
-        await handleFinishOrder(req, res);
-      } else if (req.headers.redoorder) {
-        await handleRedoOrder(req, res);
-      } else if (req.headers.getordersbyid) {
-        await handleGetOrdersById(req, res);
-      } else if (req.headers.gettimeperiods) {
-        await handleGetTimePeriods(req, res);
-      } else if (req.headers.getallordersofclient) {
-        await handleGetAllOrdersOfClient(req, res);
-      } else if (req.headers.getordersbyfilterstat) {
-        await handleGetOrdersByFilterStat(req, res);
-      } else if (req.headers.getordersbycountry) {
-        await handleGetOrdersByCountry(req, res);
-      } else {
-        sendError(res, 400, "Not a valid GET request");
-      }
-      break;
+    case "getordersunfinished":
+      res = await handleGetOrdersUnfinished(req)
+      return new Response(res.message, { status: res.status })
 
-    case "POST":
-      if (req.headers.editorder) {
-        await handleEditOrder(req, res);
-      } else {
-        await handleNewOrder(req, res);
-      }
+    case "getordersredo":
+      res = await handleGetOrdersRedo(req)
+      return new Response(res.message, { status: res.status })
 
-      break;
+    case "getallordersofclient":
+      res = await handleGetAllOrdersOfClient(req)
+      return new Response(res.message, { status: res.status })
+
+    case "getordersbyfilterofstats":
+      res = await handleGetOrdersByFilterOfStats(req)
+      return new Response(res.message, { status: res.status })
+
+    case "getordersbycountry":
+      res = await handleGetOrdersByCountry(req)
+      return new Response(res.message, { status: res.status })
+
+    case "getorderbyid":
+      res = await handleGetOrderById(req)
+      return new Response(res.message, { status: res.status })
 
     default:
-      sendError(res, 400, "Unknown request");
+      return new Response("UNKNOWN GET REQUEST", { status: 400 })
   }
 }
+
+
+export async function POST(req, { params }) {
+
+  const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
+  await dbConnect()
+  let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
+  let session = null
+
+  switch (reqType) {
+    // case "signin":
+    //   break;
+    // add more request type cases to not check the session for that request type 
+    default:
+      session = await getServerSession(authOptions)
+      if (!session) {
+        return new Response('SESSION NOT FOUND', { status: 401 })
+      }
+  }
+
+  switch (reqType) {
+
+    case "deleteorder":
+      res = await handleDeleteOrder(req)
+      return new Response(res.message, { status: res.status })
+
+    case "redoorder":
+      res = await handleRedoOrder(req)
+      return new Response(res.message, { status: res.status })
+
+    case "finishorder":
+      res = await handleFinishOrder(req)
+      return new Response(res.message, { status: res.status })
+
+    case "editorder":
+      res = await handleEditOrder(req)
+      return new Response(res.message, { status: res.status })
+
+    case "neworder":
+      res = await handleNewOrder(req)
+      return new Response(res.message, { status: res.status })
+
+    default:
+      return new Response("UNKNOWN POST REQUEST", { status: 400 })
+  }
+}
+
+
