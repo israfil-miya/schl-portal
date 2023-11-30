@@ -1,26 +1,9 @@
 import User from "@/db/Users";
 import dbConnect from "@/lib/dbConnect";
-import { headers } from "next/headers";
+import {prepareResponse, accessHeaders} from "@/lib/utils"
 
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-
-let prepareResponse = (status, data) => {
-  if (typeof data == "object") return { status, message: JSON.stringify(data) }
-  else return { status, message: data }
-}
-
-let accessHeaders = (req, headerNames) => {
-  const headersList = headers(req);
-
-  const headerValues = {};
-  headerNames.forEach((name) => {
-    headerValues[name] = headersList.get(name);
-  });
-
-  return headerValues;
-}
 
 
 
