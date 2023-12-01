@@ -1,26 +1,9 @@
 import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { headers } from "next/headers";
+
  
 export function cn(...inputs) {
   return twMerge(clsx(inputs))
-}
-
-
-export function prepareResponse(status, data) {
-  if (typeof data == "object") return { status, message: JSON.stringify(data) }
-  else return { status, message: data }
-}
-
-export function accessHeaders(req, headerNames) {
-  const headersList = headers(req);
-
-  const headerValues = {};
-  headerNames.forEach((name) => {
-    headerValues[name] = headersList.get(name);
-  });
-
-  return headerValues;
 }
 
 export function ddMmYyyyToIsoDate(ddMmYyyy) {

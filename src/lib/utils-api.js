@@ -1,6 +1,7 @@
+import { headers } from "next/headers";
 import {formatDate, getCurrentAsiaDhakaTime} from "@/lib/utils"
 
-function calculateTimeDifference(deliveryDate, deliveryTime) {
+export function calculateTimeDifference(deliveryDate, deliveryTime) {
   const is12HourFormat = /am|pm/i.test(deliveryTime);
   const [time, meridiem] = deliveryTime.split(/\s+/);
   const [hours, minutes] = time.split(":").map(Number);
@@ -34,7 +35,7 @@ function calculateTimeDifference(deliveryDate, deliveryTime) {
   return timeDifferenceMs;
 }
 
-function getDatesInRange(fromTime, toTime) {
+export function getDatesInRange(fromTime, toTime) {
   const dates = [];
   let currentDate = new Date(ddMmYyyyToIsoDate(fromTime));
   const endDate = new Date(ddMmYyyyToIsoDate(toTime));
@@ -51,7 +52,7 @@ function getDatesInRange(fromTime, toTime) {
   return dates;
 }
 
-function getDateRange() {
+export function getDateRange() {
   const today = new Date();
   const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(today.getDate() - 14);
@@ -59,4 +60,20 @@ function getDateRange() {
     from: formatDate(fourteenDaysAgo),
     to: formatDate(today),
   };
+}
+
+export function accessHeaders(req, headerNames) {
+    const headersList = headers(req);
+
+    const headerValues = {};
+    headerNames.forEach((name) => {
+        headerValues[name] = headersList.get(name);
+    });
+
+    return headerValues;
+}
+
+export function prepareResponse(status, data) {
+    if (typeof data == "object") return { status, message: JSON.stringify(data) }
+    else return { status, message: data }
 }

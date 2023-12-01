@@ -1,6 +1,6 @@
 import User from "@/db/Users";
 import dbConnect from "@/lib/dbConnect";
-import { prepareResponse, accessHeaders } from "@/lib/utils"
+import {prepareResponse, accessHeaders } from "@/lib/utils-api"
 
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'

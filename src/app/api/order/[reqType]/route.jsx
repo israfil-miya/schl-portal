@@ -2,8 +2,8 @@ import Order from "@/db/Orders";
 import Client from "@/db/Clients";
 import dbConnect from "@/lib/dbConnect";
 
-import { prepareResponse, accessHeaders, ddMmYyyyToIsoDate } from "@/lib/utils"
-import { getDatesInRange, getDateRange, calculateTimeDifference } from "./utils"
+import { ddMmYyyyToIsoDate } from "@/lib/utils"
+import {prepareResponse, accessHeaders, getDatesInRange, getDateRange, calculateTimeDifference } from "@/lib/utils-api"
 
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
@@ -467,73 +467,32 @@ async function handleGetOrderById(req) {
 
 
 
-async function handleGetOrdersByFilterOfStats(req, res) {
+async function handleGetOrdersByFilterForStatus(req) {
   try {
-    const { fromtime, totime } = req.headers;
+    const { fromtime, totime } = accessHeaders(req, ["fromtime", "totime"]);
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
     const fromStatus = getDateRange().from;
     const toStatus = getDateRange().to;
 
-    let query = { type: { $ne: "Test" } };
+    const query = { type: { $ne: "Test" } };
+
     if (fromtime || totime) {
       query.createdAt = {};
       if (fromtime) {
-        // Set the $gte filter for the start of the day
         query.createdAt.$gte = new Date(ddMmYyyyToIsoDate(fromtime));
       }
       if (totime) {
-        // Set the $lte filter for the end of the day
         const toTimeDate = new Date(ddMmYyyyToIsoDate(totime));
-        toTimeDate.setHours(23, 59, 59, 999); // Set to end of the day
+        toTimeDate.setHours(23, 59, 59, 999);
         query.createdAt.$lte = toTimeDate;
       }
     }
 
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
     const orders = await Order.find(query);
-    const mergedOrders = orders.reduce((merged, order) => {
-      const date =
-        order.createdAt instanceof Date
-          ? order.createdAt.toISOString().split("T")[0]
-          : order.createdAt.split("T")[0];
-      const [year, month, day] = date.split("-");
-      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
-
-      if (!merged[formattedDate]) {
-        merged[formattedDate] = {
-          date: formattedDate,
-          orderQuantity: 0,
-          orderPending: 0,
-          fileQuantity: 0,
-          filePending: 0,
-        };
-      }
-
-      // Update fileQuantity and filePending based on the order status and quantity
-      merged[formattedDate].fileQuantity += order.quantity;
-      merged[formattedDate].orderQuantity++;
-      if (order.status !== "Finished") {
-        merged[formattedDate].filePending += order.quantity;
-        merged[formattedDate].orderPending++;
-      }
-
-      return merged;
-    }, {});
-    const ordersQP = Object.values(mergedOrders);
-
     const ordersForStatus = await Order.find({
       createdAt: {
         $gte: new Date(ddMmYyyyToIsoDate(fromStatus)),
@@ -541,96 +500,86 @@ async function handleGetOrdersByFilterOfStats(req, res) {
       },
     });
 
-    const mergedOrdersStatus = ordersForStatus.reduce((merged, order) => {
-      const date =
-        order.createdAt instanceof Date
+    const mergeOrdersByDate = (orders) => {
+      return orders.reduce((merged, order) => {
+        const date = order.createdAt instanceof Date
           ? order.createdAt.toISOString().split("T")[0]
           : order.createdAt.split("T")[0];
-      const [year, month, day] = date.split("-");
-      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+        const [year, month, day] = date.split("-");
+        const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
-      if (!merged[formattedDate]) {
-        merged[formattedDate] = {
-          date: formattedDate,
-          orderQuantity: 0,
-          orderPending: 0,
-          fileQuantity: 0,
-          filePending: 0,
-        };
-      }
+        if (!merged[formattedDate]) {
+          merged[formattedDate] = {
+            date: formattedDate,
+            orderQuantity: 0,
+            orderPending: 0,
+            fileQuantity: 0,
+            filePending: 0,
+          };
+        }
 
-      // Update fileQuantity and filePending based on the order status and quantity
-      merged[formattedDate].fileQuantity += order.quantity;
-      merged[formattedDate].orderQuantity++;
-      if (order.status !== "Finished") {
-        merged[formattedDate].filePending += order.quantity;
-        merged[formattedDate].orderPending++;
-      }
+        merged[formattedDate].fileQuantity += order.quantity;
+        merged[formattedDate].orderQuantity++;
 
-      merged[formattedDate].isoDate = order.createdAt;
+        if (order.status !== "Finished") {
+          merged[formattedDate].filePending += order.quantity;
+          merged[formattedDate].orderPending++;
+        }
 
-      return merged;
-    }, {});
+        return merged;
+      }, {});
+    };
 
-    const ordersStatus = Object.values(mergedOrdersStatus);
+    const mergedOrders = mergeOrdersByDate(orders);
+    const mergedOrdersStatus = mergeOrdersByDate(ordersForStatus);
+
+    const initializeOrdersObject = () => {
+      const countries = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden', 'Others'];
+      return countries.reduce((obj, country) => {
+        obj[country] = [];
+        return obj;
+      }, {});
+    };
+
+    const generateZeroData = () => ({
+      orderQuantity: 0,
+      orderPending: 0,
+      fileQuantity: 0,
+      filePending: 0,
+      isoDate: null,
+    });
+
+    const ordersDetails = initializeOrdersObject();
+    const ordersCD = initializeOrdersObject();
 
     const clientsAll = await Client.find({}, { client_code: 1, country: 1 });
 
-    let ordersDetails = {
-      Australia: [],
-      Denmark: [],
-      Finland: [],
-      Norway: [],
-      Sweden: [],
-      Others: [],
-    }; // Initialize ordersDetails with the countries object
-
-    // Create an array of promises
     const orderPromises = clientsAll.map(async (clientData) =>
-      Order.find(
-        { ...query, client_code: clientData.client_code },
-        { createdAt: 1, quantity: 1 },
-      ),
+      Order.find({ ...query, client_code: clientData.client_code }, { createdAt: 1, quantity: 1 })
     );
 
-    // Use Promise.all to wait for all asynchronous calls to complete
     const ordersAll = await Promise.all(orderPromises);
 
     ordersAll.forEach((clientOrders, index) => {
       const clientData = clientsAll[index];
-      const country = ordersDetails[clientData.country]
-        ? clientData.country
-        : "Others";
+      const country = ordersDetails[clientData.country] ? clientData.country : "Others";
       if (!ordersDetails[country]) {
-        ordersDetails[country] = []; // Create an empty array if it doesn't exist
+        ordersDetails[country] = [];
       }
-      ordersDetails[country].push(...clientOrders); // Use spread operator to push the client orders
+      ordersDetails[country].push(...clientOrders);
     });
 
-    // Remove empty categories
     for (const country in ordersDetails) {
       if (ordersDetails[country].length === 0) {
         delete ordersDetails[country];
       }
     }
 
-    let ordersCD = {
-      Australia: [],
-      Denmark: [],
-      Finland: [],
-      Norway: [],
-      Sweden: [],
-      Others: [],
-    };
-
     for (const [countryName, ordersArr] of Object.entries(ordersDetails)) {
-      const merged = {}; // Reset merged object for each country
-
       const sortedDates = ordersArr.reduce((merged, order) => {
-        const date =
-          order.createdAt instanceof Date
-            ? order.createdAt.toISOString().split("T")[0]
-            : order.createdAt.split("T")[0];
+        const date = order.createdAt instanceof Date
+          ? order.createdAt.toISOString().split("T")[0]
+          : order.createdAt.split("T")[0];
         const [year, month, day] = date.split("-");
         const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
@@ -644,7 +593,6 @@ async function handleGetOrdersByFilterOfStats(req, res) {
 
         merged[formattedDate].fileQuantity += order.quantity;
         merged[formattedDate].orderQuantity++;
-
         merged[formattedDate].isoDate = order.createdAt;
 
         return merged;
@@ -664,58 +612,32 @@ async function handleGetOrdersByFilterOfStats(req, res) {
       return `${monthNames[month - 1]} ${day}`;
     });
 
-    const dateRangeForStatus = getDatesInRange(fromStatus, toStatus).map(
-      (date) => {
-        const [year, month, day] = date.split("-");
-        return `${monthNames[month - 1]} ${day}`;
-      },
-    );
+    const dateRangeForStatus = getDatesInRange(fromStatus, toStatus).map((date) => {
+      const [year, month, day] = date.split("-");
+      return `${monthNames[month - 1]} ${day}`;
+    });
 
-    const zeroDataQP = {
-      orderQuantity: 0,
-      orderPending: 0,
-      fileQuantity: 0,
-      filePending: 0,
-      isoDate: null,
-    };
+    const ordersQP = Object.values(mergedOrders);
+    const ordersStatus = Object.values(mergedOrdersStatus);
+
     const ordersQPWithMissingDates = dateRange.map((date) => {
       const existingData = ordersQP.find((item) => item.date === date);
-      if (existingData) {
-        return existingData;
-      } else {
-        return { date, ...zeroDataQP };
-      }
+      return existingData || { date, ...generateZeroData() };
     });
 
-    const zeroDataStatus = {
-      orderQuantity: 0,
-      orderPending: 0,
-      fileQuantity: 0,
-      filePending: 0,
-    };
+    const zeroDataStatus = generateZeroData();
     const ordersStatusWithMissingDates = dateRangeForStatus.map((date) => {
       const existingData = ordersStatus.find((item) => item.date === date);
-      if (existingData) {
-        return existingData;
-      } else {
-        return { date, ...zeroDataStatus };
-      }
+      return existingData || { date, ...zeroDataStatus };
     });
 
-    const zeroDataCD = {
-      orderQuantity: 0,
-      fileQuantity: 0,
-      isoDate: null,
-    };
+    const zeroDataCD = generateZeroData();
     const ordersCDWithMissingDates = {};
+
     for (const [country, ordersArr] of Object.entries(ordersCD)) {
       ordersCDWithMissingDates[country] = dateRange.map((date) => {
         const existingData = ordersArr.find((item) => item.date === date);
-        if (existingData) {
-          return existingData;
-        } else {
-          return { date, ...zeroDataCD };
-        }
+        return existingData || { date, ...zeroDataCD };
       });
     }
 
@@ -726,15 +648,16 @@ async function handleGetOrdersByFilterOfStats(req, res) {
     };
 
     if (returnData) {
-      res.status(200).json(returnData);
+      return prepareResponse(200, returnData);
     } else {
-      sendError(res, 400, "Something went wrong");
+      return prepareResponse(400, "UNABLE TO CREATE FILEFLOW STATUS DATA");
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, "An error occurred");
+    return prepareResponse(400, "AN ERROR OCCURRED");
   }
 }
+
 
 
 
@@ -785,8 +708,8 @@ export async function GET(req, { params }) {
       res = await handleGetAllOrdersOfClient(req)
       return new Response(res.message, { status: res.status })
 
-    case "getordersbyfilterofstats":
-      res = await handleGetOrdersByFilterOfStats(req)
+    case "getordersbyfilterforstatus":
+      res = await handleGetOrdersByFilterForStatus(req)
       return new Response(res.message, { status: res.status })
 
     case "getordersbycountry":
