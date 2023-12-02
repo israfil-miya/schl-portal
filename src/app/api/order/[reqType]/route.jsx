@@ -668,57 +668,65 @@ export async function GET(req, { params }) {
   const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
   dbConnect();
   let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
-  let session = null
+  // let session = await getServerSession(authOptions)
 
 
-  switch (reqType) {
-    // case "signin":
-    //   break;
-    // add more request type cases to not check the session for that request type 
-    default:
-      session = await getServerSession(authOptions)
-      if (!session) {
-        return new Response('SESSION NOT FOUND', { status: 401 })
-      }
-  }
+  // switch (reqType) {
+  //   // case "signin":
+  //   //   break;
+  //   // add more request type cases to not check the session for that request type 
+  //   default:
+  //     if (!session) {
+  //       return new Response('SESSION NOT FOUND', { status: 401 })
+  //     }
+  // }
 
 
   switch (reqType) {
     case "getallorders":
       res = await handleGetAllOrders(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "gettimeremainingfororders":
       res = await handleGetTimeRemainingForOrders(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getordersbyfilter":
       res = await handleGetOrdersByFilter(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getordersunfinished":
       res = await handleGetOrdersUnfinished(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getordersredo":
       res = await handleGetOrdersRedo(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getallordersofclient":
       res = await handleGetAllOrdersOfClient(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getordersbyfilterforstatus":
       res = await handleGetOrdersByFilterForStatus(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getordersbycountry":
       res = await handleGetOrdersByCountry(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "getorderbyid":
       res = await handleGetOrderById(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     default:
       return new Response("UNKNOWN GET REQUEST", { status: 400 })
@@ -731,18 +739,18 @@ export async function POST(req, { params }) {
   const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
   await dbConnect()
   let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
-  let session = null
+  // let session = null
 
-  switch (reqType) {
-    // case "signin":
-    //   break;
-    // add more request type cases to not check the session for that request type 
-    default:
-      session = await getServerSession(authOptions)
-      if (!session) {
-        return new Response('SESSION NOT FOUND', { status: 401 })
-      }
-  }
+  // switch (reqType) {
+  //   // case "signin":
+  //   //   break;
+  //   // add more request type cases to not check the session for that request type 
+  //   default:
+  //     session = await getServerSession(authOptions)
+  //     if (!session) {
+  //       return new Response('SESSION NOT FOUND', { status: 401 })
+  //     }
+  // }
 
   switch (reqType) {
 

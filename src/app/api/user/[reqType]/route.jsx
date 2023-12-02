@@ -129,19 +129,18 @@ export async function GET(req, { params }) {
   const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
   dbConnect();
   let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
-  let session = null
+  // let session = await getServerSession(authOptions)
 
 
-  switch (reqType) {
-    // case "signin":
-    //   break;
-    // add more request type cases to not check the session for that request type 
-    default:
-      session = await getServerSession(authOptions)
-      if (!session) {
-        return new Response('SESSION NOT FOUND', { status: 401 })
-      }
-  }
+  // switch (reqType) {
+  //   // case "signin":
+  //   //   break;
+  //   // add more request type cases to not check the session for that request type 
+  //   default:
+  //     if (!session) {
+  //       return new Response('SESSION NOT FOUND', { status: 401 })
+  //     }
+  // }
 
 
   switch (reqType) {
@@ -164,18 +163,18 @@ export async function POST(req, { params }) {
   const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
   await dbConnect()
   let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
-  let session = null
+  // let session = null
 
-  switch (reqType) {
-    case "signin":
-      break;
-    // add more request type cases to not check the session for that request type 
-    default:
-      session = await getServerSession(authOptions)
-      if (!session) {
-        return new Response('SESSION NOT FOUND', { status: 401 })
-      }
-  }
+  // switch (reqType) {
+  //   case "signin":
+  //     break;
+  //   // add more request type cases to not check the session for that request type 
+  //   default:
+  //     session = await getServerSession(authOptions)
+  //     if (!session) {
+  //       return new Response('SESSION NOT FOUND', { status: 401 })
+  //     }
+  // }
 
   switch (reqType) {
     case "signin":
