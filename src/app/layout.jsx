@@ -1,28 +1,29 @@
-import { Karla, Lato } from 'next/font/google'
-import './globals.css'
+import { Karla, Lato } from "next/font/google";
+import "./globals.css";
 
-import Provider from "./context/client-provider"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "./api/auth/[...nextauth]/route"
+import SessionProvider from "@/components/SessionProvider";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import Navbar from "@/components/navbar/Navbar";
 
-const karla = Karla({ subsets: ['latin'], weight: "400" })
-const lato = Lato({ subsets: ['latin'], weight: "400" })
+const karla = Karla({ subsets: ["latin"], weight: "400" });
+const lato = Lato({ subsets: ["latin"], weight: "400" });
 
 export const metadata = {
-  title: 'SCHL - ORDERS',
-  description: 'Professional photo editing and retouching services',
-}
+  title: "SCHL - ORDERS",
+  description: "Professional photo editing and retouching services",
+};
 
 export default async function RootLayout({ children }) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
   return (
-
     <html lang="en">
       <body className={`${karla.className} ${lato.className}`}>
-        <Provider session={session}>
+        <SessionProvider session={session}>
+          <Navbar session={session} navFor="orders" />
           {children}
-        </Provider>
+        </SessionProvider>
       </body>
     </html>
-  )
+  );
 }

@@ -1,6 +1,5 @@
 "use client"
 
-import { getSession, useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
@@ -43,8 +42,8 @@ const cities = [
 
   // Add more cities as needed
 ];
-export default function Navbar({ navFor, shortNote }) {
-  const { data: session } = useSession();
+export default function Navbar({session, navFor, shortNote }) {
+
   const signOutHandle = () => {
     signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/login` });
   };

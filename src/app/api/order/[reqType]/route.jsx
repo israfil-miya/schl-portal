@@ -5,10 +5,6 @@ import dbConnect from "@/lib/dbConnect";
 import { ddMmYyyyToIsoDate } from "@/lib/utils"
 import {prepareResponse, accessHeaders, getDatesInRange, getDateRange, calculateTimeDifference } from "@/lib/utils-api"
 
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-
-
 
 async function handleNewOrder(req) {
   try {
@@ -668,19 +664,6 @@ export async function GET(req, { params }) {
   const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
   dbConnect();
   let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
-  // let session = await getServerSession(authOptions)
-
-
-  // switch (reqType) {
-  //   // case "signin":
-  //   //   break;
-  //   // add more request type cases to not check the session for that request type 
-  //   default:
-  //     if (!session) {
-  //       return new Response('SESSION NOT FOUND', { status: 401 })
-  //     }
-  // }
-
 
   switch (reqType) {
     case "getallorders":
@@ -739,41 +722,34 @@ export async function POST(req, { params }) {
   const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
   await dbConnect()
   let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
-  // let session = null
-
-  // switch (reqType) {
-  //   // case "signin":
-  //   //   break;
-  //   // add more request type cases to not check the session for that request type 
-  //   default:
-  //     session = await getServerSession(authOptions)
-  //     if (!session) {
-  //       return new Response('SESSION NOT FOUND', { status: 401 })
-  //     }
-  // }
 
   switch (reqType) {
 
     case "deleteorder":
       res = await handleDeleteOrder(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "redoorder":
       res = await handleRedoOrder(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "finishorder":
       res = await handleFinishOrder(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "editorder":
       res = await handleEditOrder(req)
       return new Response(res.message, { status: res.status })
+      break;
 
     case "neworder":
       res = await handleNewOrder(req)
       return new Response(res.message, { status: res.status })
-
+      break;
+  
     default:
       return new Response("UNKNOWN POST REQUEST", { status: 400 })
   }

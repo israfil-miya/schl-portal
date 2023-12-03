@@ -44,8 +44,6 @@ export default function SignInForm() {
 
     let router = useRouter()
 
-    let { error, success } = useSearchParams();
-
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -53,23 +51,6 @@ export default function SignInForm() {
             password: "",
         },
     })
-
-    useEffect(() => {
-        if (error) {
-            toast.error(error, {
-                toastId: "error",
-            });
-            error = undefined;
-            router.replace("/login");
-        }
-        if (success) {
-            toast.success(success, {
-                toastId: "success",
-            });
-            success = undefined;
-            router.replace("/login");
-        }
-    }, [error, success]);
 
 
     const signinSubmit = async (values) => {
@@ -107,14 +88,13 @@ export default function SignInForm() {
         if (result.error) {
             console.log("LOGIN FAILED")
             console.log(result)
-            toast.error(result.error)
         }
     };
 
     return (
         <>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(signinSubmit)} className="max-w-md mx-auto my-8 p-6 rounded shadow-md space-y-8 bg-white">
+                <form onSubmit={form.handleSubmit(signinSubmit)} className="max-w-md mx-auto bg-white my-8 p-6 rounded shadow-md space-y-8">
                     <FormField
                         control={form.control}
                         name="name"
@@ -122,7 +102,7 @@ export default function SignInForm() {
                             <FormItem>
                                 <FormLabel>Username</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="John Doe" {...field} />
+                                    <Input className="text-black" type="text" placeholder="John Doe" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

@@ -1,6 +1,6 @@
-
-import NextAuth from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { headers } from "next/headers";
 
 export const authOptions = {
   secret: process.env.SECRET,
@@ -11,21 +11,21 @@ export const authOptions = {
       async authorize(credentials) {
         const { name, password } = credentials;
         if (!name || !password) return null;
+
         const res = await fetch(
           process.env.NEXT_PUBLIC_BASE_URL + "/api/user/signin",
           {
-            method: "POST",
-            body: JSON.stringify({
-              name,
-              password
-            }),
+            method: "GET",
             headers: {
-              "Content-Type": "application/json",
+              name,
+              password,
             },
-          },
+          }
         );
+
+        console.log(res);
+
         const user = await res.json();
-       
 
         if (user && !user.error) {
           /*
@@ -46,40 +46,33 @@ export const authOptions = {
     encryption: true,
   },
 
-
   callbacks: {
-    async session ({ session, token, user }) {
+    async session({ session, token, user }) {
       const sanitizedToken = Object.keys(token).reduce((p, c) => {
         // strip unnecessary properties
-        if (
-          c !== "iat" &&
-          c !== "exp" &&
-          c !== "jti" &&
-          c !== "apiToken"
-        ) {
-          return { ...p, [c]: token[c] }
+        if (c !== "iat" && c !== "exp" && c !== "jti" && c !== "apiToken") {
+          return { ...p, [c]: token[c] };
         } else {
-          return p
+          return p;
         }
-      }, {})
-      return { ...session, user: sanitizedToken, apiToken: token.apiToken }
+      }, {});
+      return { ...session, user: sanitizedToken, apiToken: token.apiToken };
     },
-    async jwt ({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile }) {
       if (typeof user !== "undefined") {
         // user has just signed in so the user object is populated
-        return user
+        return user;
       }
-      return token
-    }
+      return token;
+    },
   },
-
 
   pages: {
     signIn: "/login",
     error: "/login",
   },
-}
+};
 
-const handler = NextAuth(authOptions)
+const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };
