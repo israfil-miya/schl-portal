@@ -44,8 +44,8 @@ const cities = [
 ];
 export default function Navbar({session, navFor, shortNote }) {
 
-  const signOutHandle = () => {
-    signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/login` });
+  const signOutHandle = async () => {
+    await signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/login` });
   };
 
   const [isDesktop, setIsDesktop] = useState(true);
@@ -54,6 +54,7 @@ export default function Navbar({session, navFor, shortNote }) {
   const handleMediaQueryChange = (mediaQuery) => {
     setIsDesktop(mediaQuery.matches);
   };
+
 
   useEffect(() => {
     // Set up the media query
@@ -208,7 +209,7 @@ export default function Navbar({session, navFor, shortNote }) {
         )}
 
         {(session.user.role === "admin" || session.user.role === "super") && (
-          <Link className={`${styles.navitem} ${navFor === "fileflow" ? styles.active : ""}`} href="/file-flow">
+          <Link className={`${styles.navitem} ${navFor === "file-flow" ? styles.active : ""}`} href="/file-flow">
             File Flow
           </Link>
         )}

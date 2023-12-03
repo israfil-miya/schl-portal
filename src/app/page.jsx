@@ -1,5 +1,8 @@
-import UseOrders from '../components/orders/Order';
-
+import UseOrders from "../components/orders/Order";
+import Navbar from "@/components/navbar/Navbar";
+import SessionProvider from "@/components/SessionProvider";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import {headers} from "next/headers"
 
 import { toast } from "sonner";
@@ -11,56 +14,52 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-
-
+} from "@/components/ui/table";
 
 const getAllOrdersRedo = async () => {
   const res = await fetch(
     process.env.NEXT_PUBLIC_BASE_URL + "/api/order/getordersredo",
     {
       method: "GET",
-      headers: headers()
+      headers: headers(),
     }
-  )
+  );
 
   if (!res.ok) {
-    throw new Error('FAILED TO FETCH DATA')
+    throw new Error("FAILED TO FETCH DATA");
   }
 
-  return res.json()
-}
-
-
+  return res.json();
+};
 
 const getAllOrdersUnfinished = async () => {
-
   const res = await fetch(
     process.env.NEXT_PUBLIC_BASE_URL + "/api/order/getordersunfinished",
     {
       method: "GET",
-      headers: headers()
+      headers: headers(),
     }
-  )
+  );
 
   if (!res.ok) {
-    throw new Error('FAILED TO FETCH DATA')
+    throw new Error("FAILED TO FETCH DATA");
   }
 
-  return res.json()
-
-}
-
-
+  return res.json();
+};
 
 export default async function Page({ params, searchParams }) {
-  let ordersUnfinished = await getAllOrdersUnfinished()
-  let ordersRedo = await getAllOrdersRedo()
-
+  const session = await getServerSession(authOptions);
+  let ordersUnfinished = await getAllOrdersUnfinished();
+  let ordersRedo = await getAllOrdersRedo();
 
   // const { orders, countdowns } = <UseOrders initialOrders={ordersUnfinished} />;
-  return <></>
-
+  return (
+    <>
+      <Navbar navFor={"orders"} session={session} />
+      HELLO {session?.user?.name}
+    </>
+  );
 
   // return (
   //   <>
