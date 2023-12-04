@@ -7,7 +7,6 @@ export const authOptions = {
   providers: [
     CredentialsProvider({
       id: "signin",
-      name: "signin",
       async authorize(credentials) {
         const { name, password } = credentials;
         if (!name || !password) return null;

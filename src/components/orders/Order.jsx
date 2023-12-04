@@ -1,14 +1,23 @@
 "use client"
 
 import { useEffect, useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge"
 
-const UseOrders = ({ initialOrders }) => {
+
+
+const OrderTimeRemaining = ({ initialOrders, orderIndex }) => {
   const [orders, setOrders] = useState(initialOrders);
   const [countdowns, setCountdowns] = useState(getCurrentTimes(initialOrders));
 
-
   function getCurrentTimes(orders) {
-    console.log(orders);
     const timesNow = orders?.map((order) =>
       order.timeDifference <= 0 ? 'Over' : calculateCountdown(order.timeDifference)
     );
@@ -26,13 +35,26 @@ const UseOrders = ({ initialOrders }) => {
       .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
-  const getAllOrdersTime = () => {
-    return fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/order/gettimeremainingfororders', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).then((res) => res.json());
+  const getAllOrdersTime = async () => {
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order/gettimeremainingfororders',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      return response.json();
+    } catch (error) {
+      throw new Error(`Error fetching orders time: ${error.message}`);
+    }
   };
 
   useEffect(() => {
@@ -46,7 +68,6 @@ const UseOrders = ({ initialOrders }) => {
           })
           .catch((e) => {
             console.error(e);
-            // Handle the error
           });
       }, process.env.NEXT_PUBLIC_UPDATE_DELAY);
 
@@ -56,7 +77,26 @@ const UseOrders = ({ initialOrders }) => {
     }
   }, [orders]);
 
-  return { orders, countdowns };
+  let priorityColor = '';
+  const countdownTime = countdowns[orderIndex];
+  const [hours, minutes, seconds] = countdownTime.split(':');
+  const totalSeconds =
+    parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+
+  if (totalSeconds > 0) {
+    if (totalSeconds <= 1800) {
+      priorityColor = 'bg-red text-white';
+    } else if (totalSeconds <= 3600) {
+      priorityColor = 'bg-yellow text-white';
+    }
+  }
+  if (countdownTime === 'Over') priorityColor = 'bg-foreground text-white';
+
+  return (
+    <TableCell className="break-normal">
+      <Badge variant={"outline"} className={priorityColor}> {countdowns[orderIndex]}</Badge>
+    </TableCell>
+  );
 };
 
-export default UseOrders;
+export default OrderTimeRemaining;
