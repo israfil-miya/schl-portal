@@ -8,9 +8,9 @@ const karla = Karla({ subsets: ["latin"], weight: "400" });
 const lato = Lato({ subsets: ["latin"], weight: "400" });
 
 export const metadata = {
-  title: 'SCHL - LOGIN',
-  description: 'Professional photo editing and retouching services',
-}
+  title: "SCHL - LOGIN",
+  description: "Professional photo editing and retouching services",
+};
 
 export default async function RootLayout({ children }) {
   const session = await getServerSession(authOptions);
@@ -18,9 +18,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${karla.className} ${lato.className}`}>
-        <SessionProvider session={session}>
-          {children}
-        </SessionProvider>
+        <SessionProvider session={session}>{children}</SessionProvider>
       </body>
     </html>
   );

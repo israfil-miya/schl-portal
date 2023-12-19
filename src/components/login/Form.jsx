@@ -1,129 +1,137 @@
-"use client"
+"use client";
 
-import React from 'react'
+import React from "react";
 
 import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { toast } from "sonner";
-import * as z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
-
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRightToBracket } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRightToBracket } from "@fortawesome/free-solid-svg-icons";
 
 const formSchema = z.object({
-    name: z.string().min(2, {
-        message: "Username must be at least 2 characters.",
-    }
-    ).max(50, {
-        message: "Username must be between 50 characters.",
-    }),
-    password: z.string().min(2, {
-        message: "Password must be at least 4 characters.",
+  name: z
+    .string()
+    .min(2, {
+      message: "Username must be at least 2 characters.",
     })
-})
-
+    .max(50, {
+      message: "Username must be between 50 characters.",
+    }),
+  password: z.string().min(2, {
+    message: "Password must be at least 4 characters.",
+  }),
+});
 
 export default function SignInForm() {
+  let router = useRouter();
 
-    let router = useRouter()
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      password: "",
+    },
+  });
 
-    const form = useForm({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            name: "",
-            password: "",
-        },
-    })
+  const signinSubmit = async (values) => {
+    const result = await signIn("signin", {
+      redirect: false,
+      ...values,
+    });
 
+    if (!result.error) {
+      // const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/api/user", {
+      //     method: "GET",
+      //     headers: {
+      //         "Content-Type": "application/json",
+      //         ...values,
+      //         signin: true,
+      //     },
+      // });
 
-    const signinSubmit = async (values) => {
-        const result = await signIn("signin", {
-            redirect: false,
-            ...values
-        });
+      // const user = await res.json();
 
-        if (!result.error) {
-            // const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/api/user", {
-            //     method: "GET",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //         ...values,
-            //         signin: true,
-            //     },
-            // });
+      // if (
+      //     process.env.NODE_ENV !== "development" &&
+      //     user.role !== "super" &&
+      //     user.role !== "admin" &&
+      //     !ALLOWED_IPS?.includes(ip)
+      // )
+      //     router.replace("/forbidden");
+      // else
 
-            // const user = await res.json();
+      console.log("LOGIN SUCCESSFUL");
+      console.log(result);
+      router.replace("/");
+    }
+    if (result.error) {
+      console.log("LOGIN FAILED");
+      console.log(result);
+    }
+  };
 
-            // if (
-            //     process.env.NODE_ENV !== "development" &&
-            //     user.role !== "super" &&
-            //     user.role !== "admin" &&
-            //     !ALLOWED_IPS?.includes(ip)
-            // )
-            //     router.replace("/forbidden");
-            // else
-
-
-            console.log("LOGIN SUCCESSFUL")
-            console.log(result)
-            router.replace("/");
-        }
-        if (result.error) {
-            console.log("LOGIN FAILED")
-            console.log(result)
-        }
-    };
-
-    return (
-        <>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(signinSubmit)} className="max-w-md mx-auto bg-white my-8 p-6 rounded shadow-md space-y-8">
-                    <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Username</FormLabel>
-                                <FormControl>
-                                    <Input className="text-black" type="text" placeholder="John Doe" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Password</FormLabel>
-                                <FormControl>
-                                    <Input type="password" placeholder="j0hN@123*#" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <Button type="submit"><FontAwesomeIcon className="px-1" icon={faRightToBracket} />  Login to your account</Button>
-                </form>
-            </Form>
-        </>
-    )
+  return (
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(signinSubmit)}
+          className="max-w-md mx-auto bg-white my-8 p-6 rounded shadow-md space-y-8"
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input
+                    className="text-black"
+                    type="text"
+                    placeholder="John Doe"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="j0hN@123*#" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">
+            <FontAwesomeIcon className="px-1" icon={faRightToBracket} /> Login
+            to your account
+          </Button>
+        </form>
+      </Form>
+    </>
+  );
 }

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,9 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge"
-
-
+import { Badge } from "@/components/ui/badge";
 
 const OrderTimeRemaining = ({ initialOrders, orderIndex }) => {
   const [orders, setOrders] = useState(initialOrders);
@@ -19,7 +17,9 @@ const OrderTimeRemaining = ({ initialOrders, orderIndex }) => {
 
   function getCurrentTimes(orders) {
     const timesNow = orders?.map((order) =>
-      order.timeDifference <= 0 ? 'Over' : calculateCountdown(order.timeDifference)
+      order.timeDifference <= 0
+        ? "Over"
+        : calculateCountdown(order.timeDifference),
     );
     return timesNow;
   }
@@ -30,25 +30,26 @@ const OrderTimeRemaining = ({ initialOrders, orderIndex }) => {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    return `${hours.toString().padStart(2, '0')}:${minutes
+    return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
-      .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   }
 
   const getAllOrdersTime = async () => {
     try {
       const response = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order/gettimeremainingfororders',
+        process.env.NEXT_PUBLIC_BASE_URL +
+          "/api/order/gettimeremainingfororders",
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        throw new Error("Failed to fetch data");
       }
 
       return response.json();
@@ -77,24 +78,27 @@ const OrderTimeRemaining = ({ initialOrders, orderIndex }) => {
     }
   }, [orders]);
 
-  let priorityColor = '';
+  let priorityColor = "";
   const countdownTime = countdowns[orderIndex];
-  const [hours, minutes, seconds] = countdownTime.split(':');
+  const [hours, minutes, seconds] = countdownTime.split(":");
   const totalSeconds =
     parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
 
   if (totalSeconds > 0) {
     if (totalSeconds <= 1800) {
-      priorityColor = 'bg-red text-white';
+      priorityColor = "bg-red text-white";
     } else if (totalSeconds <= 3600) {
-      priorityColor = 'bg-yellow text-white';
+      priorityColor = "bg-yellow text-white";
     }
   }
-  if (countdownTime === 'Over') priorityColor = 'bg-foreground text-white';
+  if (countdownTime === "Over") priorityColor = "bg-foreground text-white";
 
   return (
     <TableCell className="break-normal">
-      <Badge variant={"outline"} className={priorityColor}> {countdowns[orderIndex]}</Badge>
+      <Badge variant={"outline"} className={priorityColor}>
+        {" "}
+        {countdowns[orderIndex]}
+      </Badge>
     </TableCell>
   );
 };

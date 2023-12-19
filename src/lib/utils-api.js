@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import {formatDate, getCurrentAsiaDhakaTime} from "@/lib/utils"
+import { formatDate, getCurrentAsiaDhakaTime } from "@/lib/utils";
 
 export function calculateTimeDifference(deliveryDate, deliveryTime) {
   const is12HourFormat = /am|pm/i.test(deliveryTime);
@@ -27,7 +27,7 @@ export function calculateTimeDifference(deliveryDate, deliveryTime) {
     adjustedHours,
     minutes,
     0,
-    0
+    0,
   );
 
   const timeDifferenceMs = deliveryDateTime - asiaDhakaTime;
@@ -63,17 +63,17 @@ export function getDateRange() {
 }
 
 export function accessHeaders(req, headerNames) {
-    const headersList = headers(req);
+  const headersList = headers(req);
 
-    const headerValues = {};
-    headerNames.forEach((name) => {
-        headerValues[name] = headersList.get(name);
-    });
+  const headerValues = {};
+  headerNames.forEach((name) => {
+    headerValues[name] = headersList.get(name);
+  });
 
-    return headerValues;
+  return headerValues;
 }
 
 export function prepareResponse(status, data) {
-    if (typeof data == "object") return { status, message: JSON.stringify(data) }
-    else return { status, message: data }
+  if (typeof data == "object") return { status, message: JSON.stringify(data) };
+  else return { status, message: data };
 }

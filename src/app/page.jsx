@@ -3,7 +3,7 @@ import Navbar from "@/components/navbar/Navbar";
 import SessionProvider from "@/components/SessionProvider";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { headers } from "next/headers"
+import { headers } from "next/headers";
 
 import { toast } from "sonner";
 
@@ -22,7 +22,7 @@ const getAllOrdersRedo = async () => {
     {
       method: "GET",
       headers: headers(),
-    }
+    },
   );
 
   if (!res.ok) {
@@ -38,7 +38,7 @@ const getAllOrdersUnfinished = async () => {
     {
       method: "GET",
       headers: headers(),
-    }
+    },
   );
 
   if (!res.ok) {
@@ -52,7 +52,6 @@ export default async function Page({ params, searchParams }) {
   const session = await getServerSession(authOptions);
   let orders = await getAllOrdersUnfinished();
   let ordersRedo = await getAllOrdersRedo();
-
 
   return (
     <>
@@ -85,7 +84,9 @@ export default async function Page({ params, searchParams }) {
                     <TableCell className="break-normal">
                       {order.client_code}
                     </TableCell>
-                    <TableCell className="break-normal">{order.folder}</TableCell>
+                    <TableCell className="break-normal">
+                      {order.folder}
+                    </TableCell>
                     <TableCell className="break-normal">
                       {order.quantity}
                     </TableCell>
@@ -103,19 +104,22 @@ export default async function Page({ params, searchParams }) {
                       {order.production}
                     </TableCell>
                     <TableCell className="break-normal">{order.qc1}</TableCell>
-                    <TableCell className="break-normal">{order.comment}</TableCell>
+                    <TableCell className="break-normal">
+                      {order.comment}
+                    </TableCell>
                     <TableCell className="break-normal">{order.type}</TableCell>
-                    <TableCell className="break-normal">{order.status}</TableCell>
+                    <TableCell className="break-normal">
+                      {order.status}
+                    </TableCell>
                   </TableRow>
                 );
               })}
           </TableBody>
         </Table>
-      </div >
+      </div>
 
       <div className="overflow-x-auto my-2">
         <h5 className="text-center py-4">Running Task List</h5>
-
 
         <Table className="py-3">
           <TableHeader>
@@ -145,7 +149,9 @@ export default async function Page({ params, searchParams }) {
                     <TableCell className="break-normal">
                       {order.client_code}
                     </TableCell>
-                    <TableCell className="break-normal">{order.folder}</TableCell>
+                    <TableCell className="break-normal">
+                      {order.folder}
+                    </TableCell>
                     <TableCell className="break-normal">
                       {order.quantity}
                     </TableCell>
@@ -157,16 +163,23 @@ export default async function Page({ params, searchParams }) {
                       <span className="text-body-secondary"> | </span>
                       {order.delivery_bd_time}
                     </TableCell>
-                      <OrderTimeRemaining initialOrders={orders} orderIndex={index} />
+                    <OrderTimeRemaining
+                      initialOrders={orders}
+                      orderIndex={index}
+                    />
                     <TableCell className="break-normal">{order.task}</TableCell>
                     <TableCell className="break-normal">{order.et}</TableCell>
                     <TableCell className="break-normal">
                       {order.production}
                     </TableCell>
                     <TableCell className="break-normal">{order.qc1}</TableCell>
-                    <TableCell className="break-normal">{order.comment}</TableCell>
+                    <TableCell className="break-normal">
+                      {order.comment}
+                    </TableCell>
                     <TableCell className="break-normal">{order.type}</TableCell>
-                    <TableCell className="break-normal">{order.status}</TableCell>
+                    <TableCell className="break-normal">
+                      {order.status}
+                    </TableCell>
                   </TableRow>
                 );
               })}

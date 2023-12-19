@@ -1,5 +1,4 @@
-"use client"
-
+"use client";
 
 import React from "react";
 import Moment from "react-moment";
@@ -11,7 +10,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 import styles from "./Navbar.module.css";
 
@@ -19,7 +18,9 @@ const TimeCard = ({ city }) => {
   return (
     <>
       <Card className={`rounded-none ${styles.customcard}`}>
-        <CardHeader className={`fw-light text-white bg-foreground text-background px-2 py-0 text-center  ${styles.customcardheader}`}>
+        <CardHeader
+          className={`fw-light text-white bg-foreground text-background px-2 py-0 text-center  ${styles.customcardheader}`}
+        >
           {city
             .split("/")[1]
             .replace("_", " ")

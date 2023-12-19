@@ -2,9 +2,14 @@ import Order from "@/db/Orders";
 import Client from "@/db/Clients";
 import dbConnect from "@/lib/dbConnect";
 
-import { ddMmYyyyToIsoDate } from "@/lib/utils"
-import {prepareResponse, accessHeaders, getDatesInRange, getDateRange, calculateTimeDifference } from "@/lib/utils-api"
-
+import { ddMmYyyyToIsoDate } from "@/lib/utils";
+import {
+  prepareResponse,
+  accessHeaders,
+  getDatesInRange,
+  getDateRange,
+  calculateTimeDifference,
+} from "@/lib/utils-api";
 
 async function handleNewOrder(req) {
   try {
@@ -14,17 +19,16 @@ async function handleNewOrder(req) {
     if (orderData) {
       return prepareResponse(200, orderData);
     } else {
-      return prepareResponse(400, "UNABLE TO CREATE NEW ORDER")
+      return prepareResponse(400, "UNABLE TO CREATE NEW ORDER");
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleGetOrdersUnfinished(req) {
   try {
-
     const ordersData = await Order.find({
       status: { $nin: ["Finished", "Correction"] },
       type: { $ne: "Test" },
@@ -41,14 +45,13 @@ async function handleGetOrdersUnfinished(req) {
         }))
         .sort((a, b) => a.timeDifference - b.timeDifference);
 
-      return prepareResponse(200, sortedOrdersDataByTimeRemaining)
-    }
-    else {
-      return prepareResponse(200, [])
+      return prepareResponse(200, sortedOrdersDataByTimeRemaining);
+    } else {
+      return prepareResponse(200, []);
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
@@ -60,14 +63,13 @@ async function handleGetOrdersRedo(req) {
     }).lean();
 
     if (ordersData) {
-      return prepareResponse(200, ordersData)
-    }
-    else {
-      return prepareResponse(200, [])
+      return prepareResponse(200, ordersData);
+    } else {
+      return prepareResponse(200, []);
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
@@ -140,22 +142,30 @@ async function handleGetAllOrders(req) {
         pageCount,
       },
       items: ordersData,
-    })
-
+    });
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleGetOrdersByFilter(req) {
   try {
-    const { fromtime, totime, folder, clientcode, task, type, status } = accessHeaders(req, ["fromtime", "totime", "folder", "clientcode", "task", "type", "status"]);
+    const { fromtime, totime, folder, clientcode, task, type, status } =
+      accessHeaders(req, [
+        "fromtime",
+        "totime",
+        "folder",
+        "clientcode",
+        "task",
+        "type",
+        "status",
+      ]);
     const page = accessHeaders(req, ["page"]) || 1;
     const ITEMS_PER_PAGE = parseInt(accessHeaders(req, ["itemsperpage"])) || 50;
     const skip = (page - 1) * ITEMS_PER_PAGE;
 
-    const NOT_PAGINATED = accessHeaders(req, ["notpaginated"]) || false
+    const NOT_PAGINATED = accessHeaders(req, ["notpaginated"]) || false;
 
     let query = {};
     if (status) query.status = status;
@@ -177,9 +187,8 @@ async function handleGetOrdersByFilter(req) {
     }
 
     if (Object.keys(query).length === 0 && query.constructor === Object) {
-      return prepareResponse(400, "NO FILTER APPLIED")
-    }
-    else {
+      return prepareResponse(400, "NO FILTER APPLIED");
+    } else {
       let pipeline = [
         { $match: query },
         {
@@ -250,11 +259,11 @@ async function handleGetOrdersByFilter(req) {
           pageCount,
         },
         items: ordersData,
-      })
+      });
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
@@ -275,20 +284,20 @@ async function handleGetTimeRemainingForOrders(req) {
         }))
         .sort((a, b) => a.timeDifference - b.timeDifference);
 
-      return prepareResponse(200, sortedOrdersDataByTimeRemaining)
+      return prepareResponse(200, sortedOrdersDataByTimeRemaining);
     } else {
-      return prepareResponse(200, [])
+      return prepareResponse(200, []);
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleEditOrder(req) {
   try {
     let data = req.body;
-    const updated_by = accessHeaders(req, ["updatedby"])
+    const updated_by = accessHeaders(req, ["updatedby"]);
     data = { ...data, updated_by };
 
     const orderData = await Order.findByIdAndUpdate(data._id, data, {
@@ -296,102 +305,114 @@ async function handleEditOrder(req) {
     });
 
     if (orderData) {
-      return prepareResponse(200, orderData)
+      return prepareResponse(200, orderData);
     } else {
-      return prepareResponse(400, "UNABLE TO EDIT THE ORDER")
+      return prepareResponse(400, "UNABLE TO EDIT THE ORDER");
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleDeleteOrder(req) {
   try {
-    let { id } = req.body
+    let { id } = req.body;
 
     const orderData = await Order.findByIdAndDelete(id);
 
     if (orderData) {
-      return prepareResponse(200, orderData)
+      return prepareResponse(200, orderData);
     } else {
-      return prepareResponse(400, "UNABLE TO DELETE THE ORDER")
+      return prepareResponse(400, "UNABLE TO DELETE THE ORDER");
     }
-
   } catch (e) {
     console.error(e);
-    return prepareResponse(400, "AN ERROR OCCURED")
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleFinishOrder(req) {
   try {
     let { id } = req.body;
-    const updated_by = accessHeaders(req, ["updatedby"])
+    const updated_by = accessHeaders(req, ["updatedby"]);
 
-    const orderData = await Order.findByIdAndUpdate(id,
+    const orderData = await Order.findByIdAndUpdate(
+      id,
       { status: "Finished", updated_by },
       {
         new: true,
-      });
+      },
+    );
     if (orderData) {
-      return prepareResponse(200, orderData)
+      return prepareResponse(200, orderData);
     } else {
-      return prepareResponse(400, "UNABLE TO CHANGE THE ORDER STATUS TO FINISHED")
+      return prepareResponse(
+        400,
+        "UNABLE TO CHANGE THE ORDER STATUS TO FINISHED",
+      );
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleRedoOrder(req) {
   try {
     let { id } = req.body;
-    const updated_by = accessHeaders(req, ["updatedby"])
+    const updated_by = accessHeaders(req, ["updatedby"]);
 
-    const orderData = await Order.findByIdAndUpdate(id,
+    const orderData = await Order.findByIdAndUpdate(
+      id,
       { status: "Correction", updated_by },
       {
         new: true,
-      });
+      },
+    );
     if (orderData) {
-      return prepareResponse(200, orderData)
+      return prepareResponse(200, orderData);
     } else {
-      return prepareResponse(400, "UNABLE TO CHANGE THE ORDER STATUS TO CORRECTION")
+      return prepareResponse(
+        400,
+        "UNABLE TO CHANGE THE ORDER STATUS TO CORRECTION",
+      );
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleGetAllOrdersOfClient(req) {
   try {
-    const { clientcode } = accessHeaders(req, ["clientcode"])
+    const { clientcode } = accessHeaders(req, ["clientcode"]);
 
     const ordersData = await Order.find({ client_code: clientcode });
 
     if (ordersData) {
-      return prepareResponse(200, ordersData)
+      return prepareResponse(200, ordersData);
     } else {
-      return prepareResponse(200, [])
+      return prepareResponse(200, []);
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleGetOrdersByCountry(req) {
   try {
-    let { country, fromtime, totime } = accessHeaders(req, ["country", "fromtime", "totime"])
+    let { country, fromtime, totime } = accessHeaders(req, [
+      "country",
+      "fromtime",
+      "totime",
+    ]);
     let countriesList = ["Australia", "Denmark", "Finland", "Norway", "Sweden"];
 
     if (!country) {
-      return prepareResponse(400, "NO COUNTRY NAME PROVIDED")
+      return prepareResponse(400, "NO COUNTRY NAME PROVIDED");
     } else {
-
       let query = { type: { $ne: "Test" } };
 
       if (fromtime || totime) {
@@ -408,7 +429,7 @@ async function handleGetOrdersByCountry(req) {
 
       let countryFilter = country;
       if (country == "Others") countryFilter = { $nin: countriesList };
-  
+
       const clientsData = await Client.find(
         { country: countryFilter },
         { client_code: 1, country: 1 },
@@ -418,57 +439,64 @@ async function handleGetOrdersByCountry(req) {
         details: [],
         totalFiles: 0,
       };
-  
+
       clientsData.map((clientData) => {
         Order.find({ ...query, client_code: clientData.client_code })
           .lean()
           .then((ordersOfClient) => {
             if (ordersOfClient.length === 0) return;
-  
+
             ordersOfClient.forEach((data) => {
               returnData.details.push({ ...data, country: clientData.country });
               returnData.totalFiles += data.quantity;
             });
-          }).catch(e => {
-            console.error(e)
-            return;
           })
+          .catch((e) => {
+            console.error(e);
+            return;
+          });
       });
 
-      return prepareResponse(200, returnData)
+      return prepareResponse(200, returnData);
     }
   } catch (e) {
-    console.error(e)
-    return prepareResponse(400, "AN ERROR OCCURED")
+    console.error(e);
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
 
 async function handleGetOrderById(req) {
   try {
-    let { id } = accessHeaders(req, ["id"])
+    let { id } = accessHeaders(req, ["id"]);
     const orderData = await Order.findById(id).lean();
 
     if (orderData) {
-      return prepareResponse(200, orderData)
-    }
-    else {
-      return prepareResponse(400, "NO ORDER FOUND WITH THE ID")
+      return prepareResponse(200, orderData);
+    } else {
+      return prepareResponse(400, "NO ORDER FOUND WITH THE ID");
     }
   } catch (e) {
     console.error(e);
-    return prepareResponse(400, "AN ERROR OCCURED")
+    return prepareResponse(400, "AN ERROR OCCURED");
   }
 }
-
-
-
 
 async function handleGetOrdersByFilterForStatus(req) {
   try {
     const { fromtime, totime } = accessHeaders(req, ["fromtime", "totime"]);
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
 
     const fromStatus = getDateRange().from;
@@ -498,9 +526,10 @@ async function handleGetOrdersByFilterForStatus(req) {
 
     const mergeOrdersByDate = (orders) => {
       return orders.reduce((merged, order) => {
-        const date = order.createdAt instanceof Date
-          ? order.createdAt.toISOString().split("T")[0]
-          : order.createdAt.split("T")[0];
+        const date =
+          order.createdAt instanceof Date
+            ? order.createdAt.toISOString().split("T")[0]
+            : order.createdAt.split("T")[0];
         const [year, month, day] = date.split("-");
         const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
@@ -530,7 +559,14 @@ async function handleGetOrdersByFilterForStatus(req) {
     const mergedOrdersStatus = mergeOrdersByDate(ordersForStatus);
 
     const initializeOrdersObject = () => {
-      const countries = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden', 'Others'];
+      const countries = [
+        "Australia",
+        "Denmark",
+        "Finland",
+        "Norway",
+        "Sweden",
+        "Others",
+      ];
       return countries.reduce((obj, country) => {
         obj[country] = [];
         return obj;
@@ -551,14 +587,19 @@ async function handleGetOrdersByFilterForStatus(req) {
     const clientsAll = await Client.find({}, { client_code: 1, country: 1 });
 
     const orderPromises = clientsAll.map(async (clientData) =>
-      Order.find({ ...query, client_code: clientData.client_code }, { createdAt: 1, quantity: 1 })
+      Order.find(
+        { ...query, client_code: clientData.client_code },
+        { createdAt: 1, quantity: 1 },
+      ),
     );
 
     const ordersAll = await Promise.all(orderPromises);
 
     ordersAll.forEach((clientOrders, index) => {
       const clientData = clientsAll[index];
-      const country = ordersDetails[clientData.country] ? clientData.country : "Others";
+      const country = ordersDetails[clientData.country]
+        ? clientData.country
+        : "Others";
       if (!ordersDetails[country]) {
         ordersDetails[country] = [];
       }
@@ -573,9 +614,10 @@ async function handleGetOrdersByFilterForStatus(req) {
 
     for (const [countryName, ordersArr] of Object.entries(ordersDetails)) {
       const sortedDates = ordersArr.reduce((merged, order) => {
-        const date = order.createdAt instanceof Date
-          ? order.createdAt.toISOString().split("T")[0]
-          : order.createdAt.split("T")[0];
+        const date =
+          order.createdAt instanceof Date
+            ? order.createdAt.toISOString().split("T")[0]
+            : order.createdAt.split("T")[0];
         const [year, month, day] = date.split("-");
         const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
@@ -608,10 +650,12 @@ async function handleGetOrdersByFilterForStatus(req) {
       return `${monthNames[month - 1]} ${day}`;
     });
 
-    const dateRangeForStatus = getDatesInRange(fromStatus, toStatus).map((date) => {
-      const [year, month, day] = date.split("-");
-      return `${monthNames[month - 1]} ${day}`;
-    });
+    const dateRangeForStatus = getDatesInRange(fromStatus, toStatus).map(
+      (date) => {
+        const [year, month, day] = date.split("-");
+        return `${monthNames[month - 1]} ${day}`;
+      },
+    );
 
     const ordersQP = Object.values(mergedOrders);
     const ordersStatus = Object.values(mergedOrdersStatus);
@@ -654,105 +698,94 @@ async function handleGetOrdersByFilterForStatus(req) {
   }
 }
 
-
-
-
-
-
 export async function GET(req, { params }) {
-
-  const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
+  const reqType = params?.reqType; // access the request type from the link /api/user/<reqType>
   dbConnect();
-  let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
+  let res = { status: 500, message: "NO RESPONSE FROM SERVER" };
 
   switch (reqType) {
     case "getallorders":
-      res = await handleGetAllOrders(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetAllOrders(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "gettimeremainingfororders":
-      res = await handleGetTimeRemainingForOrders(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetTimeRemainingForOrders(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getordersbyfilter":
-      res = await handleGetOrdersByFilter(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetOrdersByFilter(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getordersunfinished":
-      res = await handleGetOrdersUnfinished(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetOrdersUnfinished(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getordersredo":
-      res = await handleGetOrdersRedo(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetOrdersRedo(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getallordersofclient":
-      res = await handleGetAllOrdersOfClient(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetAllOrdersOfClient(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getordersbyfilterforstatus":
-      res = await handleGetOrdersByFilterForStatus(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetOrdersByFilterForStatus(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getordersbycountry":
-      res = await handleGetOrdersByCountry(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetOrdersByCountry(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "getorderbyid":
-      res = await handleGetOrderById(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleGetOrderById(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     default:
-      return new Response("UNKNOWN GET REQUEST", { status: 400 })
+      return new Response("UNKNOWN GET REQUEST", { status: 400 });
   }
 }
 
-
 export async function POST(req, { params }) {
-
-  const reqType = params?.reqType // access the request type from the link /api/user/<reqType>
-  await dbConnect()
-  let res = { status: 500, message: "NO RESPONSE FROM SERVER" }
+  const reqType = params?.reqType; // access the request type from the link /api/user/<reqType>
+  await dbConnect();
+  let res = { status: 500, message: "NO RESPONSE FROM SERVER" };
 
   switch (reqType) {
-
     case "deleteorder":
-      res = await handleDeleteOrder(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleDeleteOrder(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "redoorder":
-      res = await handleRedoOrder(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleRedoOrder(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "finishorder":
-      res = await handleFinishOrder(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleFinishOrder(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "editorder":
-      res = await handleEditOrder(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleEditOrder(req);
+      return new Response(res.message, { status: res.status });
       break;
 
     case "neworder":
-      res = await handleNewOrder(req)
-      return new Response(res.message, { status: res.status })
+      res = await handleNewOrder(req);
+      return new Response(res.message, { status: res.status });
       break;
-  
+
     default:
-      return new Response("UNKNOWN POST REQUEST", { status: 400 })
+      return new Response("UNKNOWN POST REQUEST", { status: 400 });
   }
 }
-
-

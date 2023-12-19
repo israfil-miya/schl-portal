@@ -40,7 +40,7 @@ async function handleNewUser(req) {
       {
         new: true,
         upsert: true,
-      }
+      },
     );
 
     if (userData) {

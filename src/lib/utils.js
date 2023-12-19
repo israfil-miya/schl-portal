@@ -1,9 +1,8 @@
-import { clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
- 
 export function cn(...inputs) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function ddMmYyyyToIsoDate(ddMmYyyy) {
@@ -43,12 +42,12 @@ export function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${day}-${month}-${year}`;
-};
+}
 
 export function getCurrentAsiaDhakaTime() {
   const now = new Date();
   const asiaDhakaTime = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" })
+    now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
   );
   return asiaDhakaTime;
 }

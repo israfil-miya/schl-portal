@@ -1,52 +1,52 @@
 .nav {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-  }
-  
-  .navitem {
-    font-size: 15px;
-    font-weight: 600;
-    text-transform: uppercase;
-    text-align: center;
-    text-decoration: none;
-    color: white;
-    padding: 10px;
-    transition: background-color 0.3s ease;
-    margin-right: 10px;
-  }
-  
-  .navitem:hover {
-    color: rgba(255, 255, 255, 0.9);
-    cursor: pointer;
-  }
-  
-  .navitem:last-child {
-    margin-right: 0;
-  }
-  
-  .active {
-    background-color: #7aa63e;
-  }
-  
-  .dropitem {
-    color: white;
-  }
-  .dropitem:hover {
-    background-color: #7aa63e;
-    color: white;
-  }
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
 
-  .customcard {
-    overflow: hidden;
-    word-wrap: break-word;
-    word-break: normal;
-    hyphens: auto;
-    border-radius: 0 0 20px 0;
-  }
+.navitem {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  padding: 10px;
+  transition: background-color 0.3s ease;
+  margin-right: 10px;
+}
 
-  .customcardheader {
-    font-size: 14px;
-    border-radius: 5px 0 0 0;
-  }
+.navitem:hover {
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.navitem:last-child {
+  margin-right: 0;
+}
+
+.active {
+  background-color: #7aa63e;
+}
+
+.dropitem {
+  color: white;
+}
+.dropitem:hover {
+  background-color: #7aa63e;
+  color: white;
+}
+
+.customcard {
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+  border-radius: 0 0 20px 0;
+}
+
+.customcardheader {
+  font-size: 14px;
+  border-radius: 5px 0 0 0;
+}

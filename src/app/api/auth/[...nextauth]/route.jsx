@@ -19,12 +19,14 @@ export const authOptions = {
               name,
               password,
             },
-          }
+          },
         );
 
-        console.log(res);
+        console.log("BEFORE: ", res);
 
         const user = await res.json();
+
+        console.log("AFTER: ", user);
 
         if (user && !user.error) {
           /*
