@@ -61,15 +61,6 @@ h6 {
   }
 }
 
-@layer utilities {
-  .bg-background {
-    background-color: hsl(var(--background));
-  }
-  .text-foreground {
-    color: hsl(var(--foreground));
-  }
-}
-
 @layer base {
   body {
     @apply bg-background text-foreground;

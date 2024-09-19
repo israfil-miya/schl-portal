@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 const NotFound = () => {
   const router = useRouter();
@@ -22,7 +22,7 @@ const NotFound = () => {
             Go back
           </button>
           <button
-            className="bg-primary rounded-md hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-4 py-2"
+            className="bg-primary text-white rounded-md hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-4 py-2"
             onClick={() => router.replace('/')}
           >
             Go home
