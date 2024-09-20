@@ -1,15 +1,15 @@
 'use client';
 
+import 'moment-timezone';
 import React from 'react';
 import Moment from 'react-moment';
-import 'moment-timezone';
 
 interface propsType {
   timezones: string[];
   className?: string | undefined;
 }
 
-const Timecards: React.FC<propsType> = (props) => {
+const Timecards: React.FC<propsType> = props => {
   return (
     <>
       <div suppressHydrationWarning>

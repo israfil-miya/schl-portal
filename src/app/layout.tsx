@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { Toaster } from 'sonner';
-import { Karla, Lato } from 'next/font/google';
+import { auth } from '@/auth';
+import Header from '@/components/Header';
 import cn from '@/utility/cn';
+import type { Metadata } from 'next';
+import { SessionProvider } from 'next-auth/react';
+import { Karla, Lato } from 'next/font/google';
+import { Toaster } from 'sonner';
+import './globals.css';
 
 // Initialize the fonts
 const karla = Karla({ subsets: ['latin'], weight: ['400', '700'] });
@@ -14,11 +17,13 @@ export const metadata: Metadata = {
     'Studio Click House is also known as the House of Graphics Designer started their journey in the Image Editing Industry from 2015. The motto of the Studio Click House is to provide quality images editing services at a reasonable cost. We are from Studio Click House always motivated about the work we do for our clients. We take challenges from our clients to full-fill their requirements. Our goal is to help our clients through our services. Studio Click House providing services like Clipping path, Multiple clipping path, Image masking, Image cut out, Remove background, Photo retouching, Neck joint/Ghost mannequin, Drop shadow, Color correction, E-commerce image editing, 360-degree image editing, Products image editing, etc. Mostly we work with Online shops, Brands, Photographers, Graphic designers, Photo studio, Photo agency Worldwide. Our image processing is a full-service post-production studio based in Bangladesh. Currently, we have 150+ experienced Graphic designers who are operating 24/7, 365 days. To meet the deadline we even work on a holiday like Christmas, New Year or any other festivals.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -28,9 +33,12 @@ export default function RootLayout({
           lato.className,
         )}
       >
-        <noscript>You need to enable JavaScript to run this app.</noscript>
-        <main>{children}</main>
-        <Toaster pauseWhenPageIsHidden richColors position="top-right" />
+        <SessionProvider session={session}>
+          <Header />
+          <noscript>You need to enable JavaScript to run this app.</noscript>
+          <main>{children}</main>
+          <Toaster pauseWhenPageIsHidden richColors position="top-right" />
+        </SessionProvider>
       </body>
     </html>
   );
