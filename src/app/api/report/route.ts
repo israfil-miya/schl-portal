@@ -1,20 +1,9 @@
-import { auth } from '@/auth';
-import Approval from '@/models/Approvals';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
 import dbConnect from '@/utility/dbConnect';
 import getQuery from '@/utility/getApiQuery';
-import getTodayDate from '@/utility/getTodayDate';
-import {
-  addBooleanField,
-  addIfDefined,
-  addRegexField,
-  createRegexQuery,
-  Query,
-  RegexQuery,
-} from '@/utility/reportsFilterHelpers';
+
 import moment from 'moment-timezone';
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 dbConnect();
 

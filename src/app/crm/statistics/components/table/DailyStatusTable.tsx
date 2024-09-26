@@ -8,10 +8,12 @@ import { toast } from 'sonner';
 import FilterButton from './Filter';
 
 interface ReportsStatusState {
-  totalCalls: number;
-  totalTests: number;
-  totalLeads: number;
-  totalProspects: number;
+  [key: string]: {
+    totalCalls: number;
+    totalLeads: number;
+    totalTests: number;
+    totalProspects: number;
+  };
 }
 
 const countDays = (startDate: string, endDate: string): number => {
@@ -35,12 +37,7 @@ const DailyStatusTable = () => {
   const callsTargetConst = 60;
   const leadsTargetConst = 10;
 
-  const [reportsStatus, setReportsStatus] = useState<ReportsStatusState>({
-    totalCalls: 0,
-    totalTests: 0,
-    totalLeads: 0,
-    totalProspects: 0,
-  });
+  const [reportsStatus, setReportsStatus] = useState<ReportsStatusState>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { data: session } = useSession();
 
@@ -110,10 +107,11 @@ const DailyStatusTable = () => {
         />
       </div>
 
-      <div className="table-responsive text-center text-nowrap text-lg px-2 mt-1">
+      <div className="table-responsive text-center text-lg px-2 mt-1">
         <table className="table table-bordered border">
           <thead>
             <tr className="bg-gray-50">
+              <th className="w-8">Marketer</th>
               <th>Calls</th>
               <th>Tests</th>
               <th>Prospects</th>
@@ -122,35 +120,135 @@ const DailyStatusTable = () => {
           </thead>
           <tbody>
             {!isLoading ? (
-              <tr>
-                <td
-                  className={
-                    reportsStatus.totalCalls < callsTarget
-                      ? 'text-destructive'
-                      : 'text-green-400'
-                  }
-                >
-                  {reportsStatus.totalCalls}
-                  {reportsStatus.totalCalls < callsTarget &&
-                    ` (${callsTarget - reportsStatus.totalCalls})`}
-                </td>
-                <td>{reportsStatus.totalTests}</td>
-                <td>{reportsStatus.totalProspects}</td>
-                <td
-                  className={
-                    reportsStatus.totalLeads < leadsTarget
-                      ? 'text-destructive'
-                      : 'text-green-400'
-                  }
-                >
-                  {reportsStatus.totalLeads}
-                  {reportsStatus.totalLeads < leadsTarget &&
-                    ` (${leadsTarget - reportsStatus.totalLeads})`}
-                </td>
-              </tr>
+              <>
+                {Object.keys(reportsStatus).map((key, index) => {
+                  return (
+                    <tr key={key}>
+                      <td
+                        className={`${
+                          callsTarget - reportsStatus[key].totalCalls <= 0 &&
+                          leadsTarget - reportsStatus[key].totalLeads <= 0
+                            ? 'bg-green-500'
+                            : 'bg-red-500'
+                        } w-8 text-wrap lg:text-nowrap text-left text-white ps-3`}
+                      >
+                        {index + 1}. {key}
+                      </td>
+                      <td
+                        className={
+                          reportsStatus[key].totalCalls < callsTarget
+                            ? 'text-destructive'
+                            : 'text-green-400'
+                        }
+                      >
+                        {reportsStatus[key].totalCalls}
+                        {reportsStatus[key].totalCalls < callsTarget &&
+                          ` (${callsTarget - reportsStatus[key].totalCalls})`}
+                      </td>
+                      <td>{reportsStatus[key].totalTests}</td>
+                      <td>{reportsStatus[key].totalProspects}</td>
+                      <td
+                        className={
+                          reportsStatus[key].totalLeads < leadsTarget
+                            ? 'text-destructive'
+                            : 'text-green-400'
+                        }
+                      >
+                        {reportsStatus[key].totalLeads}
+                        {reportsStatus[key].totalLeads < leadsTarget &&
+                          ` (${leadsTarget - reportsStatus[key].totalLeads})`}
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr className="bg-gray-50">
+                  {/* Calculate the total values for all marketers */}
+                  <td className="text-center text-bold">Total</td>
+
+                  <td className="text-bold">
+                    {/* Calculate capped total calls made */}
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) =>
+                        acc +
+                        (curr.totalCalls > callsTarget
+                          ? callsTarget
+                          : curr.totalCalls),
+                      0,
+                    )}
+
+                    {/* Show remaining total calls if below target */}
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) =>
+                        acc +
+                        (curr.totalCalls > callsTarget
+                          ? callsTarget
+                          : curr.totalCalls),
+                      0,
+                    ) <
+                      callsTarget * Object.keys(reportsStatus).length &&
+                      ` (${
+                        callsTarget * Object.keys(reportsStatus).length -
+                        Object.values(reportsStatus).reduce(
+                          (acc, curr) =>
+                            acc +
+                            (curr.totalCalls > callsTarget
+                              ? callsTarget
+                              : curr.totalCalls),
+                          0,
+                        )
+                      })`}
+                  </td>
+
+                  <td className="text-bold">
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) => acc + curr.totalTests,
+                      0,
+                    )}
+                  </td>
+                  <td className="text-bold">
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) => acc + curr.totalProspects,
+                      0,
+                    )}
+                  </td>
+                  <td className="text-bold">
+                    {/* Calculate capped total calls made */}
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) =>
+                        acc +
+                        (curr.totalLeads > leadsTarget
+                          ? leadsTarget
+                          : curr.totalLeads),
+                      0,
+                    )}
+
+                    {/* Show remaining total calls if below target */}
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) =>
+                        acc +
+                        (curr.totalLeads > leadsTarget
+                          ? leadsTarget
+                          : curr.totalLeads),
+                      0,
+                    ) <
+                      leadsTarget * Object.keys(reportsStatus).length &&
+                      ` (${
+                        leadsTarget * Object.keys(reportsStatus).length -
+                        Object.values(reportsStatus).reduce(
+                          (acc, curr) =>
+                            acc +
+                            (curr.totalLeads > leadsTarget
+                              ? leadsTarget
+                              : curr.totalLeads),
+                          0,
+                        )
+                      })`}
+                  </td>
+                </tr>
+              </>
             ) : (
               <tr key={0}>
-                <td colSpan={4} className="align-center text-center">
+                <td colSpan={5} className="align-center text-center">
                   Loading...
                 </td>
               </tr>
