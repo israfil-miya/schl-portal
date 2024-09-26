@@ -15,7 +15,7 @@ const Cards = () => {
         title="Trial Clients"
         description="Clients that placed test orders but haven't converted to regular customers."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/trial-clients')
+          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/trial-clients')
         }
         icon={
           <svg
@@ -33,7 +33,7 @@ const Cards = () => {
         title="Pending Prospects"
         description="Prospects contacted over 2 months ago who haven't converted to regular customers and didn't give any test."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/stale-clients')
+          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/potential-leads')
         }
         icon={
           <svg
@@ -52,7 +52,7 @@ const Cards = () => {
         title="Potential Leads"
         description="Leads with high conversion potential."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/ideal-prospects')
+          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/ideal-prospects')
         }
         icon={
           <svg
@@ -70,7 +70,7 @@ const Cards = () => {
         title="Regular Clients"
         description="Clients that consistently place orders."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/regular-clients')
+          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/regular-clients')
         }
         icon={
           <svg

@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
-import dbConnect from '@/utility/dbConnect';
-dbConnect();
 import User from '@/models/Users';
+import dbConnect from '@/utility/dbConnect';
 import getQuery from '@/utility/getApiQuery';
+import { NextResponse } from 'next/server';
+dbConnect();
 
 async function handleLogin(req: Request): Promise<{
   data: string | Object;
@@ -12,20 +12,18 @@ async function handleLogin(req: Request): Promise<{
   const password = req.headers.get('password')?.trim();
 
   try {
-    const userData = await User.findOne({name: username, password: password});
-
-    // console.log(userData, username, password);
-    // return { data: 'Invalid username or password', status: 400 };
-    
+    const userData = await User.findOne({ name: username, password: password });
 
     if (userData) {
-      console.log("User Data 1", userData, username, password);
       if (userData.role === 'marketer') {
-        return { data: 'You are not authorized to login here, You may login at https://marketers.studioclickhouse.com/', status: 400 };
+        return {
+          data: 'You are not authorized to login here, You may login at https://marketers.studioclickhouse.com/',
+          status: 400,
+        };
       }
       return { data: userData, status: 200 };
     } else {
-      console.log("User Data 2", userData, username, password);
+      console.log('User Data 2', userData, username, password);
       return { data: 'Invalid username or password', status: 400 };
     }
   } catch (e) {

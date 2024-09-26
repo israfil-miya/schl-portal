@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import ReportsCountGraph from './ReportsCountGraph';
-import ClientsOnboardGraph from './ClientsOnboardGraph';
-import TestOrdersTrendGraph from './TestOrdersTrendGraph';
-import fetchData from '@/utility/fetchdata';
-import { toast } from 'sonner';
+import fetchData from '@/utility/fetchData';
 import { useSession } from 'next-auth/react';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import ClientsOnboardGraph from './ClientsOnboardGraph';
+import ReportsCountGraph from './ReportsCountGraph';
+import TestOrdersTrendGraph from './TestOrdersTrendGraph';
 
 const Graphs = () => {
   const { data: session } = useSession();
@@ -22,7 +22,7 @@ const Graphs = () => {
 
   async function getReportsCount() {
     try {
-      setIsLoading((prevData) => ({ ...prevData, reportsCount: true }));
+      setIsLoading(prevData => ({ ...prevData, reportsCount: true }));
 
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL +
@@ -30,7 +30,6 @@ const Graphs = () => {
       let options: {} = {
         method: 'GET',
         headers: {
-          name: session?.user.provided_name,
           'Content-Type': 'application/json',
         },
       };
@@ -46,13 +45,13 @@ const Graphs = () => {
       console.error(error);
       toast.error('An error occurred while retrieving reports count data');
     } finally {
-      setIsLoading((prevData) => ({ ...prevData, reportsCount: false }));
+      setIsLoading(prevData => ({ ...prevData, reportsCount: false }));
     }
   }
 
   async function getClientsOnboard() {
     try {
-      setIsLoading((prevData) => ({
+      setIsLoading(prevData => ({
         ...prevData,
         clientsOnboard: true,
       }));
@@ -63,7 +62,6 @@ const Graphs = () => {
       let options: {} = {
         method: 'GET',
         headers: {
-          name: session?.user.provided_name,
           'Content-Type': 'application/json',
         },
       };
@@ -79,7 +77,7 @@ const Graphs = () => {
       console.error(error);
       toast.error('An error occurred while retrieving clients onboard data');
     } finally {
-      setIsLoading((prevData) => ({
+      setIsLoading(prevData => ({
         ...prevData,
         clientsOnboard: false,
       }));
@@ -88,7 +86,7 @@ const Graphs = () => {
 
   async function getTestOrdersTrend() {
     try {
-      setIsLoading((prevData) => ({
+      setIsLoading(prevData => ({
         ...prevData,
         testOrdersTrend: true,
       }));
@@ -99,7 +97,6 @@ const Graphs = () => {
       let options: {} = {
         method: 'GET',
         headers: {
-          name: session?.user.provided_name,
           'Content-Type': 'application/json',
         },
       };
@@ -115,7 +112,7 @@ const Graphs = () => {
       console.error(error);
       toast.error('An error occurred while retrieving test orders trend data');
     } finally {
-      setIsLoading((prevData) => ({
+      setIsLoading(prevData => ({
         ...prevData,
         testOrdersTrend: false,
       }));
