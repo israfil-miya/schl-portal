@@ -1,13 +1,10 @@
 'use client';
-import fetchData from '@/utility/fetchData';
-import getTodayDate from '@/utility/getTodayDate';
-import moment from 'moment-timezone';
-import { useSession } from 'next-auth/react';
+
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import FilterButton from './Filter';
 
-interface ReportsStatusState {
+export interface ReportsStatusState {
   [key: string]: {
     totalCalls: number;
     totalLeads: number;
@@ -16,93 +13,29 @@ interface ReportsStatusState {
   };
 }
 
-const countDays = (startDate: string, endDate: string): number => {
-  // Parse the input dates using moment
-  const start = moment.tz(startDate, 'YYYY-MM-DD', 'Asia/Dhaka');
-  const end = moment.tz(endDate, 'YYYY-MM-DD', 'Asia/Dhaka');
-
-  // Calculate the difference in days
-  const dayDifference = end.diff(start, 'days');
-
-  // If dates are equal, return 1
-  if (dayDifference === 0) {
-    return 1;
-  }
-
-  // Return the absolute value to ensure the difference is positive
-  return Math.abs(dayDifference) + 1;
-};
+export const callsTargetConst = 60;
+export const leadsTargetConst = 10;
 
 const DailyStatusTable = () => {
-  const callsTargetConst = 60;
-  const leadsTargetConst = 10;
-
   const [reportsStatus, setReportsStatus] = useState<ReportsStatusState>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { data: session } = useSession();
-
-  const [filters, setFilters] = useState({
-    fromDate: getTodayDate(),
-    toDate: getTodayDate(),
-  });
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [callsTarget, setCallsTarget] = useState<number>(callsTargetConst);
   const [leadsTarget, setLeadsTarget] = useState<number>(leadsTargetConst);
 
-  async function getReportsStatus() {
-    try {
-      setIsLoading(true);
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/report?action=get-reports-status';
-      let options: {} = {
-        method: 'POST',
-        body: JSON.stringify(filters),
-        headers: {
-          name: session?.user.real_name,
-          'Content-Type': 'application/json',
-        },
-      };
-
-      let response = await fetchData(url, options);
-
-      if (response.ok) {
-        setReportsStatus(response.data);
-        setCallsTarget(
-          callsTargetConst * countDays(filters.fromDate, filters.toDate),
-        );
-        setLeadsTarget(
-          leadsTargetConst * countDays(filters.fromDate, filters.toDate),
-        );
-      } else {
-        toast.error(response.data);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving daily reports status');
-    } finally {
-      setIsLoading(false);
-      console.log(callsTarget, leadsTarget);
-    }
-  }
-
-  useEffect(() => {
-    getReportsStatus();
-  }, []);
-
   return (
-    <div className="mt-6">
+    <>
       <div className="flex flex-col sm:flex-row justify-center gap-1 mb-2 sm:gap-4 sm:mb-0 items-center px-2">
-        <p className="font-mono inline-block text-destructive font-extrabold text-md sm:text-lg md:text-xl text-center uppercase">
+        <p className="font-mono inline-block text-destructive font-extrabold text-lg sm:text-xl md:text-2xl text-center uppercase">
           <span className="underline">DAILY TARGET:</span> {callsTargetConst}{' '}
           CALLS (20 NORMAL, 40 RECALL), {leadsTargetConst} LEADS, 10 TESTS/MONTH
         </p>
         <FilterButton
-          isLoading={isLoading}
-          submitHandler={getReportsStatus}
-          setFilters={setFilters}
-          filters={filters}
+          loading={loading}
+          setLoading={setLoading}
+          setReportsStatus={setReportsStatus}
+          setCallsTarget={setCallsTarget}
+          setLeadsTarget={setLeadsTarget}
           className="w-full justify-between sm:w-auto"
         />
       </div>
@@ -111,7 +44,7 @@ const DailyStatusTable = () => {
         <table className="table table-bordered border">
           <thead>
             <tr className="bg-gray-50">
-              <th className="w-8">Marketer</th>
+              <th className="sm:max-w-8">Marketer</th>
               <th>Calls</th>
               <th>Tests</th>
               <th>Prospects</th>
@@ -119,7 +52,7 @@ const DailyStatusTable = () => {
             </tr>
           </thead>
           <tbody>
-            {!isLoading ? (
+            {!loading ? (
               <>
                 {Object.keys(reportsStatus).map((key, index) => {
                   return (
@@ -130,7 +63,7 @@ const DailyStatusTable = () => {
                           leadsTarget - reportsStatus[key].totalLeads <= 0
                             ? 'bg-green-500'
                             : 'bg-red-500'
-                        } w-8 text-wrap lg:text-nowrap text-left text-white ps-3`}
+                        } sm:max-w-8 text-wrap lg:text-nowrap text-left text-white ps-3`}
                       >
                         {index + 1}. {key}
                       </td>
@@ -256,7 +189,7 @@ const DailyStatusTable = () => {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   );
 };
 

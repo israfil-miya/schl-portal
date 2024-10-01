@@ -1,3 +1,4 @@
+import Employee, { EmployeeDataType } from '@/models/Employees';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
 import dbConnect from '@/utility/dbConnect';
@@ -21,12 +22,13 @@ async function handleGetTestOrdersTrend(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const now = moment.tz('Asia/Dhaka');
+    const now = moment().tz('Asia/Dhaka');
     const startDate = now
       .clone()
       .subtract(12, 'months')
       .startOf('month')
       .toDate();
+
     const endDate = now.clone().endOf('month').toDate();
 
     interface ReportCount {
@@ -88,7 +90,7 @@ async function handleGetReportsCount(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const now = moment.tz('Asia/Dhaka');
+    const now = moment().tz('Asia/Dhaka');
     const startDate = now
       .clone()
       .subtract(12, 'months')
@@ -166,7 +168,7 @@ async function handleGetClientsOnboard(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const now = moment.tz('Asia/Dhaka');
+    const now = moment().tz('Asia/Dhaka');
     const startDate = now
       .clone()
       .subtract(12, 'months')
@@ -329,6 +331,22 @@ async function handleGetReportsStatus(req: Request): Promise<{
   }
 }
 
+async function handleGetAllMarketers(req: Request): Promise<{
+  data: EmployeeDataType[] | string;
+  status: number;
+}> {
+  try {
+    const marketers = await Employee.find({
+      department: 'Marketing',
+      status: 'Active',
+    });
+
+    return { data: marketers, status: 200 };
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
 export async function POST(req: Request) {
   let res: { data: string | Object | number; status: number };
 
@@ -353,6 +371,9 @@ export async function GET(req: Request) {
       return NextResponse.json(res.data, { status: res.status });
     case 'get-test-orders-trend':
       res = await handleGetTestOrdersTrend(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'get-all-marketers':
+      res = await handleGetAllMarketers(req);
       return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });

@@ -24,12 +24,12 @@ const Nav: React.FC<PropsType> = props => {
   const userRole = session?.user.role;
 
   useEffect(() => {
-    initFlowbite();
+    if (typeof window !== 'undefined') initFlowbite();
   }, []);
 
   return (
     <div
-      className={`w-full flex flex-row align-middle items-center justify-between bg-black px-5 text-white ${props.className}`}
+      className={`w-full flex flex-row align-middle items-center justify-between bg-gray-800 px-5 text-white ${props.className}`}
     >
       <div className="flex flex-row">
         <Link
@@ -69,7 +69,7 @@ const Nav: React.FC<PropsType> = props => {
         </span>
         <div
           id="adminDropdown"
-          className="z-10 hidden bg-black divide-y divide-gray-100 rounded-md shadow w-44"
+          className="z-10 hidden bg-gray-800 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul className="py-2 text-white" aria-labelledby="adminDropdownButton">
             <li>
@@ -121,7 +121,7 @@ const Nav: React.FC<PropsType> = props => {
               </span>
               <div
                 id="adminUsersDropdown"
-                className="z-10 hidden bg-black divide-y divide-gray-100 rounded-md shadow w-44"
+                className="z-10 hidden bg-gray-800 divide-y divide-gray-100 rounded-md shadow w-44"
               >
                 <ul
                   className="py-2 text-white"
@@ -164,7 +164,7 @@ const Nav: React.FC<PropsType> = props => {
               </span>
               <div
                 id="adminNoticesDropdown"
-                className="z-10 hidden bg-black divide-y divide-gray-100 rounded-md shadow w-44"
+                className="z-10 hidden bg-gray-800 divide-y divide-gray-100 rounded-md shadow w-44"
               >
                 <ul
                   className="py-2 text-white"
@@ -223,7 +223,7 @@ const Nav: React.FC<PropsType> = props => {
         </span>
         <div
           id="accountancyDropdown"
-          className="z-10 hidden bg-black divide-y divide-gray-100 rounded-md shadow w-44"
+          className="z-10 hidden bg-gray-800 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul
             className="py-2 text-white"
@@ -254,7 +254,7 @@ const Nav: React.FC<PropsType> = props => {
               </span>
               <div
                 id="accountancyInvoicesDropdown"
-                className="z-10 hidden bg-black divide-y divide-gray-100 rounded-md shadow w-44"
+                className="z-10 hidden bg-gray-800 divide-y divide-gray-100 rounded-md shadow w-44"
               >
                 <ul
                   className="py-2 text-white"
@@ -301,7 +301,7 @@ const Nav: React.FC<PropsType> = props => {
         </span>
         <div
           id="crmDropdown"
-          className="z-10 hidden bg-black divide-y divide-gray-100 rounded-md shadow w-44"
+          className="z-10 hidden bg-gray-800 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul className="py-2 text-white" aria-labelledby="crmDropdownButton">
             <li>

@@ -1,7 +1,12 @@
+import Header from '@/components/Header';
 import React from 'react';
 
 function RegularClientsPage() {
-  return <div>Regular clients</div>;
+  return (
+    <>
+      <Header />
+    </>
+  );
 }
 
 export default RegularClientsPage;

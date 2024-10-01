@@ -10,7 +10,7 @@ const Cards = () => {
   const router = useRouter();
 
   return (
-    <div className="sm:flex grid grid-cols-2 gap-4 mb-4 justify-between px-2">
+    <div className="sm:flex grid grid-cols-2 gap-4 justify-between px-2">
       <Card
         title="Trial Clients"
         description="Clients that placed test orders but haven't converted to regular customers."

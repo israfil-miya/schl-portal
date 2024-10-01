@@ -33,12 +33,9 @@ export default async function RootLayout({
           lato.className,
         )}
       >
-        <SessionProvider session={session}>
-          <Header />
-          <noscript>You need to enable JavaScript to run this app.</noscript>
-          <main>{children}</main>
-          <Toaster pauseWhenPageIsHidden richColors position="top-right" />
-        </SessionProvider>
+        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <main>{children}</main>
+        <Toaster pauseWhenPageIsHidden richColors position="top-right" />
       </body>
     </html>
   );
