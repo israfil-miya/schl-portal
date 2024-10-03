@@ -12,15 +12,12 @@ const Statistics = async () => {
   const session = await auth();
   return (
     <>
-      <Header />
-      <SessionProvider session={session}>
-        <div className="container mx-auto space-y-2 my-8">
-          <MarketersTable />
-          <DailyStatusTable />
-          <Cards />
-          <Graphs />
-        </div>
-      </SessionProvider>
+      <div className="container mx-auto space-y-2 my-8">
+        <MarketersTable />
+        <DailyStatusTable />
+        <Cards />
+        <Graphs />
+      </div>
     </>
   );
 };

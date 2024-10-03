@@ -96,9 +96,9 @@ const DailyStatusTable = () => {
                 })}
                 <tr className="bg-gray-50">
                   {/* Calculate the total values for all marketers */}
-                  <td className="text-center text-bold">Total</td>
+                  <td className="text-center font-bold">Total</td>
 
-                  <td className="text-bold">
+                  <td className="font-bold">
                     {/* Calculate capped total calls made */}
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) =>
@@ -132,19 +132,19 @@ const DailyStatusTable = () => {
                       })`}
                   </td>
 
-                  <td className="text-bold">
+                  <td className="font-bold">
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) => acc + curr.totalTests,
                       0,
                     )}
                   </td>
-                  <td className="text-bold">
+                  <td className="font-bold">
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) => acc + curr.totalProspects,
                       0,
                     )}
                   </td>
-                  <td className="text-bold">
+                  <td className="font-bold">
                     {/* Calculate capped total calls made */}
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) =>

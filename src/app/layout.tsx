@@ -35,7 +35,12 @@ export default async function RootLayout({
       >
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <main>{children}</main>
-        <Toaster pauseWhenPageIsHidden richColors position="top-right" />
+        <Toaster
+          closeButton
+          richColors
+          position="top-right"
+          pauseWhenPageIsHidden
+        />
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
-import React from 'react';
 import { auth } from '@/auth';
+import React from 'react';
 
 import Login from './components/Login';
 
@@ -12,11 +12,7 @@ const LoginPage = async () => {
     redirect('/');
   }
 
-  return (
-    <>
-      <Login />
-    </>
-  );
+  return <Login />;
 };
 
 export default LoginPage;

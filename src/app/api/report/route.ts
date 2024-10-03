@@ -4,8 +4,19 @@ import User from '@/models/Users';
 import dbConnect from '@/utility/dbConnect';
 import getQuery from '@/utility/getApiQuery';
 
+import { auth } from '@/auth';
+import {
+  addBooleanField,
+  addIfDefined,
+  addRegexField,
+  createRegexQuery,
+  Query,
+  RegexQuery,
+} from '@/utility/reportsFilterHelpers';
 import moment from 'moment-timezone';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+
 dbConnect();
 
 interface ReportCount {
@@ -347,11 +358,182 @@ async function handleGetAllMarketers(req: Request): Promise<{
     return { data: 'An error occurred', status: 500 };
   }
 }
+
+async function handleGetAllReports(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  try {
+    const page: number = Number(headers().get('page')) || 1;
+    const ITEMS_PER_PAGE: number = Number(headers().get('item_per_page')) || 30;
+    const isFilter: boolean = headers().get('filtered') === 'true';
+    const paginated: boolean = headers().get('paginated') === 'true';
+
+    const filters = await req.json();
+
+    const {
+      country,
+      companyName,
+      category,
+      marketerName,
+      fromDate,
+      toDate,
+      test,
+      prospect,
+      onlyLead,
+      followupDone,
+      regularClient,
+      staleClient,
+      prospectStatus,
+      generalSearchString,
+    } = filters;
+
+    const query: Query = {};
+
+    addRegexField(query, 'country', country);
+    addRegexField(query, 'company_name', companyName);
+    addRegexField(query, 'category', category);
+    addRegexField(query, 'marketer_name', marketerName, true);
+    addRegexField(query, 'prospect_status', prospectStatus, true);
+
+    addBooleanField(query, 'is_prospected', prospect);
+
+    query.is_lead = onlyLead || false;
+
+    addIfDefined(query, 'followup_done', followupDone);
+    addIfDefined(query, 'regular_client', regularClient);
+
+    if (staleClient) {
+      const twoMonthsAgo = moment().subtract(2, 'months').format('YYYY-MM-DD');
+      query.calling_date_history = {
+        $not: { $elemMatch: { $gte: twoMonthsAgo } },
+      };
+    }
+
+    if (fromDate || toDate) {
+      query.calling_date_history = query.calling_date_history || {};
+      query.calling_date_history.$elemMatch = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
+      };
+    }
+
+    if (!fromDate && !toDate && !staleClient) {
+      delete query.calling_date_history;
+    }
+
+    // if is_test filter is true
+    if (test === true) {
+      if (query.calling_date_history) {
+        query.test_given_date_history = query.calling_date_history;
+        delete query.calling_date_history;
+      } else {
+        query.test_given_date_history = { $exists: true, $ne: [] };
+      }
+    }
+
+    const searchQuery: Query = { ...query };
+
+    let sortQuery: Record<string, 1 | -1> = {
+      createdAt: -1,
+    };
+
+    // Sorting by followup date (ascending) if followup is pending and not a regular client (/pending-followups)
+    if (
+      followupDone === false &&
+      regularClient === false &&
+      searchQuery.is_lead === false
+    ) {
+      sortQuery = {
+        hasFollowupDate: 1, // Sort by presence of followup_date first (0 for missing, 1 for present)
+        followup_date: 1, // Then sort by followup_date ascending
+        createdAt: -1, // Finally, sort by createdAt descending
+      };
+    }
+
+    if (!query && isFilter == true && !generalSearchString) {
+      return { data: 'No filter applied', status: 400 };
+    } else {
+      const skip = (page - 1) * ITEMS_PER_PAGE;
+
+      if (generalSearchString) {
+        searchQuery['$or'] = [
+          { country: { $regex: generalSearchString, $options: 'i' } },
+          { company_name: { $regex: generalSearchString, $options: 'i' } },
+          { category: { $regex: generalSearchString, $options: 'i' } },
+          { marketer_name: { $regex: generalSearchString, $options: 'i' } },
+          { designation: { $regex: generalSearchString, $options: 'i' } },
+          { website: { $regex: generalSearchString, $options: 'i' } },
+          { contact_person: { $regex: generalSearchString, $options: 'i' } },
+          { contact_number: { $regex: generalSearchString, $options: 'i' } },
+          { calling_status: { $regex: generalSearchString, $options: 'i' } },
+          { email_address: { $regex: generalSearchString, $options: 'i' } },
+          { linkedin: { $regex: generalSearchString, $options: 'i' } },
+        ];
+      }
+
+      const count: number = await Report.countDocuments(searchQuery);
+      let reports: any;
+
+      if (paginated) {
+        reports = await Report.aggregate([
+          { $match: searchQuery },
+          {
+            $addFields: {
+              hasFollowupDate: {
+                $cond: {
+                  if: { $eq: ['$followup_date', ''] },
+                  then: 1,
+                  else: 0,
+                },
+              },
+            },
+          },
+          { $sort: sortQuery },
+          { $skip: skip },
+          { $limit: ITEMS_PER_PAGE },
+          {
+            $project: {
+              hasFollowupDate: 0, // Remove the added field from the final output
+            },
+          },
+        ]);
+      } else {
+        reports = await Report.find(searchQuery).lean();
+      }
+
+      console.log('SEARCH Query:', searchQuery);
+
+      const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);
+
+      if (!reports) {
+        return { data: 'Unable to retrieve reports', status: 400 };
+      } else {
+        let reportsData = {
+          pagination: {
+            count,
+            pageCount,
+          },
+          items: reports,
+        };
+
+        return { data: reportsData, status: 200 };
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
 export async function POST(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
     case 'get-reports-status':
+      res = await handleGetReportsStatus(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'get-all-reports':
       res = await handleGetReportsStatus(req);
       return NextResponse.json(res.data, { status: res.status });
     default:
