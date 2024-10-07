@@ -534,7 +534,7 @@ export async function POST(req: Request) {
       res = await handleGetReportsStatus(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-all-reports':
-      res = await handleGetReportsStatus(req);
+      res = await handleGetAllReports(req);
       return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });

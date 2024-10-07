@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
-import EditButton from './Edit';
 import FilterButton from './Filter';
 
 type ReportsState = {
@@ -50,9 +49,9 @@ const Table = () => {
     category: '',
     fromDate: '',
     toDate: '',
-    prospect: false,
+    test: false,
+    prospectStatus: '',
     generalSearchString: '',
-    show: 'all',
   });
 
   async function getAllReports() {
@@ -71,8 +70,8 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          show: 'all',
-          test: true,
+          prospect: true,
+          test: false,
           regularClient: false,
         }),
       };
@@ -109,7 +108,8 @@ const Table = () => {
         },
         body: JSON.stringify({
           ...filters,
-          test: true,
+          prospect: true,
+          test: false,
           regularClient: false,
         }),
       };
@@ -131,18 +131,8 @@ const Table = () => {
     return;
   }
 
-  async function deleteReport(
-    originalReportData: { [key: string]: any },
-    reportId: string,
-    reqBy: string,
-  ) {
+  async function deleteReport(reportId: string, reqBy: string) {
     try {
-      // block delete action if the report is others and the user is not the one who created the report
-      // if (originalReportData.marketer_name !== reqBy) {
-      //   toast.error('You are not allowed to delete this report');
-      //   return;
-      // }
-
       let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
       let options: {} = {
         method: 'POST',
@@ -307,7 +297,6 @@ const Table = () => {
                   <th>#</th>
                   <th>Calling Date</th>
                   <th>Followup Date</th>
-                  <th>Last Test Date</th>
                   <th>Country</th>
                   <th>Website</th>
                   <th>Category</th>
@@ -318,6 +307,7 @@ const Table = () => {
                   <th>Email Address</th>
                   <th>Calling Status</th>
                   <th>LinkedIn</th>
+                  <th>Test</th>
                   <th>Prospected</th>
                   <th>Action</th>
                 </tr>
@@ -350,14 +340,7 @@ const Table = () => {
                         {item.followup_date &&
                           convertToDDMMYYYY(item.followup_date)}
                       </td>
-                      <td>
-                        {item.test_given_date_history?.length &&
-                          convertToDDMMYYYY(
-                            item.test_given_date_history[
-                              item.test_given_date_history.length - 1
-                            ],
-                          )}
-                      </td>
+
                       <td>{item.country}</td>
                       <td>
                         {item.website.length ? (
@@ -385,6 +368,9 @@ const Table = () => {
                         ) : (
                           'No link provided'
                         )}
+                      </td>
+                      <td>
+                        {item.test_given_date_history?.length ? 'Yes' : 'No'}
                       </td>
                       <td>
                         {item.is_prospected

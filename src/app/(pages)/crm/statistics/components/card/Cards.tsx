@@ -33,7 +33,9 @@ const Cards = () => {
         title="Pending Prospects"
         description="Prospects contacted over 2 months ago who haven't converted to regular customers and didn't give any test."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/potential-leads')
+          router.push(
+            process.env.NEXT_PUBLIC_BASE_URL + '/crm/pending-prospects',
+          )
         }
         icon={
           <svg
@@ -52,7 +54,7 @@ const Cards = () => {
         title="Potential Leads"
         description="Leads with high conversion potential."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/ideal-prospects')
+          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/potential-leads')
         }
         icon={
           <svg

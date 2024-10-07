@@ -1,6 +1,6 @@
 'use client';
 import { EmployeeDataType } from '@/models/Employees';
-import { YYYY_MM_DD_to_DD_MM_YY as convertDDMMYY } from '@/utility/dateConvertion';
+import { YYYY_MM_DD_to_DD_MM_YY as convertDDMMYY } from '@/utility/dateConversion';
 import fetchData from '@/utility/fetchData';
 import getTodayDate from '@/utility/getTodayDate';
 import moment from 'moment-timezone';

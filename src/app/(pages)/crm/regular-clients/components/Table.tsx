@@ -2,19 +2,16 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
-import countDaysSinceLastCall from '@/utility/countDaysPassed';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/dateConversion';
 import fetchData from '@/utility/fetchData';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
-import EditButton from './Edit';
 import FilterButton from './Filter';
 
-type ReportsState = {
+type ClientsState = {
   pagination: {
     count: number;
     pageCount: number;
@@ -23,15 +20,13 @@ type ReportsState = {
 };
 
 const Table = () => {
-  const [reports, setReports] = useState<ReportsState>({
+  const [clients, setClients] = useState<ClientsState>({
     pagination: {
       count: 0,
       pageCount: 0,
     },
     items: [],
   });
-
-  const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
@@ -50,12 +45,12 @@ const Table = () => {
     category: '',
     fromDate: '',
     toDate: '',
-    prospect: false,
+    test: false,
     generalSearchString: '',
     show: 'all',
   });
 
-  async function getAllReports() {
+  async function getAllClients() {
     try {
       // setLoading(true);
 
@@ -72,27 +67,26 @@ const Table = () => {
         },
         body: JSON.stringify({
           show: 'all',
-          test: true,
-          regularClient: false,
+          regularClient: true,
         }),
       };
 
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setClients(response.data);
       } else {
         toast.error(response.data);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving reports data');
+      toast.error('An error occurred while retrieving clients data');
     } finally {
       setLoading(false);
     }
   }
 
-  async function getAllReportsFiltered() {
+  async function getAllClientsFiltered() {
     try {
       // setLoading(true);
 
@@ -109,37 +103,35 @@ const Table = () => {
         },
         body: JSON.stringify({
           ...filters,
-          test: true,
-          regularClient: false,
+          regularClient: true,
         }),
       };
 
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setClients(response.data);
         setIsFiltered(true);
       } else {
         toast.error(response.data);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving reports data');
+      toast.error('An error occurred while retrieving clients data');
     } finally {
       setLoading(false);
     }
     return;
   }
 
-  async function deleteReport(
-    originalReportData: { [key: string]: any },
+  async function deleteClient(
+    originalClientData: { [key: string]: any },
     reportId: string,
     reqBy: string,
   ) {
     try {
-      // block delete action if the report is others and the user is not the one who created the report
-      // if (originalReportData.marketer_name !== reqBy) {
-      //   toast.error('You are not allowed to delete this report');
+      // if (originalClientData.marketer_name !== reqBy) {
+      //   toast.error('You are not allowed to delete this client');
       //   return;
       // }
 
@@ -171,7 +163,7 @@ const Table = () => {
   }
 
   useEffect(() => {
-    getAllReports();
+    getAllClients();
   }, []);
 
   function handlePrevious() {
@@ -190,24 +182,24 @@ const Table = () => {
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
-      if (reports?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllReports();
-      else getAllReportsFiltered();
+      if (clients?.pagination?.pageCount == 1) return;
+      if (!isFiltered) getAllClients();
+      else getAllClientsFiltered();
     }
     prevPage.current = page;
   }, [page]);
 
   useEffect(() => {
-    if (reports?.pagination?.pageCount !== undefined) {
+    if (clients?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllReportsFiltered();
+        if (!isFiltered) getAllClientsFiltered();
       }
-      if (reports) setPageCount(reports?.pagination?.pageCount);
-      prevPageCount.current = reports?.pagination?.pageCount;
+      if (clients) setPageCount(clients?.pagination?.pageCount);
+      prevPageCount.current = clients?.pagination?.pageCount;
       prevPage.current = 1;
     }
-  }, [reports?.pagination?.pageCount]);
+  }, [clients?.pagination?.pageCount]);
 
   useEffect(() => {
     // Reset to first page when itemPerPage changes
@@ -215,8 +207,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllReports();
-    else getAllReportsFiltered();
+    if (!isFiltered) getAllClients();
+    else getAllClientsFiltered();
   }, [itemPerPage]);
 
   return (
@@ -249,7 +241,7 @@ const Table = () => {
               className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
             >
               <label>
-                Page <b>{reports?.items?.length !== 0 ? page : 0}</b> of{' '}
+                Page <b>{clients?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
@@ -288,7 +280,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllReportsFiltered}
+            submitHandler={getAllClientsFiltered}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
@@ -299,67 +291,48 @@ const Table = () => {
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
       {!loading &&
-        (reports?.items?.length !== 0 ? (
+        (clients?.items?.length !== 0 ? (
           <div className="table-responsive text-nowrap text-sm">
-            <table className="table">
+            <table className="table table-striped table-bordered">
               <thead className="table-dark">
                 <tr>
                   <th>#</th>
-                  <th>Calling Date</th>
-                  <th>Followup Date</th>
-                  <th>Last Test Date</th>
+                  {/* <th>Calling Date</th>
+                  <th>Followup Date</th> */}
+                  <th>Onboard Date</th>
                   <th>Country</th>
-                  <th>Website</th>
-                  <th>Category</th>
+                  {/* <th>Website</th>
+                  <th>Category</th> */}
                   <th>Company Name</th>
                   <th>Contact Person</th>
-                  <th>Designation</th>
-                  <th>Contact Number</th>
+                  {/* <th>Designation</th> */}
+                  {/* <th>Contact Number</th> */}
                   <th>Email Address</th>
-                  <th>Calling Status</th>
-                  <th>LinkedIn</th>
-                  <th>Prospected</th>
-                  <th>Action</th>
+                  {/* <th>LinkedIn</th>
+                  <th>Test</th> */}
+                  <th>Manage</th>
                 </tr>
               </thead>
               <tbody>
-                {reports?.items?.map((item, index) => {
-                  let tableRowColor = 'table-secondary';
-
-                  if (item.is_prospected) {
-                    if (item?.prospect_status == 'high_interest') {
-                      tableRowColor = 'table-success';
-                    } else if (item?.prospect_status == 'low_interest') {
-                      tableRowColor = 'table-warning';
-                    }
-                  } else {
-                    tableRowColor = 'table-danger';
-                  }
-
+                {clients?.items?.map((item, index) => {
                   return (
-                    <tr
-                      key={item._id}
-                      className={tableRowColor ? tableRowColor : ''}
-                    >
+                    <tr key={item._id}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      <td>
+                      {/* <td>
                         {item.calling_date &&
                           convertToDDMMYYYY(item.calling_date)}
                       </td>
                       <td>
                         {item.followup_date &&
                           convertToDDMMYYYY(item.followup_date)}
-                      </td>
+                      </td> */}
                       <td>
-                        {item.test_given_date_history?.length &&
-                          convertToDDMMYYYY(
-                            item.test_given_date_history[
-                              item.test_given_date_history.length - 1
-                            ],
-                          )}
+                        {item.onboard_date &&
+                          convertToDDMMYYYY(item.onboard_date)}
                       </td>
+
                       <td>{item.country}</td>
-                      <td>
+                      {/* <td>
                         {item.website.length ? (
                           <Linkify
                             coverText="Click here to visit"
@@ -369,14 +342,14 @@ const Table = () => {
                           'No link provided'
                         )}
                       </td>
-                      <td>{item.category}</td>
+                      <td>{item.category}</td> */}
                       <td className="text-wrap">{item.company_name}</td>
                       <td className="text-wrap">{item.contact_person}</td>
-                      <td>{item.designation}</td>
+                      {/* <td>{item.designation}</td>
                       <td className="text-wrap">{item.contact_number}</td>
+                       */}
                       <td className="text-wrap">{item.email_address}</td>
-                      <CallingStatusTd data={item.calling_status} />
-                      <td>
+                      {/* <td>
                         {item.linkedin.length ? (
                           <Linkify
                             coverText="Click here to visit"
@@ -387,10 +360,8 @@ const Table = () => {
                         )}
                       </td>
                       <td>
-                        {item.is_prospected
-                          ? `Yes (${item.followup_done ? 'Done' : 'Pending'})`
-                          : 'No'}
-                      </td>
+                        {item.test_given_date_history?.length ? 'Yes' : 'No'}
+                      </td> */}
                       <td
                         className="text-center"
                         style={{ verticalAlign: 'middle' }}
@@ -398,8 +369,8 @@ const Table = () => {
                         <div className="inline-block">
                           <div className="flex gap-2">
                             <DeleteButton
-                              submitHandler={deleteReport}
-                              reportData={item}
+                              submitHandler={deleteClient}
+                              clientData={item}
                             />
                           </div>
                         </div>
@@ -413,7 +384,7 @@ const Table = () => {
         ) : (
           <tr key={0}>
             <td colSpan={16} className=" align-center text-center">
-              No Reports To Show.
+              No Clients To Show.
             </td>
           </tr>
         ))}
