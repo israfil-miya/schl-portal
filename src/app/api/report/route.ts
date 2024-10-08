@@ -9,10 +9,7 @@ import {
   addBooleanField,
   addIfDefined,
   addRegexField,
-  createRegexQuery,
-  Query,
-  RegexQuery,
-} from '@/utility/reportsFilterHelpers';
+} from '@/utility/filterHelpers';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -27,6 +24,39 @@ interface ReportCount {
     totalProspects: number;
   };
 }
+
+export interface RegexQuery {
+  $regex: string;
+  $options: string;
+}
+
+export interface Query {
+  country?: RegexQuery;
+  company_name?: RegexQuery;
+  category?: RegexQuery;
+  marketer_name?:
+    | RegexQuery
+    | { [key: string]: RegexQuery | string | undefined };
+  // is_test?: boolean;
+  is_prospected?: boolean;
+  is_lead?: boolean;
+  followup_done?: boolean;
+  onboard_date?: string | { [key: string]: RegexQuery | string | undefined };
+  prospect_status?: RegexQuery;
+  calling_date_history?: { [key: string]: any };
+  regular_client?: boolean;
+  test_given_date_history?: { [key: string]: any };
+  $or?: { [key: string]: RegexQuery }[];
+}
+
+export type BooleanFields = Extract<
+  keyof Query,
+  'is_test' | 'is_prospected' | 'is_lead' | 'followup_done' | 'regular_client'
+>;
+export type RegexFields = Extract<
+  keyof Query,
+  'country' | 'company_name' | 'category' | 'marketer_name' | 'prospect_status'
+>;
 
 async function handleGetTestOrdersTrend(req: Request): Promise<{
   data: string | Record<string, number>;
