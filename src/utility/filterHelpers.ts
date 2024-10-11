@@ -49,7 +49,12 @@ export const addRegexField = (
 };
 
 // Helper function to add fields if they are defined
-export const addIfDefined = (query: Query, key: keyof Query, value: any) => {
+
+export const addIfDefined = <T extends Query>(
+  query: T,
+  key: keyof T,
+  value: any,
+) => {
   if (value !== undefined && value !== null && value !== '') {
     query[key] = value;
   }

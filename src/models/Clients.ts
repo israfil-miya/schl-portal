@@ -12,8 +12,8 @@ export interface ClientDataType {
   address: string;
   prices: string;
   currency: string;
-  last_invoice_number: string;
-  updated_by: string;
+  last_invoice_number: string | null;
+  updated_by: string | null;
 }
 
 type Client = mongoose.Document & ClientDataType;

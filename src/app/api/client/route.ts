@@ -17,8 +17,8 @@ export interface RegexQuery {
 }
 
 export interface Query {
-  country?: RegexQuery;
   client_code?: RegexQuery;
+  country?: RegexQuery;
   contact_person?: RegexQuery;
   marketer?: RegexQuery;
 }
@@ -56,7 +56,7 @@ async function handleCreateNewClient(req: Request): Promise<{
 }
 
 async function handleGetAllClients(req: Request): Promise<{
-  data: string | Record<string, number>;
+  data: string | Object;
   status: number;
 }> {
   try {
@@ -69,53 +69,72 @@ async function handleGetAllClients(req: Request): Promise<{
 
     const { countryName, clientCode, contactPerson, marketerName } = filters;
 
-    let query = {};
-    if (country) query.country = { $regex: country, $options: 'i' };
-    if (clientcode) query.client_code = { $regex: clientcode, $options: 'i' };
-    if (contactperson)
-      query.contact_person = { $regex: contactperson, $options: 'i' };
-    if (marketer) query.marketer = { $regex: marketer, $options: 'i' };
+    let query: Query = {};
+
+    addIfDefined(query, 'country', countryName);
+    addIfDefined(query, 'client_code', clientCode);
+    addIfDefined(query, 'contact_person', contactPerson);
+    addIfDefined(query, 'marketer', marketerName);
 
     console.log(query);
 
-    if (
-      Object.keys(query).length === 0 &&
-      query.constructor === Object &&
-      req.headers.isfilter == true
-    )
-      sendError(res, 400, 'No filter applied');
-    else {
+    const searchQuery: Query = { ...query };
+
+    let sortQuery: Record<string, 1 | -1> = {
+      createdAt: -1,
+    };
+
+    if (!query && isFilter == true) {
+      return { data: 'No filter applied', status: 400 };
+    } else {
       const skip = (page - 1) * ITEMS_PER_PAGE;
+      const count: number = await Client.countDocuments(searchQuery);
+      let clients: ClientDataType[];
 
-      const count = await Client.countDocuments(query);
+      if (paginated) {
+        clients = (await Client.aggregate([
+          { $match: searchQuery },
+          { $sort: sortQuery },
+          { $skip: skip },
+          { $limit: ITEMS_PER_PAGE },
+        ])) as ClientDataType[];
+      } else {
+        clients = await Client.find(searchQuery).lean();
+      }
 
-      let clients;
+      console.log('SEARCH Query:', searchQuery);
 
-      if (req.headers.notpaginated) clients = await Client.find({});
-      else clients = await Client.find(query).skip(skip).limit(ITEMS_PER_PAGE);
+      const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);
 
-      const pageCount = Math.ceil(count / ITEMS_PER_PAGE); // Calculate the total number of pages
+      if (!clients) {
+        return { data: 'Unable to retrieve reports', status: 400 };
+      } else {
+        let clientsData = {
+          pagination: {
+            count,
+            pageCount,
+          },
+          items: clients,
+        };
 
-      res.status(200).json({
-        pagination: {
-          count,
-          pageCount,
-        },
-        items: clients,
-      });
+        return { data: clientsData, status: 200 };
+      }
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleEditClient(req: Request) {
-  let data = req.body;
-  const updated_by = req.headers.name;
+async function handleEditClient(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  let data = await req.json();
+  const updated_by = Number(headers().get('name'));
   data = { ...data, updated_by };
 
-  // console.log("Received edit request with data:", data);
+  console.log('Received edit request with data:', data);
 
   try {
     const resData = await Client.findByIdAndUpdate(data._id, data, {
@@ -123,55 +142,74 @@ async function handleEditClient(req: Request) {
     });
 
     if (resData) {
-      res.status(200).json(resData);
+      return { data: 'Updated the client successfully', status: 200 };
     } else {
-      sendError(res, 400, 'No client found');
+      return { data: 'Unable to update the client', status: 400 };
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleGetClientByCode(req: Request) {
+async function handleGetClientByCode(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
   try {
-    let data = req.headers;
+    let client_code = headers().get('client_code');
 
     const client = await Client.findOne({
-      client_code: data.client_code,
+      client_code,
     }).lean();
 
-    if (!client) sendError(res, 400, 'No client found with the code');
-    else res.status(200).json(client);
+    if (client) {
+      return { data: client, status: 200 };
+    } else {
+      return { data: 'No client found with the code', status: 400 };
+    }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleGetClientById(req: Request) {
+async function handleGetClientById(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
   try {
-    let data = req.headers;
+    let client_id = headers().get('client_id');
 
-    const client = await Client.findById(data.id).lean();
+    const client = await Client.findById(client_id).lean();
 
-    if (!client) sendError(res, 400, 'No client found with the id');
-    else res.status(200).json(client);
+    if (client) {
+      return { data: client, status: 200 };
+    } else {
+      return { data: 'No client found with the id', status: 400 };
+    }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleDeleteClient(req: Request) {
-  let data = req.headers;
+async function handleDeleteClient(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  let { client_id }: { client_id: string } = await req.json();
 
   try {
-    const resData = await Client.findByIdAndDelete(data.id);
-    res.status(200).json(resData);
+    const resData = await Client.findByIdAndDelete(client_id);
+    if (resData) {
+      return { data: 'Deleted the client successfully', status: 200 };
+    } else {
+      return { data: 'Unable to delete the client', status: 400 };
+    }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 

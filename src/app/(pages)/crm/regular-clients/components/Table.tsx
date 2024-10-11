@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
+import NewClient from './New';
 
 type ClientsState = {
   pagination: {
@@ -162,6 +163,38 @@ const Table = () => {
     return;
   }
 
+  async function createNewClient(
+    editedData: { [key: string]: any },
+    setEditedData: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>,
+  ) {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_PORTAL_URL +
+        '/api/client?action=create-new-client';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: { ...editedData, marketer: editedData.marketer_name },
+        }),
+      };
+
+      let response = await fetchData(url, options);
+
+      if (response.ok) {
+        toast.success('Successfully created new client');
+        setEditedData({});
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while creating new client');
+    }
+  }
+
   useEffect(() => {
     getAllClients();
   }, []);
@@ -297,19 +330,11 @@ const Table = () => {
               <thead className="table-dark">
                 <tr>
                   <th>#</th>
-                  {/* <th>Calling Date</th>
-                  <th>Followup Date</th> */}
                   <th>Onboard Date</th>
                   <th>Country</th>
-                  {/* <th>Website</th>
-                  <th>Category</th> */}
                   <th>Company Name</th>
                   <th>Contact Person</th>
-                  {/* <th>Designation</th> */}
-                  {/* <th>Contact Number</th> */}
                   <th>Email Address</th>
-                  {/* <th>LinkedIn</th>
-                  <th>Test</th> */}
                   <th>Manage</th>
                 </tr>
               </thead>
@@ -318,50 +343,14 @@ const Table = () => {
                   return (
                     <tr key={item._id}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      {/* <td>
-                        {item.calling_date &&
-                          convertToDDMMYYYY(item.calling_date)}
-                      </td>
-                      <td>
-                        {item.followup_date &&
-                          convertToDDMMYYYY(item.followup_date)}
-                      </td> */}
                       <td>
                         {item.onboard_date &&
                           convertToDDMMYYYY(item.onboard_date)}
                       </td>
-
                       <td>{item.country}</td>
-                      {/* <td>
-                        {item.website.length ? (
-                          <Linkify
-                            coverText="Click here to visit"
-                            data={item.website}
-                          />
-                        ) : (
-                          'No link provided'
-                        )}
-                      </td>
-                      <td>{item.category}</td> */}
                       <td className="text-wrap">{item.company_name}</td>
                       <td className="text-wrap">{item.contact_person}</td>
-                      {/* <td>{item.designation}</td>
-                      <td className="text-wrap">{item.contact_number}</td>
-                       */}
                       <td className="text-wrap">{item.email_address}</td>
-                      {/* <td>
-                        {item.linkedin.length ? (
-                          <Linkify
-                            coverText="Click here to visit"
-                            data={item.linkedin}
-                          />
-                        ) : (
-                          'No link provided'
-                        )}
-                      </td>
-                      <td>
-                        {item.test_given_date_history?.length ? 'Yes' : 'No'}
-                      </td> */}
                       <td
                         className="text-center"
                         style={{ verticalAlign: 'middle' }}
@@ -371,6 +360,11 @@ const Table = () => {
                             <DeleteButton
                               submitHandler={deleteClient}
                               clientData={item}
+                            />
+                            <NewClient
+                              loading={loading}
+                              clientData={item}
+                              submitHandler={createNewClient}
                             />
                           </div>
                         </div>
