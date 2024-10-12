@@ -119,7 +119,7 @@ const CreateButton: React.FC<PropsType> = props => {
                   className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
                   htmlFor="grid-password"
                 >
-                  Client Code
+                  Client Code*
                 </label>
                 <input
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
@@ -151,12 +151,12 @@ const CreateButton: React.FC<PropsType> = props => {
                   className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
                   htmlFor="grid-password"
                 >
-                  Client Name
+                  Client Name*
                 </label>
                 <input
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   name="client_name"
-                  value={editedData.company_name}
+                  value={editedData.client_name}
                   onChange={handleChange}
                   type="text"
                 />

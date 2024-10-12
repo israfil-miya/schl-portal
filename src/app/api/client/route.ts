@@ -1,4 +1,5 @@
 import Client, { ClientDataType } from '@/models/Clients';
+import Report from '@/models/Reports';
 import dbConnect from '@/utility/dbConnect';
 import {
   addBooleanField,
@@ -35,6 +36,8 @@ async function handleCreateNewClient(req: Request): Promise<{
   try {
     const data: ClientDataType = await req.json();
 
+    console.log('Received data:', data);
+
     const resData = await Client.findOneAndUpdate(
       { client_code: data.client_code },
       data,
@@ -45,7 +48,19 @@ async function handleCreateNewClient(req: Request): Promise<{
     );
 
     if (resData) {
-      return { data: 'Added the client successfully', status: 200 };
+      const reportData = await Report.findOneAndUpdate(
+        { company_name: data.client_name },
+        { permanent_client: true },
+        {
+          new: true,
+          upsert: true,
+        },
+      );
+
+      if (reportData) {
+        return { data: 'Added the client successfully', status: 200 };
+      }
+      return { data: 'Unable to add new client', status: 400 };
     } else {
       return { data: 'Unable to add new client', status: 400 };
     }

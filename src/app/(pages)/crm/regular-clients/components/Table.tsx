@@ -169,16 +169,14 @@ const Table = () => {
   ) {
     try {
       let url: string =
-        process.env.NEXT_PUBLIC_PORTAL_URL +
+        process.env.NEXT_PUBLIC_BASE_URL +
         '/api/client?action=create-new-client';
       let options: {} = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: { ...editedData, marketer: editedData.marketer_name },
-        }),
+        body: JSON.stringify({ ...editedData, marketer: editedData.marketer }),
       };
 
       let response = await fetchData(url, options);
@@ -363,7 +361,15 @@ const Table = () => {
                             />
                             <NewClient
                               loading={loading}
-                              clientData={item}
+                              clientData={{
+                                country: item.country,
+                                client_name: item.company_name,
+                                contact_person: item.contact_person,
+                                designation: item.designation,
+                                contact_number: item.contact_number,
+                                email: item.email_address,
+                                marketer: item.marketer_name,
+                              }}
                               submitHandler={createNewClient}
                             />
                           </div>

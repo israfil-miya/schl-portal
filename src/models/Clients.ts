@@ -22,36 +22,47 @@ const ClientSchema = new mongoose.Schema<Client>(
   {
     client_code: {
       type: String,
+      required: true,
     },
     client_name: {
       type: String,
+      required: true,
     },
     marketer: {
       type: String,
+      required: true,
     },
     contact_person: {
       type: String,
+      default: '',
     },
     designation: {
       type: String,
+      default: '',
     },
     contact_number: {
       type: String,
+      default: '',
     },
     email: {
       type: String,
+      default: '',
     },
     country: {
       type: String,
+      default: '',
     },
     address: {
       type: String,
+      default: '',
     },
     prices: {
       type: String,
+      default: '',
     },
     currency: {
       type: String,
+      default: '',
     },
     last_invoice_number: {
       type: String,

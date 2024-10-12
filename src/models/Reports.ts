@@ -22,7 +22,8 @@ export interface Report extends mongoose.Document {
   is_prospected: boolean;
   prospect_status: string;
   is_lead: boolean;
-  regular_client: boolean;
+  regular_client: boolean; // limited to crm portal
+  permanent_client: boolean; // added in erp portal
   lead_withdrawn: boolean;
   test_given_date_history: string[];
   onboard_date: string;
@@ -82,6 +83,7 @@ const ReportSchema = new mongoose.Schema<Report>(
     is_lead: { type: Boolean, default: false },
     lead_withdrawn: { type: Boolean, default: false },
     regular_client: { type: Boolean, default: false },
+    permanent_client: { type: Boolean, default: false },
     test_given_date_history: { type: [String] },
     onboard_date: { type: String, default: '' },
   },
