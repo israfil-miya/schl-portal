@@ -1,9 +1,9 @@
 'use client';
 
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const Form: React.FC = () => {
   const [creds, setCreds] = useState<{ username: string; password: string }>({
@@ -17,7 +17,7 @@ const Form: React.FC = () => {
   ): Promise<void> => {
     e.preventDefault();
     setLoading(true);
-    
+
     // console.log('creds', creds);
 
     try {
@@ -62,7 +62,7 @@ const Form: React.FC = () => {
             Username
           </label>
           <input
-            className="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             required
             name="username"
             value={creds.username}

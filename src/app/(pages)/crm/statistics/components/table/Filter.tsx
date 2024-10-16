@@ -4,6 +4,7 @@ import { parseFormData } from '@/utility/actionHelpers';
 import cn from '@/utility/cn';
 import fetchData from '@/utility/fetchData';
 import getTodayDate from '@/utility/getTodayDate';
+import { Filter, X } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -144,15 +145,7 @@ const FilterButton: React.FC<PropsType> = ({
         )}
       >
         Filter
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          viewBox="0 0 16 16"
-        >
-          <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5zm1 .5v1.308l4.372 4.858A.5.5 0 0 1 7 8.5v5.306l2-.666V8.5a.5.5 0 0 1 .128-.334L13.5 3.308V2z" />
-        </svg>
+        <Filter size={18} />
       </button>
 
       <section
@@ -173,18 +166,7 @@ const FilterButton: React.FC<PropsType> = ({
               type="button"
               className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
             >
-              <svg
-                className="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
+              <X size={18} />
             </button>
           </header>
           <form

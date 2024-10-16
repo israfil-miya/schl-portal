@@ -193,16 +193,6 @@ const Nav: React.FC<PropsType> = props => {
             </li>
           </ul>
         </div>
-        <Link
-          className={cn(
-            'py-3 px-5',
-            pathname == '/file-flow' ? 'bg-primary' : 'hover:opacity-90',
-            userRole === 'user' && 'hidden',
-          )}
-          href={'/file-flow'}
-        >
-          File Flow
-        </Link>
         <span
           role="button"
           id="accountancyDropdownButton"
@@ -346,6 +336,16 @@ const Nav: React.FC<PropsType> = props => {
             </li>
           </ul>
         </div>
+        <Link
+          className={cn(
+            'py-3 px-5',
+            pathname == '/file-flow' ? 'bg-primary' : 'hover:opacity-90',
+            userRole === 'user' && 'hidden',
+          )}
+          href={'/file-flow'}
+        >
+          File Flow
+        </Link>
       </div>
 
       <span className="max-lg:hidden">{msg}</span>

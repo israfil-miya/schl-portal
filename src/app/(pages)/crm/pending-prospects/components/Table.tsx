@@ -5,6 +5,7 @@ import Linkify from '@/components/Linkify';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/dateConversion';
 import fetchData from '@/utility/fetchData';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -219,18 +220,7 @@ const Table = () => {
               type="button"
               className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"
-                />
-              </svg>
+              <ChevronLeft size={18} className="stroke-gray-500" />
               Prev
             </button>
             <button
@@ -249,18 +239,7 @@ const Table = () => {
               className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             >
               Next
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"
-                />
-              </svg>
+              <ChevronRight size={18} className="stroke-gray-500" />
             </button>
           </div>
 
