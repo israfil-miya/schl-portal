@@ -50,7 +50,7 @@ async function handleCreateNewClient(req: Request): Promise<{
     if (resData) {
       const reportData = await Report.findOneAndUpdate(
         { company_name: data.client_name },
-        { permanent_client: true },
+        { $set: { permanent_client: true } },
         {
           new: true,
           upsert: true,
@@ -58,6 +58,7 @@ async function handleCreateNewClient(req: Request): Promise<{
       );
 
       if (reportData) {
+        console.log('Added the client successfully', reportData);
         return { data: 'Added the client successfully', status: 200 };
       }
       return { data: 'Unable to add new client', status: 400 };

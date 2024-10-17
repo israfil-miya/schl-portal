@@ -185,6 +185,8 @@ const Table = () => {
       if (response.ok) {
         toast.success('Successfully created new client');
         setEditedData({});
+        if (!isFiltered) getAllClients();
+        else getAllClientsFiltered();
       } else {
         toast.error(response.data.message);
       }
@@ -338,19 +340,21 @@ const Table = () => {
                               submitHandler={deleteClient}
                               clientData={item}
                             />
-                            <NewClient
-                              loading={loading}
-                              clientData={{
-                                country: item.country,
-                                client_name: item.company_name,
-                                contact_person: item.contact_person,
-                                designation: item.designation,
-                                contact_number: item.contact_number,
-                                email: item.email_address,
-                                marketer: item.marketer_name,
-                              }}
-                              submitHandler={createNewClient}
-                            />
+                            {!item.permanent_client && (
+                              <NewClient
+                                loading={loading}
+                                clientData={{
+                                  country: item.country,
+                                  client_name: item.company_name,
+                                  contact_person: item.contact_person,
+                                  designation: item.designation,
+                                  contact_number: item.contact_number,
+                                  email: item.email_address,
+                                  marketer: item.marketer_name,
+                                }}
+                                submitHandler={createNewClient}
+                              />
+                            )}
                           </div>
                         </div>
                       </td>
