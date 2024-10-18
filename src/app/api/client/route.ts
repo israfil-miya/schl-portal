@@ -5,6 +5,7 @@ import {
   addBooleanField,
   addIfDefined,
   addRegexField,
+  createRegexQuery,
 } from '@/utility/filterHelpers';
 import getQuery from '@/utility/getApiQuery';
 import moment from 'moment-timezone';
@@ -48,8 +49,37 @@ async function handleCreateNewClient(req: Request): Promise<{
     );
 
     if (resData) {
+      return { data: 'Added the client successfully', status: 200 };
+    } else {
+      return { data: 'Unable to add new client', status: 400 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+async function handleConvertToPermanent(req: Request): Promise<{
+  data: string | Record<string, number>;
+  status: number;
+}> {
+  try {
+    const data: ClientDataType = await req.json();
+
+    console.log('Received data:', data);
+
+    const resData = await Client.findOneAndUpdate(
+      { client_code: data.client_code },
+      data,
+      {
+        new: true,
+        upsert: true,
+      },
+    );
+
+    if (resData) {
       const reportData = await Report.findOneAndUpdate(
-        { company_name: data.client_name },
+        { company_name: data.client_name, is_lead: false },
         { $set: { permanent_client: true } },
         {
           new: true,
@@ -219,6 +249,16 @@ async function handleDeleteClient(req: Request): Promise<{
   try {
     const resData = await Client.findByIdAndDelete(client_id);
     if (resData) {
+      const reportData = await Report.findOne({
+        is_lead: false,
+        company_name: createRegexQuery(resData.client_name),
+      });
+
+      if (reportData) {
+        reportData.permanent_client = false;
+        await reportData.save();
+      }
+
       return { data: 'Deleted the client successfully', status: 200 };
     } else {
       return { data: 'Unable to delete the client', status: 400 };
@@ -233,6 +273,12 @@ export async function POST(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
+    case 'create-new-client':
+      res = await handleCreateNewClient(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'convert-to-permanent':
+      res = await handleConvertToPermanent(req);
+      return NextResponse.json(res.data, { status: res.status });
     case 'create-new-client':
       res = await handleCreateNewClient(req);
       return NextResponse.json(res.data, { status: res.status });

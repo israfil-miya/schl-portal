@@ -55,7 +55,12 @@ export const addIfDefined = <T extends Query>(
   key: keyof T,
   value: any,
 ) => {
-  if (value !== undefined && value !== null && value !== '') {
+  if (
+    value !== undefined &&
+    value !== null &&
+    value !== '' &&
+    value !== false
+  ) {
     query[key] = value;
   }
 };

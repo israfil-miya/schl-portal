@@ -2,6 +2,7 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { Report as ReportDataType } from '@/models/Reports';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/dateConversion';
 import fetchData from '@/utility/fetchData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -11,23 +12,23 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
-import NewClient from './New';
+import NewReport from './New';
 
-type ClientsState = {
+type ReportsState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: { [key: string]: any }[];
+  items: ReportDataType[];
 };
 
 const Table = () => {
-  const [clients, setClients] = useState<ClientsState>({
+  const [reports, setReports] = useState<ReportsState>({
     pagination: {
       count: 0,
       pageCount: 0,
     },
-    items: [],
+    items: React.useMemo(() => [], []),
   });
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -48,11 +49,12 @@ const Table = () => {
     fromDate: '',
     toDate: '',
     test: false,
+    permanentClient: false,
     generalSearchString: '',
     show: 'all',
   });
 
-  async function getAllClients() {
+  async function getAllReports() {
     try {
       // setLoading(true);
 
@@ -76,19 +78,19 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setClients(response.data);
+        setReports(response.data);
       } else {
         toast.error(response.data);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving clients data');
+      toast.error('An error occurred while retrieving reports data');
     } finally {
       setLoading(false);
     }
   }
 
-  async function getAllClientsFiltered() {
+  async function getAllReportsFiltered() {
     try {
       // setLoading(true);
 
@@ -112,31 +114,22 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setClients(response.data);
+        setReports(response.data);
         setIsFiltered(true);
       } else {
         toast.error(response.data);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving clients data');
+      toast.error('An error occurred while retrieving reports data');
     } finally {
       setLoading(false);
     }
     return;
   }
 
-  async function deleteClient(
-    originalClientData: { [key: string]: any },
-    reportId: string,
-    reqBy: string,
-  ) {
+  async function deleteReport(reportId: string, reqBy: string) {
     try {
-      // if (originalClientData.marketer_name !== reqBy) {
-      //   toast.error('You are not allowed to delete this client');
-      //   return;
-      // }
-
       let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
       let options: {} = {
         method: 'POST',
@@ -164,14 +157,14 @@ const Table = () => {
     return;
   }
 
-  async function createNewClient(
+  async function convertToClient(
     editedData: { [key: string]: any },
     setEditedData: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>,
   ) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/client?action=create-new-client';
+        '/api/client?action=convert-to-permanent';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -185,8 +178,8 @@ const Table = () => {
       if (response.ok) {
         toast.success('Successfully created new client');
         setEditedData({});
-        if (!isFiltered) getAllClients();
-        else getAllClientsFiltered();
+        if (!isFiltered) getAllReports();
+        else getAllReportsFiltered();
       } else {
         toast.error(response.data.message);
       }
@@ -197,7 +190,7 @@ const Table = () => {
   }
 
   useEffect(() => {
-    getAllClients();
+    getAllReports();
   }, []);
 
   function handlePrevious() {
@@ -216,24 +209,24 @@ const Table = () => {
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
-      if (clients?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllClients();
-      else getAllClientsFiltered();
+      if (reports?.pagination?.pageCount == 1) return;
+      if (!isFiltered) getAllReports();
+      else getAllReportsFiltered();
     }
     prevPage.current = page;
   }, [page]);
 
   useEffect(() => {
-    if (clients?.pagination?.pageCount !== undefined) {
+    if (reports?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllClientsFiltered();
+        if (!isFiltered) getAllReportsFiltered();
       }
-      if (clients) setPageCount(clients?.pagination?.pageCount);
-      prevPageCount.current = clients?.pagination?.pageCount;
+      if (reports) setPageCount(reports?.pagination?.pageCount);
+      prevPageCount.current = reports?.pagination?.pageCount;
       prevPage.current = 1;
     }
-  }, [clients?.pagination?.pageCount]);
+  }, [reports?.pagination?.pageCount]);
 
   useEffect(() => {
     // Reset to first page when itemPerPage changes
@@ -241,8 +234,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllClients();
-    else getAllClientsFiltered();
+    if (!isFiltered) getAllReports();
+    else getAllReportsFiltered();
   }, [itemPerPage]);
 
   return (
@@ -264,7 +257,7 @@ const Table = () => {
               className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
             >
               <label>
-                Page <b>{clients?.items?.length !== 0 ? page : 0}</b> of{' '}
+                Page <b>{reports?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
@@ -292,7 +285,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllClientsFiltered}
+            submitHandler={getAllReportsFiltered}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
@@ -303,7 +296,7 @@ const Table = () => {
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
       {!loading &&
-        (clients?.items?.length !== 0 ? (
+        (reports?.items?.length !== 0 ? (
           <div className="table-responsive text-nowrap text-sm">
             <table className="table table-striped table-bordered">
               <thead className="table-dark">
@@ -318,9 +311,9 @@ const Table = () => {
                 </tr>
               </thead>
               <tbody>
-                {clients?.items?.map((item, index) => {
+                {reports?.items?.map((item, index) => {
                   return (
-                    <tr key={item._id}>
+                    <tr key={String(item._id)}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
                       <td>
                         {item.onboard_date &&
@@ -337,11 +330,11 @@ const Table = () => {
                         <div className="inline-block">
                           <div className="flex gap-2">
                             <DeleteButton
-                              submitHandler={deleteClient}
-                              clientData={item}
+                              submitHandler={deleteReport}
+                              reportData={item}
                             />
                             {!item.permanent_client && (
-                              <NewClient
+                              <NewReport
                                 loading={loading}
                                 clientData={{
                                   country: item.country,
@@ -352,7 +345,7 @@ const Table = () => {
                                   email: item.email_address,
                                   marketer: item.marketer_name,
                                 }}
-                                submitHandler={createNewClient}
+                                submitHandler={convertToClient}
                               />
                             )}
                           </div>
@@ -367,7 +360,7 @@ const Table = () => {
         ) : (
           <tr key={0}>
             <td colSpan={16} className=" align-center text-center">
-              No Clients To Show.
+              No Reports To Show.
             </td>
           </tr>
         ))}

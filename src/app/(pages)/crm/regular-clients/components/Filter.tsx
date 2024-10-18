@@ -14,6 +14,7 @@ interface PropsType {
     fromDate: string;
     toDate: string;
     test: boolean;
+    permanentClient: boolean;
     generalSearchString: string;
     show: string;
   };
@@ -54,6 +55,7 @@ const FilterButton: React.FC<PropsType> = props => {
       fromDate: '',
       toDate: '',
       test: false,
+      permanentClient: false,
       generalSearchString: '',
       show: 'all',
     });
@@ -93,7 +95,7 @@ const FilterButton: React.FC<PropsType> = props => {
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
             <h3 className="text-gray-900 text-lg lg:text-xl font-semibold dark:text-white uppercase">
-              Filter Clients
+              Filter Reports
             </h3>
             <button
               onClick={() => setIsOpen(false)}
@@ -181,6 +183,22 @@ const FilterButton: React.FC<PropsType> = props => {
                   />
                   <label htmlFor="test-checkbox" className="uppercase ">
                     Test Job
+                  </label>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <input
+                    name="permanentClient"
+                    checked={filters.permanentClient}
+                    onChange={handleChange}
+                    id="permanent-client-checkbox"
+                    type="checkbox"
+                    className="w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <label
+                    htmlFor="permanent-client-checkbox"
+                    className="uppercase "
+                  >
+                    Permanent
                   </label>
                 </div>
               </div>

@@ -5,12 +5,8 @@ import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
-  clientData: { [key: string]: any };
-  submitHandler: (
-    originalClientData: { [key: string]: any },
-    reportId: string,
-    reqBy: string,
-  ) => Promise<void>;
+  reportData: { [key: string]: any };
+  submitHandler: (reportId: string, reqBy: string) => Promise<void>;
 }
 const DeleteButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -35,7 +31,7 @@ const DeleteButton: React.FC<PropsType> = props => {
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
             <h3 className="text-gray-900 text-lg lg:text-xl font-semibold dark:text-white uppercase">
-              Delete Client
+              Delete Report
             </h3>
             <button
               onClick={() => setIsOpen(false)}
@@ -48,7 +44,7 @@ const DeleteButton: React.FC<PropsType> = props => {
           </header>
           <div className="overflow-hidden max-h-[70vh] p-4">
             <p className="text-lg">
-              Are you sure, you want to delete this client?
+              Are you sure, you want to delete this report?
             </p>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">
@@ -62,8 +58,7 @@ const DeleteButton: React.FC<PropsType> = props => {
             <button
               onClick={() => {
                 props.submitHandler(
-                  props.clientData,
-                  props.clientData?._id,
+                  props.reportData?._id,
                   session?.user.real_name || '',
                 );
                 setIsOpen(false);

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 // Interface for Report document
-export interface Report extends mongoose.Document {
+export interface ReportDataType {
   marketer_id: string;
   marketer_name: string;
   calling_date: string;
@@ -30,6 +30,8 @@ export interface Report extends mongoose.Document {
   createdAt: string;
   updatedAt: string;
 }
+
+export type Report = mongoose.Document & ReportDataType;
 
 // Create Report schema with type annotations for properties
 const ReportSchema = new mongoose.Schema<Report>(

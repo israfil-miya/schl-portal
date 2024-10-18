@@ -41,17 +41,23 @@ export interface Query {
   is_prospected?: boolean;
   is_lead?: boolean;
   followup_done?: boolean;
+  regular_client?: boolean;
+  permanent_client?: boolean;
   onboard_date?: string | { [key: string]: RegexQuery | string | undefined };
   prospect_status?: RegexQuery;
   calling_date_history?: { [key: string]: any };
-  regular_client?: boolean;
   test_given_date_history?: { [key: string]: any };
   $or?: { [key: string]: RegexQuery }[];
 }
 
 export type BooleanFields = Extract<
   keyof Query,
-  'is_test' | 'is_prospected' | 'is_lead' | 'followup_done' | 'regular_client'
+  | 'is_test'
+  | 'is_prospected'
+  | 'is_lead'
+  | 'followup_done'
+  | 'regular_client'
+  | 'permanent_client'
 >;
 export type RegexFields = Extract<
   keyof Query,
@@ -409,6 +415,7 @@ async function handleGetAllReports(req: Request): Promise<{
       fromDate,
       toDate,
       test,
+      permanentClient,
       prospect,
       onlyLead,
       followupDone,
@@ -432,6 +439,7 @@ async function handleGetAllReports(req: Request): Promise<{
 
     addIfDefined(query, 'followup_done', followupDone);
     addIfDefined(query, 'regular_client', regularClient);
+    addIfDefined(query, 'permanent_client', permanentClient);
 
     if (staleClient) {
       const twoMonthsAgo = moment().subtract(2, 'months').format('YYYY-MM-DD');
@@ -532,7 +540,7 @@ async function handleGetAllReports(req: Request): Promise<{
         reports = await Report.find(searchQuery).lean();
       }
 
-      console.log('SEARCH Query:', searchQuery);
+      console.log('GET REPORTS: SEARCH Query:', searchQuery);
 
       const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);
 
