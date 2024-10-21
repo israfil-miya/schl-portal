@@ -251,7 +251,7 @@ async function handleDeleteClient(req: Request): Promise<{
     if (resData) {
       const reportData = await Report.findOne({
         is_lead: false,
-        company_name: createRegexQuery(resData.client_name),
+        company_name: createRegexQuery(resData.client_name.trim()),
       });
 
       if (reportData) {
