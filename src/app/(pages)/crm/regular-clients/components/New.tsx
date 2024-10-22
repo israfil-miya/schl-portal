@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { UserRoundPlus, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
-import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/dateConversion';
+import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
 
 interface PropsType {
   clientData: { [key: string]: any };

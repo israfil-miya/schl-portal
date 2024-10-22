@@ -1,52 +1,28 @@
 import Client from '@/models/Clients';
+import Order from '@/models/Orders';
+import { calculateTimeDifference } from '@/utility/date';
+import { createRegexQuery } from '@/utility/filterHelpers';
 import getQuery from '@/utility/getApiQuery';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { NextRequest, NextResponse } from 'next/server';
-import { createRegexQuery } from '@/utility/filterHelpers';
-import Order from '@/models/Orders';
 
-function calculateTimeDifference(deliveryDate, deliveryTime) {
-  const is12HourFormat = /\b(?:am|pm)\b/i.test(deliveryTime);
-  const [time, meridiem] = deliveryTime.split(/\s+/);
-  const [hours, minutes] = time.split(':').map(Number);
-
-  let adjustedHours = hours;
-  if (is12HourFormat) {
-    const meridiemLower = meridiem.toLowerCase();
-    adjustedHours = moment(
-      `${hours}:${minutes} ${meridiemLower}`,
-      'hh:mm a',
-    ).hours();
-  }
-  const asiaDhakaTime = moment().tz('Asia/Dhaka');
-
-  const [year, month, day] = deliveryDate.split('-').map(Number);
-  const deliveryDateTime = moment.tz(
-    `${year}-${month}-${day} ${adjustedHours}:${minutes}`,
-    'YYYY-MM-DD HH:mm',
-    'Asia/Dhaka',
-  );
-
-  const timeDifferenceMs = deliveryDateTime.diff(asiaDhakaTime);
-
-  return timeDifferenceMs;
-}
-
-
-async function handleNewOrder(req, res) {
+async function handleNewOrder(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
   try {
-    const data = req.body;
-    const resData = await Order.create(data);
+    const orderData = req.json();
+    const resData = await Order.create(orderData);
 
     if (resData) {
-      res.status(200).json(resData);
+      return { data: 'Added the order successfully', status: 200 };
     } else {
-      sendError(res, 400, 'No order found');
+      return { data: 'Unable to add new order', status: 400 };
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
@@ -354,36 +330,10 @@ async function handleEditOrder(req, res) {
 async function handleDeleteOrder(req: Request): Promise<{
   data: string | Object;
   status: number;
-}>  {
-  try {
-    const {order_id}: {order_id: string} = await req.json();
-    try {
-      const resData = await Order.findByIdAndDelete(order_id);
-      if (resData) {
-        return { data: 'Deleted the order successfully', status: 200 };
-      } else {
-        return { data: 'Unable to delete the order', status: 400 };
-      }
-    } catch (e) {
-      console.error(e);
-      return { data: 'An error occurred', status: 500 };
-    }
-}
-
-async function handleFinishOrder(req: Request): Promise<{
-  data: string | Object;
-  status: number;
 }> {
   try {
-    const {order_id}: {order_id: string} = await req.json();
-    const resData = await Order.findByIdAndUpdate(
-      order_id,
-      { status: 'Finished' },
-      {
-        new: true,
-      },
-    );
-
+    const { order_id }: { order_id: string } = await req.json();
+    const resData = await Order.findByIdAndDelete(order_id);
     if (resData) {
       return { data: 'Deleted the order successfully', status: 200 };
     } else {
@@ -395,13 +345,42 @@ async function handleFinishOrder(req: Request): Promise<{
   }
 }
 
-async function handleRedoOrder(req, res) {
+async function handleFinishOrder(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
   try {
-    const data = req.headers;
-    // console.log("Received edit request with data:", data);
+    const { order_id }: { order_id: string } = await req.json();
+    const resData = await Order.findByIdAndUpdate(
+      order_id,
+      { status: 'Finished' },
+      {
+        new: true,
+      },
+    );
+    if (resData) {
+      return {
+        data: 'Changed the status of the order successfully',
+        status: 200,
+      };
+    } else {
+      return { data: 'Unable to change the status of the order', status: 400 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+async function handleRedoOrder(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  try {
+    const { order_id }: { order_id: string } = await req.json();
 
     const resData = await Order.findByIdAndUpdate(
-      data.id,
+      order_id,
       { status: 'Correction' },
       {
         new: true,
@@ -409,33 +388,36 @@ async function handleRedoOrder(req, res) {
     );
 
     if (resData) {
-      res.status(200).json(resData);
+      return {
+        data: 'Changed the status of the order successfully',
+        status: 200,
+      };
     } else {
-      sendError(res, 400, 'No order found');
+      return { data: 'Unable to change the status of the order', status: 400 };
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleGetAllOrdersOfClient(req, res) {
+async function handleGetAllOrdersOfClient(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
   try {
-    const data = req.headers;
-    // console.log("Received edit request with data of Client:", data);
+    const { client_code }: { client_code: string } = await req.json();
 
-    const resData = await Order.find({ client_code: data.client_code });
-
-    // console.log(resData);
+    const resData = await Order.find({ client_code });
 
     if (resData) {
-      res.status(200).json(resData);
+      return { data: resData, status: 400 };
     } else {
-      sendError(res, 400, 'No order found');
+      return { data: 'No orders found', status: 400 };
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 

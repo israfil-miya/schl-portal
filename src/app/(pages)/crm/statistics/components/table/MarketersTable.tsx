@@ -1,8 +1,10 @@
 'use client';
 import { EmployeeDataType } from '@/models/Employees';
-import { YYYY_MM_DD_to_DD_MM_YY as convertDDMMYY } from '@/utility/dateConversion';
+import {
+  YYYY_MM_DD_to_DD_MM_YY as convertDDMMYY,
+  getTodayDate,
+} from '@/utility/date';
 import fetchData from '@/utility/fetchData';
-import getTodayDate from '@/utility/getTodayDate';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
