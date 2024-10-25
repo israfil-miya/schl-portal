@@ -1,29 +1,78 @@
 import Client from '@/models/Clients';
-import Order from '@/models/Orders';
-import { calculateTimeDifference } from '@/utility/date';
-import { createRegexQuery } from '@/utility/filterHelpers';
+import Invoice from '@/models/Invoices';
+import Order, { OrderDataType } from '@/models/Orders';
+import {
+  calculateTimeDifference,
+  getDateRange,
+  getDatesInRange,
+  getLast12Months,
+  getMonthRange,
+} from '@/utility/date';
+import { addIfDefined, createRegexQuery } from '@/utility/filterHelpers';
 import getQuery from '@/utility/getApiQuery';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
+import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-async function handleNewOrder(req: Request): Promise<{
-  data: string | Object;
-  status: number;
-}> {
-  try {
-    const orderData = req.json();
-    const resData = await Order.create(orderData);
+const monthNames = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
-    if (resData) {
-      return { data: 'Added the order successfully', status: 200 };
-    } else {
-      return { data: 'Unable to add new order', status: 400 };
-    }
-  } catch (e) {
-    console.error(e);
-    return { data: 'An error occurred', status: 500 };
-  }
+const countriesList = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden'];
+
+interface OrderData {
+  date: string;
+  orderQuantity: number;
+  orderPending: number;
+  fileQuantity: number;
+  filePending: number;
+}
+interface CountryOrderData {
+  date: string;
+  orderQuantity: number;
+  fileQuantity: number;
+  isoDate?: Date;
+}
+interface StatusOrderData {
+  date: string;
+  orderQuantity: number;
+  orderPending: number;
+  fileQuantity: number;
+  filePending: number;
+  isoDate?: Date;
+}
+
+interface OrderDetails {
+  details: (OrderDataType & { country: string })[];
+  totalFiles: number;
+}
+
+interface ClientOrdersByMonth {
+  client_code: string;
+  orders: {
+    [monthYear: string]: {
+      count: number;
+      totalFiles: number;
+      invoiced: boolean;
+    };
+  }[];
+}
+
+interface PaginatedData<ItemsType> {
+  pagination: { count: number; pageCount: number };
+  items: ItemsType;
 }
 
 async function handleGetOrdersUnFinished(req, res) {
@@ -327,6 +376,25 @@ async function handleEditOrder(req, res) {
   }
 }
 
+async function handleCreateOrder(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  try {
+    const orderData = req.json();
+    const resData = await Order.create(orderData);
+
+    if (resData) {
+      return { data: 'Added the order successfully', status: 200 };
+    } else {
+      return { data: 'Unable to add new order', status: 400 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
 async function handleDeleteOrder(req: Request): Promise<{
   data: string | Object;
   status: number;
@@ -421,221 +489,33 @@ async function handleGetAllOrdersOfClient(req: Request): Promise<{
   }
 }
 
-function getDatesInRange(fromTime, toTime) {
-  const dates = [];
-  let currentDate = new Date(fromTime);
-  const endDate = new Date(toTime).setHours(23, 59, 59, 999);
-
-  while (currentDate <= endDate) {
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day}`;
-    dates.push(formattedDate);
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return dates;
-}
-
-function getDateRange() {
-  const today = new Date();
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(today.getDate() - 14);
-
-  const formatDate = date => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  return {
-    from: formatDate(fourteenDaysAgo),
-    to: formatDate(today),
-  };
-}
-
-async function handleGetOrdersByFilterStat(req, res) {
+// QP = Quantity and Pending
+async function handleGetOrdersQP(req: Request): Promise<{
+  data: string | OrderData[];
+  status: number;
+}> {
   try {
-    const { fromtime, totime } = req.headers;
+    const fromDate = headers().get('from_date');
+    const toDate = headers().get('to_date');
 
-    const fromStatus = getDateRange().from;
-    const toStatus = getDateRange().to;
+    let query: any = { type: { $ne: 'Test' } };
 
-    let query = { type: { $ne: 'Test' } };
-
-    if (fromtime || totime) {
+    if (fromDate || toDate) {
       query.createdAt = {};
-      if (fromtime) {
-        // Set the $gte filter for the start of the day
-        query.createdAt.$gte = new Date(fromtime);
-      }
-      if (totime) {
-        // Set the $lte filter for the end of the day
-        const toTimeDate = new Date(totime);
-        toTimeDate.setHours(23, 59, 59, 999); // Set to end of the day
-        query.createdAt.$lte = toTimeDate;
-      }
+      query.createdAt = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
+      };
     }
 
-    // console.log("QUERY: ", query)
-
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
+    if (!fromDate && !toDate) {
+      delete query.createdAt;
+    }
 
     const orders = await Order.find(query);
-    const mergedOrders = orders.reduce((merged, order) => {
-      const date =
-        order.createdAt instanceof Date
-          ? order.createdAt.toISOString().split('T')[0]
-          : order.createdAt.split('T')[0];
-
-      // console.log("VALIDATE IS DATE 1: ", date)
-
-      const [year, month, day] = date.split('-');
-      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
-
-      if (!merged[formattedDate]) {
-        merged[formattedDate] = {
-          date: formattedDate,
-          orderQuantity: 0,
-          orderPending: 0,
-          fileQuantity: 0,
-          filePending: 0,
-        };
-      }
-
-      // Update fileQuantity and filePending based on the order status and quantity
-      merged[formattedDate].fileQuantity += order.quantity;
-      merged[formattedDate].orderQuantity++;
-      if (order.status !== 'Finished') {
-        merged[formattedDate].filePending += order.quantity;
-        merged[formattedDate].orderPending++;
-      }
-
-      return merged;
-    }, {});
-    const ordersQP = Object.values(mergedOrders);
-
-    // console.log("Code reached here 01")
-
-    // console.log(fromStatus, toStatus)
-
-    const ordersForStatus = await Order.find({
-      createdAt: {
-        $gte: new Date(fromStatus),
-        $lte: new Date(toStatus).setHours(23, 59, 59, 999),
-      },
-    });
-
-    // console.log("Code reached here 02")
-
-    const mergedOrdersStatus = ordersForStatus.reduce((merged, order) => {
-      const date =
-        order.createdAt instanceof Date
-          ? order.createdAt.toISOString().split('T')[0]
-          : order.createdAt.split('T')[0];
-
-      // console.log("VALIDATE IS DATE 2: ", date)
-
-      const [year, month, day] = date.split('-');
-      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
-
-      if (!merged[formattedDate]) {
-        merged[formattedDate] = {
-          date: formattedDate,
-          orderQuantity: 0,
-          orderPending: 0,
-          fileQuantity: 0,
-          filePending: 0,
-        };
-      }
-
-      // Update fileQuantity and filePending based on the order status and quantity
-      merged[formattedDate].fileQuantity += order.quantity;
-      merged[formattedDate].orderQuantity++;
-      if (order.status !== 'Finished') {
-        merged[formattedDate].filePending += order.quantity;
-        merged[formattedDate].orderPending++;
-      }
-
-      merged[formattedDate].isoDate = order.createdAt;
-
-      return merged;
-    }, {});
-
-    const ordersStatus = Object.values(mergedOrdersStatus);
-
-    const clientsAll = await Client.find({}, { client_code: 1, country: 1 });
-
-    let ordersDetails = {
-      Australia: [],
-      Denmark: [],
-      Finland: [],
-      Norway: [],
-      Sweden: [],
-      Others: [],
-    }; // Initialize ordersDetails with the countries object
-
-    // Create an array of promises
-    const orderPromises = clientsAll.map(async clientData =>
-      Order.find(
-        { ...query, client_code: clientData.client_code },
-        { createdAt: 1, quantity: 1 },
-      ),
-    );
-
-    // Use Promise.all to wait for all asynchronous calls to complete
-    const ordersAll = await Promise.all(orderPromises);
-
-    ordersAll.forEach((clientOrders, index) => {
-      const clientData = clientsAll[index];
-      const country = ordersDetails[clientData.country]
-        ? clientData.country
-        : 'Others';
-      if (!ordersDetails[country]) {
-        ordersDetails[country] = []; // Create an empty array if it doesn't exist
-      }
-      ordersDetails[country].push(...clientOrders); // Use spread operator to push the client orders
-    });
-
-    // Remove empty categories
-    for (const country in ordersDetails) {
-      if (ordersDetails[country].length === 0) {
-        delete ordersDetails[country];
-      }
-    }
-
-    let ordersCD = {
-      Australia: [],
-      Denmark: [],
-      Finland: [],
-      Norway: [],
-      Sweden: [],
-      Others: [],
-    };
-
-    for (const [countryName, ordersArr] of Object.entries(ordersDetails)) {
-      const merged = {}; // Reset merged object for each country
-
-      const sortedDates = ordersArr.reduce((merged, order) => {
-        const date =
-          order.createdAt instanceof Date
-            ? order.createdAt.toISOString().split('T')[0]
-            : order.createdAt.split('T')[0];
+    const mergedOrders = orders.reduce(
+      (merged: Record<string, OrderData>, order: any) => {
+        const date = order.createdAt.toISOString().split('T')[0];
         const [year, month, day] = date.split('-');
         const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
@@ -643,235 +523,272 @@ async function handleGetOrdersByFilterStat(req, res) {
           merged[formattedDate] = {
             date: formattedDate,
             orderQuantity: 0,
+            orderPending: 0,
             fileQuantity: 0,
+            filePending: 0,
           };
         }
 
         merged[formattedDate].fileQuantity += order.quantity;
         merged[formattedDate].orderQuantity++;
+        if (order.status !== 'Finished') {
+          merged[formattedDate].filePending += order.quantity;
+          merged[formattedDate].orderPending++;
+        }
+
+        return merged;
+      },
+      {},
+    );
+
+    const ordersQP: OrderData[] = Object.values(mergedOrders);
+    return { data: ordersQP, status: 200 };
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+// CD = Country Data
+async function handleGetOrdersCD(req: Request): Promise<{
+  data: string | Record<string, CountryOrderData[]>;
+  status: number;
+}> {
+  try {
+    const fromDate = headers().get('from_date') as string;
+    const toDate = headers().get('to_date') as string;
+    const query: any = { type: { $ne: 'Test' } };
+
+    if (fromDate || toDate) {
+      query.createdAt = {};
+      query.createdAt = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
+      };
+    }
+
+    if (!fromDate && !toDate) {
+      delete query.createdAt;
+    }
+
+    // Retrieve clients and initialize country mapping
+    const clientsAll = await Client.find({}, { client_code: 1, country: 1 });
+    const ordersDetails: Record<string, any[]> = {
+      ...countriesList.reduce(
+        (acc, country) => ({ ...acc, [country]: [] }),
+        {},
+      ),
+      Others: [],
+    };
+
+    // Collect all orders for each client
+    const orderPromises = clientsAll.map(client =>
+      Order.find(
+        { ...query, client_code: client.client_code },
+        { createdAt: 1, quantity: 1 },
+      ),
+    );
+    const ordersAll = await Promise.all(orderPromises);
+
+    // Map orders to their respective countries
+    ordersAll.forEach((clientOrders, index) => {
+      const clientCountry = clientsAll[index].country || 'Others';
+      const country = ordersDetails[clientCountry] ? clientCountry : 'Others';
+      ordersDetails[country] = [
+        ...(ordersDetails[country] || []),
+        ...clientOrders,
+      ];
+    });
+
+    // Process and format data for each country
+    const ordersCD: Record<string, CountryOrderData[]> = {};
+    Object.entries(ordersDetails).forEach(([country, ordersArr]) => {
+      const sortedDates = ordersArr.reduce<Record<string, CountryOrderData>>(
+        (merged, order) => {
+          const date = order.createdAt.toISOString().split('T')[0];
+          const [year, month, day] = date.split('-');
+          const formattedDate = `${monthNames[+month - 1]} ${day}`;
+
+          if (!merged[formattedDate]) {
+            merged[formattedDate] = {
+              date: formattedDate,
+              orderQuantity: 0,
+              fileQuantity: 0,
+              isoDate: order.createdAt,
+            };
+          }
+          merged[formattedDate].fileQuantity += order.quantity;
+          merged[formattedDate].orderQuantity++;
+
+          return merged;
+        },
+        {},
+      );
+
+      ordersCD[country] = Object.values(sortedDates);
+    });
+
+    return { data: ordersCD, status: 200 };
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+async function handleGetOrdersStatus(req: Request): Promise<{
+  data: string | StatusOrderData[];
+  status: number;
+}> {
+  try {
+    const statusFromDate = getDateRange(14).from;
+    const statusToDate = getDateRange(14).to;
+
+    const ordersForStatus = await Order.find({
+      createdAt: {
+        $gte: new Date(statusFromDate),
+        $lte: new Date(statusToDate).setHours(23, 59, 59, 999),
+      },
+    });
+
+    const mergedOrdersStatus = ordersForStatus.reduce(
+      (merged: Record<string, StatusOrderData>, order: any) => {
+        const date = order.createdAt.toISOString().split('T')[0];
+        const [year, month, day] = date.split('-');
+        const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+
+        if (!merged[formattedDate]) {
+          merged[formattedDate] = {
+            date: formattedDate,
+            orderQuantity: 0,
+            orderPending: 0,
+            fileQuantity: 0,
+            filePending: 0,
+          };
+        }
+
+        merged[formattedDate].fileQuantity += order.quantity;
+        merged[formattedDate].orderQuantity++;
+        if (order.status !== 'Finished') {
+          merged[formattedDate].filePending += order.quantity;
+          merged[formattedDate].orderPending++;
+        }
 
         merged[formattedDate].isoDate = order.createdAt;
 
         return merged;
-      }, {});
-
-      const sortedDatesArray = Object.values(sortedDates).sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateA - dateB;
-      });
-
-      ordersCD[countryName].push(...sortedDatesArray);
-    }
-
-    const dateRange = getDatesInRange(fromtime, totime).map(date => {
-      const [year, month, day] = date.split('-');
-      return `${monthNames[month - 1]} ${day}`;
-    });
-
-    const dateRangeForStatus = getDatesInRange(fromStatus, toStatus).map(
-      date => {
-        const [year, month, day] = date.split('-');
-        return `${monthNames[month - 1]} ${day}`;
       },
+      {},
     );
 
-    const zeroDataQP = {
-      orderQuantity: 0,
-      orderPending: 0,
-      fileQuantity: 0,
-      filePending: 0,
-      isoDate: null,
-    };
-    const ordersQPWithMissingDates = dateRange.map(date => {
-      const existingData = ordersQP.find(item => item.date === date);
-      if (existingData) {
-        return existingData;
-      } else {
-        return { date, ...zeroDataQP };
-      }
-    });
-
-    const zeroDataStatus = {
-      orderQuantity: 0,
-      orderPending: 0,
-      fileQuantity: 0,
-      filePending: 0,
-    };
-    const ordersStatusWithMissingDates = dateRangeForStatus.map(date => {
-      const existingData = ordersStatus.find(item => item.date === date);
-      if (existingData) {
-        return existingData;
-      } else {
-        return { date, ...zeroDataStatus };
-      }
-    });
-
-    const zeroDataCD = {
-      orderQuantity: 0,
-      fileQuantity: 0,
-      isoDate: null,
-    };
-    const ordersCDWithMissingDates = {};
-    for (const [country, ordersArr] of Object.entries(ordersCD)) {
-      ordersCDWithMissingDates[country] = dateRange.map(date => {
-        const existingData = ordersArr.find(item => item.date === date);
-        if (existingData) {
-          return existingData;
-        } else {
-          return { date, ...zeroDataCD };
-        }
-      });
-    }
-
-    const returnData = {
-      ordersQP: ordersQPWithMissingDates,
-      ordersCD: ordersCDWithMissingDates,
-      ordersStatus: ordersStatusWithMissingDates,
-    };
-
-    if (returnData) {
-      res.status(200).json(returnData);
-    } else {
-      sendError(res, 400, 'Something went wrong');
-    }
+    const ordersStatus: StatusOrderData[] = Object.values(mergedOrdersStatus);
+    return { data: ordersStatus, status: 200 };
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleGetOrdersByCountry(req, res) {
+async function handleGetOrdersByCountry(req: Request): Promise<{
+  data: string | OrderDetails;
+  status: number;
+}> {
   try {
-    let { country, fromtime, totime } = req.headers;
-    if (!country) sendError(res, 400, 'Country must be provided');
+    const fromDate = headers().get('from_date');
+    const toDate = headers().get('to_date');
+    const country = headers().get('country');
 
-    let countriesList = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden'];
+    if (!country) throw new Error('Country must be provided');
 
-    let query = { type: { $ne: 'Test' } };
+    let query: any = { type: { $ne: 'Test' } };
 
-    if (fromtime || totime) {
+    if (fromDate || toDate) {
       query.createdAt = {};
-      if (fromtime) {
-        // Set the $gte filter for the start of the day
-        query.createdAt.$gte = new Date(fromtime);
-      }
-      if (totime) {
-        // Set the $lte filter for the end of the day
-        const toTimeDate = new Date(totime);
-        toTimeDate.setHours(23, 59, 59, 999); // Set to end of the day
-        query.createdAt.$lte = toTimeDate;
-      }
+      query.createdAt = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
+      };
     }
 
-    let countryFilter = country;
-    if (country == 'Others') countryFilter = { $nin: countriesList };
+    if (!fromDate && !toDate) {
+      delete query.createdAt;
+    }
 
+    const countryFilter =
+      country === 'Others' ? { $nin: countriesList } : country;
     const clientsAll = await Client.find(
       { country: countryFilter },
       { client_code: 1, country: 1 },
+    ).lean();
+
+    const returnData: OrderDetails = { details: [], totalFiles: 0 };
+    await Promise.all(
+      clientsAll.map(async clientData => {
+        const orders = await Order.find({
+          ...query,
+          client_code: clientData.client_code,
+        }).lean();
+        orders.forEach(order => {
+          returnData.details.push({ ...order, country: clientData.country });
+          returnData.totalFiles += order.quantity;
+        });
+      }),
     );
 
-    let returnData = {
-      details: [],
-      totalFiles: 0,
-    };
-
-    // Create an array of promises for Order.find operations
-    const promises = clientsAll.map(clientData => {
-      return Order.find({ ...query, client_code: clientData.client_code })
-        .lean()
-        .then(ordersOfClient => {
-          if (ordersOfClient.length === 0) return;
-
-          ordersOfClient.forEach(data => {
-            returnData.details.push({ ...data, country: clientData.country });
-            returnData.totalFiles += data.quantity;
-          });
-        });
-    });
-
-    Promise.all(promises)
-      .then(() => {
-        res.status(200).json(returnData);
-      })
-      .catch(error => {
-        // console.log(error);
-        sendError(res, 400, 'Something went wrong');
-      });
-  } catch (e) {
-    console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: returnData, status: 200 };
+  } catch (error) {
+    console.error(error);
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-const getLast12Months = () => {
-  const result = [];
-  const today = moment();
-  for (let i = 0; i < 12; i++) {
-    result.push({
-      monthYear: today.format('YYYY-MM'), // Format as "YYYY-MM"
-    });
-    today.subtract(1, 'months');
-  }
-  return result.reverse(); // Reverse to start from oldest to newest
-};
+// Function: handleGetOrdersByMonth
+async function handleGetOrdersByMonth(req: Request): Promise<{
+  data: string | PaginatedData<ClientOrdersByMonth[]>;
+  status: number;
+}> {
+  const page: number = Number(headers().get('page')) || 1;
+  const ITEMS_PER_PAGE: number = Number(headers().get('items_per_page')) || 30;
+  // const isFilter: boolean = headers().get('filtered') === 'true';
+  // const paginated: boolean = headers().get('paginated') === 'true';
 
-function getMonthRange(monthYear) {
-  const [monthName, year] = monthYear.split(' ');
-  const monthNumber = moment().month(monthName).format('MM');
-  const startDate = moment
-    .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
-    .startOf('month')
-    .format('YYYY-MM-DD');
-  const endDate = moment
-    .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
-    .endOf('month')
-    .format('YYYY-MM-DD');
-  return { start: startDate, end: endDate };
-}
+  const filters = await req.json();
 
-async function handleGetOrdersByMonth(req, res) {
-  const ITEMS_PER_PAGE = 20;
-  let page = parseInt(req.headers.page) || 1;
-  console.log('Page = ', req.headers.page);
-  let { client_code } = req.headers;
-  let query = {};
+  const { client_code } = filters;
 
-  if (client_code)
-    query.client_code = { $regex: `^${client_code.trim()}$`, $options: 'i' };
+  const query: any = {};
+
+  addIfDefined(query, 'client_code', createRegexQuery(client_code, true));
 
   try {
-    // Step 1: Get client codes from the Client collection with pagination
     const skip = (page - 1) * ITEMS_PER_PAGE;
     const clients = await Client.find(query, { client_code: 1 })
       .skip(skip)
       .limit(ITEMS_PER_PAGE)
       .lean();
+    const result: ClientOrdersByMonth[] = [];
 
-    // Step 2: Loop through each client code
-    const result = [];
     for (const client of clients) {
-      const clientCode = client.client_code;
-      const clientOrders = {
-        client_code: clientCode,
+      const clientOrders: ClientOrdersByMonth = {
+        client_code: client.client_code,
         orders: [],
       };
 
-      // Step 3: Loop through the Order collection to count orders for each month
-      const ordersByMonth = {};
+      const ordersByMonth: Record<
+        string,
+        { count: number; totalFiles: number; invoiced: boolean }
+      > = {};
       const startDate = moment()
         .subtract(11, 'months')
         .startOf('month')
         .toDate();
       const endDate = moment().endOf('month').toDate();
+
       const orders = await Order.find({
-        // status: "Finished",
-        client_code: clientCode,
+        client_code: client.client_code,
         createdAt: { $gte: startDate, $lte: endDate },
       }).lean();
 
-      orders.forEach(order => {
+      orders.forEach((order: any) => {
         const monthYear = moment(order.createdAt).format('YYYY-MM');
         if (!ordersByMonth[monthYear]) {
           ordersByMonth[monthYear] = {
@@ -884,74 +801,46 @@ async function handleGetOrdersByMonth(req, res) {
         ordersByMonth[monthYear].totalFiles += order.quantity;
       });
 
-      // Step 4: Aggregate monthly order counts for the client
       const last12Months = getLast12Months();
-      await Promise.all(
-        last12Months.map(async month => {
-          const monthYear = month.monthYear;
-
-          // console.log(ordersByMonth, month);
-          const count = ordersByMonth[monthYear]?.count || 0;
-          const totalFiles = ordersByMonth[monthYear]?.totalFiles || 0;
-          let invoiced = ordersByMonth[monthYear]?.invoiced || false;
-
-          const formattedMonthYear = moment(monthYear, 'YYYY-MM').format(
-            'MMMM YYYY',
-          );
-
-          if (count) {
-            let monthYearRange = getMonthRange(formattedMonthYear);
-            try {
-              const invoiceData = await Invoice.findOne({
-                client_code: clientCode,
-                'time_period.fromDate': { $gte: monthYearRange.start },
-                'time_period.toDate': { $lte: monthYearRange.end },
-              }).lean();
-              if (invoiceData) {
-                invoiced = true;
-              }
-            } catch (error) {
-              console.error('Error fetching invoice data:', error);
-              invoiced = false;
-            }
-          }
-
-          return {
-            monthYear: formattedMonthYear,
-            data: { count, totalFiles, invoiced },
-          };
-        }),
-      ).then(monthlyData => {
-        // Sort the monthlyData array based on monthYear
-        monthlyData.sort(
-          (a, b) =>
-            moment(a.monthYear, 'MMMM YYYY') - moment(b.monthYear, 'MMMM YYYY'),
+      for (const month of last12Months) {
+        const monthAndYear = month.monthAndYear;
+        const formattedMonthYear = moment(monthAndYear, 'YYYY-MM').format(
+          'MMMM YYYY',
         );
+        const count = ordersByMonth[monthAndYear]?.count || 0;
+        const totalFiles = ordersByMonth[monthAndYear]?.totalFiles || 0;
+        let invoiced = false;
 
-        // Push the sorted data into clientOrders.orders
-        monthlyData.forEach(data => {
-          clientOrders.orders.push({ [data.monthYear]: data.data });
+        if (count) {
+          const { start, end } = getMonthRange(formattedMonthYear);
+          invoiced = !!(await Invoice.findOne({
+            client_code: client.client_code,
+            'time_period.fromDate': { $gte: start },
+            'time_period.toDate': { $lte: end },
+          }).lean());
+        }
+
+        clientOrders.orders.push({
+          [formattedMonthYear]: { count, totalFiles, invoiced },
         });
-      });
+      }
 
       result.push(clientOrders);
     }
 
-    // Step 5: Pagination
-    const count = await Client.countDocuments(query); // Count the total matching documents
-    const pageCount = Math.ceil(count / ITEMS_PER_PAGE); // Calculate the total number of pages
+    const count = await Client.countDocuments(query);
+    const pageCount = Math.ceil(count / ITEMS_PER_PAGE);
 
-    res.status(200).json({
-      pagination: {
-        count,
-        pageCount,
-        currentPage: page,
+    return {
+      data: {
+        pagination: { count, pageCount },
+        items: result,
       },
-      items: result,
-    });
+      status: 200,
+    };
   } catch (error) {
-    console.error('Error fetching orders by month:', error);
-    sendError(res, 500, 'An error occurred');
+    console.error(error);
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
@@ -959,17 +848,23 @@ export async function POST(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
+    case 'create-order':
+      res = await handleCreateOrder(req);
+      return NextResponse.json(res.data, { status: res.status });
     case 'delete-order':
-      res = await handleGetAllReports(req);
+      res = await handleDeleteOrder(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'finish-order':
-      res = await handleGetAllReports(req);
+      res = await handleFinishOrder(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'redo-order':
-      res = await handleGetAllReports(req);
+      res = await handleRedoOrder(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'edit-order':
-      res = await handleGetAllReports(req);
+      res = await handleEditOrder(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'get-orders-by-month':
+      res = await handleGetOrdersByMonth(req);
       return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
@@ -981,7 +876,7 @@ export async function GET(req: Request) {
 
   switch (getQuery(req).action) {
     case 'get-all-orders':
-      res = await handleGetReportsCount(req);
+      res = await handleGetAllOrderPaginated(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-unfinished-orders':
       res = await handleGetClientsOnboard(req);
@@ -993,20 +888,24 @@ export async function GET(req: Request) {
       res = await handleGetAllMarketers(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-order-by-id':
-      res = await handleGetAllMarketers(req);
+      res = await handleGetOrdersById(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-client-orders':
-      res = await handleGetAllMarketers(req);
+      res = await handleGetAllOrdersOfClient(req);
       return NextResponse.json(res.data, { status: res.status });
-    case 'get-order-stats':
-      res = await handleGetAllMarketers(req);
+    case 'get-orders-status':
+      res = await handleGetOrdersStatus(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'get-orders-qp':
+      res = await handleGetOrdersQP(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'get-orders-cd':
+      res = await handleGetOrdersCD(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-orders-by-country':
-      res = await handleGetAllMarketers(req);
+      res = await handleGetOrdersByCountry(req);
       return NextResponse.json(res.data, { status: res.status });
-    case 'get-orders-by-month':
-      res = await handleGetAllMarketers(req);
-      return NextResponse.json(res.data, { status: res.status });
+
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }

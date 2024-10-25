@@ -107,7 +107,8 @@ async function handleGetAllClients(req: Request): Promise<{
 }> {
   try {
     const page: number = Number(headers().get('page')) || 1;
-    const ITEMS_PER_PAGE: number = Number(headers().get('item_per_page')) || 30;
+    const ITEMS_PER_PAGE: number =
+      Number(headers().get('items_per_page')) || 30;
     const isFilter: boolean = headers().get('filtered') === 'true';
     const paginated: boolean = headers().get('paginated') === 'true';
 
