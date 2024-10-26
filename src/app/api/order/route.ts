@@ -8,12 +8,35 @@ import {
   getLast12Months,
   getMonthRange,
 } from '@/utility/date';
-import { addIfDefined, createRegexQuery } from '@/utility/filterHelpers';
+import {
+  addIfDefined,
+  addRegexField,
+  createRegexQuery,
+} from '@/utility/filterHelpers';
 import getQuery from '@/utility/getApiQuery';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+
+export interface RegexQuery {
+  $regex: string;
+  $options: string;
+}
+
+export interface Query {
+  type?: RegexQuery;
+  task?: RegexQuery;
+  folder?: RegexQuery;
+  client_code?: RegexQuery;
+  createdAt?: { $gte?: string; $lte?: string };
+  $or?: { [key: string]: RegexQuery }[];
+}
+
+export type RegexFields = Extract<
+  keyof Query,
+  'type' | 'task' | 'folder' | 'client_code'
+>;
 
 const monthNames = [
   'January',
@@ -75,237 +98,175 @@ interface PaginatedData<ItemsType> {
   items: ItemsType;
 }
 
-async function handleGetOrdersUnFinished(req, res) {
+async function handleGetUnfinishedOrders(req: Request): Promise<{
+  data: string | OrderDataType[];
+  status: number;
+}> {
   try {
     const orders = await Order.find({
       status: { $nin: ['Finished', 'Correction'] },
       type: { $ne: 'Test' },
     }).lean();
 
-    if (!orders) res.status(200).json([]);
+    if (orders) {
+      const sortedOrders = orders
+        .map(order => ({
+          ...order,
+          timeDifference: calculateTimeDifference(
+            order.delivery_date,
+            order.delivery_bd_time,
+          ),
+        }))
+        .sort((a, b) => a.timeDifference - b.timeDifference);
 
-    const sortedOrders = orders
-      .map(order => ({
-        ...order,
-        timeDifference: calculateTimeDifference(
-          order.delivery_date,
-          order.delivery_bd_time,
-        ),
-      }))
-      .sort((a, b) => a.timeDifference - b.timeDifference);
-
-    res.status(200).json(sortedOrders);
+      return { data: sortedOrders, status: 200 };
+    } else {
+      return { data: [], status: 200 };
+    }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, ['An error occurred']);
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleGetOrdersRedo(req, res) {
+async function handleGetRedoOrders(req: Request): Promise<{
+  data: string | OrderDataType[];
+  status: number;
+}> {
   try {
     const orders = await Order.find({
       $or: [{ type: 'Test' }, { status: 'Correction' }],
       status: { $ne: 'Finished' },
     }).lean();
 
-    const sortedOrders = orders
-      .map(order => ({
-        ...order,
-        timeDifference: calculateTimeDifference(
-          order.delivery_date,
-          order.delivery_bd_time,
-        ),
-      }))
-      .sort((a, b) => a.timeDifference - b.timeDifference);
-
-    res.status(200).json(sortedOrders);
+    if (orders) {
+      const sortedOrders = orders
+        .map(order => ({
+          ...order,
+          timeDifference: calculateTimeDifference(
+            order.delivery_date,
+            order.delivery_bd_time,
+          ),
+        }))
+        .sort((a, b) => a.timeDifference - b.timeDifference);
+      return { data: sortedOrders, status: 200 };
+    } else {
+      return { data: [], status: 200 };
+    }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleGetAllOrderPaginated(req, res) {
-  const ITEMS_PER_PAGE = 50;
-  const page = req.headers.page || 1;
-
-  // Put all your query params in here
-  const query = {};
-
+async function handleGetAllOrders(req: Request): Promise<{
+  data: string | PaginatedData<OrderDataType[]>;
+  status: number;
+}> {
   try {
-    const skip = (page - 1) * ITEMS_PER_PAGE; // Calculate the number of items to skip
+    const page: number = Number(headers().get('page')) || 1;
+    const ITEMS_PER_PAGE: number =
+      Number(headers().get('items_per_page')) || 30;
+    const isFilter: boolean = headers().get('filtered') === 'true';
+    const paginated: boolean = headers().get('paginated') === 'true';
 
-    // Add a new field "customSortField" based on your custom sorting criteria
-    const pipeline = [
-      { $match: query }, // Apply the query filter
-      {
-        $addFields: {
-          customSortField: {
-            $cond: {
-              if: {
-                $or: [
-                  {
-                    $and: [
-                      { $eq: ['$status', 'Correction'] },
-                      { $ne: ['$status', 'Finished'] },
-                    ],
-                  },
-                  {
-                    $and: [
-                      { $eq: ['$type', 'Test'] },
-                      { $ne: ['$status', 'Finished'] },
-                    ],
-                  },
-                ],
-              },
-              then: 0,
-              else: {
-                $cond: {
-                  if: { $ne: ['$status', 'Finished'] },
-                  then: 1,
-                  else: {
-                    $cond: {
-                      if: {
-                        $and: [
-                          { $eq: ['$status', 'Finished'] },
-                          { $eq: ['$type', 'Test'] },
-                        ],
-                      },
-                      then: 2,
-                      else: 3,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      { $sort: { customSortField: 1, createdAt: -1 } }, // Sort the documents based on "customSortField"
-      { $skip: skip }, // Skip items for pagination
-      { $limit: ITEMS_PER_PAGE }, // Limit the number of items per page
-    ];
+    const filters = await req.json();
 
-    const count = await Order.estimatedDocumentCount(query);
-
-    // Execute the aggregation pipeline and convert the result to an array
-    const orders = await Order.aggregate(pipeline).exec();
-
-    const pageCount = Math.ceil(count / ITEMS_PER_PAGE); // Calculate the total number of pages
-
-    // Send the response with pagination information and sorted, paginated data
-    res.status(200).json({
-      pagination: {
-        count,
-        pageCount,
-      },
-      items: orders,
-    });
-  } catch (e) {
-    console.error(e);
-    sendError(res, 500, 'An error occurred');
-  }
-}
-
-async function handleGetOrdersById(req, res) {
-  try {
-    let data = req.headers;
-    const orders = await Order.findById(data.id).lean();
-
-    if (!orders) sendError(res, 400, 'No order found with the id');
-    else res.status(200).json(orders);
-  } catch (e) {
-    console.error(e);
-    sendError(res, 500, 'An error occurred');
-  }
-}
-
-async function handleGetOrdersByFilter(req, res) {
-  try {
-    const { fromtime, totime, folder, client_code, task, type, forinvoice } =
-      req.headers;
-    const page = req.headers.page || 1;
-    const ITEMS_PER_PAGE = parseInt(req.headers.ordersnumber) || 20; // Number of items per page
-
-    console.log(
-      'Received request with parameters:',
-      fromtime,
-      totime,
+    const {
       folder,
-      client_code,
+      clientCode,
       task,
       type,
-      forinvoice,
-      page,
-    );
+      fromDate,
+      toDate,
+      generalSearchString,
+    } = filters;
 
-    let query = {};
-    // if (forinvoice) query.status = "Finished";
+    let query: Query = {};
 
-    if (folder) query.folder = { $regex: `^${folder.trim()}$`, $options: 'i' };
-    if (client_code)
-      query.client_code = { $regex: `^${client_code.trim()}$`, $options: 'i' };
-    if (task) query.task = { $regex: `^${task.trim()}$`, $options: 'i' };
-
-    if (type) query.type = { $regex: type, $options: 'i' };
-
-    if (fromtime || totime) {
+    if (fromDate || toDate) {
       query.createdAt = {};
-      if (fromtime) {
-        // Set the $gte filter for the start of the day
-        query.createdAt.$gte = new Date(fromtime);
-      }
-      if (totime) {
-        // Set the $lte filter for the end of the day
-        const toTimeDate = new Date(totime);
-        toTimeDate.setHours(23, 59, 59, 999); // Set to end of the day
-        query.createdAt.$lte = toTimeDate;
-      }
+      query.createdAt = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
+      };
     }
 
-    if (Object.keys(query).length === 0 && query.constructor === Object)
-      sendError(res, 400, 'No filter applied');
-    else {
-      // Calculate the number of documents to skip based on the current page
+    if (!fromDate && !toDate) {
+      delete query.createdAt;
+    }
+
+    addRegexField(query, 'folder', folder);
+    addRegexField(query, 'client_code', clientCode);
+    addRegexField(query, 'task', task);
+    addRegexField(query, 'type', type, true);
+
+    console.log(query);
+
+    const searchQuery: Query = { ...query };
+
+    let sortQuery: Record<string, 1 | -1> = {
+      customSortField: 1,
+      createdAt: -1,
+    };
+
+    if (!query && isFilter == true && !generalSearchString) {
+      return { data: 'No filter applied', status: 400 };
+    } else {
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
-      let pipeline = [
-        { $match: query }, // Apply the query filter
-        {
-          $addFields: {
-            customSortField: {
-              $cond: {
-                if: {
-                  $or: [
-                    {
-                      $and: [
-                        { $eq: ['$status', 'Correction'] },
-                        { $ne: ['$status', 'Finished'] },
-                      ],
-                    },
-                    {
-                      $and: [
-                        { $eq: ['$type', 'Test'] },
-                        { $ne: ['$status', 'Finished'] },
-                      ],
-                    },
-                  ],
-                },
-                then: 0,
-                else: {
-                  $cond: {
-                    if: { $ne: ['$status', 'Finished'] },
-                    then: 1,
-                    else: {
-                      $cond: {
-                        if: {
-                          $and: [
-                            { $eq: ['$status', 'Finished'] },
-                            { $eq: ['$type', 'Test'] },
-                          ],
+      if (generalSearchString) {
+        searchQuery['$or'] = [
+          { client_code: createRegexQuery(generalSearchString)! },
+          { client_name: createRegexQuery(generalSearchString)! },
+          { folder: createRegexQuery(generalSearchString)! },
+          { task: createRegexQuery(generalSearchString)! },
+          { folder_path: createRegexQuery(generalSearchString)! },
+        ];
+      }
+
+      const count: number = await Order.countDocuments(searchQuery);
+      let orders: OrderDataType[];
+
+      if (paginated) {
+        orders = (await Order.aggregate([
+          { $match: query },
+          {
+            $addFields: {
+              customSortField: {
+                $cond: {
+                  if: {
+                    $or: [
+                      {
+                        $and: [
+                          { $eq: ['$status', 'Correction'] },
+                          { $ne: ['$status', 'Finished'] },
+                        ],
+                      },
+                      {
+                        $and: [
+                          { $eq: ['$type', 'Test'] },
+                          { $ne: ['$status', 'Finished'] },
+                        ],
+                      },
+                    ],
+                  },
+                  then: 0,
+                  else: {
+                    $cond: {
+                      if: { $ne: ['$status', 'Finished'] },
+                      then: 1,
+                      else: {
+                        $cond: {
+                          if: {
+                            $and: [
+                              { $eq: ['$status', 'Finished'] },
+                              { $eq: ['$type', 'Test'] },
+                            ],
+                          },
+                          then: 2,
+                          else: 3,
                         },
-                        then: 2,
-                        else: 3,
                       },
                     },
                   },
@@ -313,66 +274,84 @@ async function handleGetOrdersByFilter(req, res) {
               },
             },
           },
-        },
-        { $sort: { customSortField: 1 } }, // Sort the documents based on "customSortField"
-        // Limit the number of items per page
-      ];
-
-      if (!req.headers.not_paginated) {
-        pipeline = [
-          ...pipeline,
-          { $sort: { createdAt: -1 } },
-          { $skip: skip }, // Skip items for pagination
+          { $sort: sortQuery },
+          { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
-        ];
+        ])) as OrderDataType[];
       } else {
-        pipeline = [...pipeline, { $sort: { createdAt: 1 } }];
+        orders = await Order.find(searchQuery).lean().sort({ createdAt: -1 });
       }
 
-      // console.log(pipeline);
+      console.log('SEARCH Query:', searchQuery);
 
-      console.log('Final Query: ', query);
+      const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);
 
-      const count = await Order.countDocuments(query); // Count the total matching documents
+      if (!orders) {
+        return { data: 'Unable to retrieve orders', status: 400 };
+      } else {
+        let ordersData = {
+          pagination: {
+            count,
+            pageCount,
+          },
+          items: orders,
+        };
 
-      const orders = await Order.aggregate(pipeline).exec();
-
-      // console.log("FILTERED ORDERS: ", orders.length);
-
-      const pageCount = Math.ceil(count / ITEMS_PER_PAGE); // Calculate the total number of pages
-
-      res.status(200).json({
-        pagination: {
-          count,
-          pageCount,
-        },
-        items: orders,
-      });
+        return { data: ordersData, status: 200 };
+      }
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
-async function handleEditOrder(req, res) {
+async function handleGetOrdersById(req: Request): Promise<{
+  data: string | OrderDataType;
+  status: number;
+}> {
   try {
-    let data = req.body;
-    const updated_by = req.headers.name;
-    data = { ...data, updated_by };
-
-    const resData = await Order.findByIdAndUpdate(data._id, data, {
-      new: true,
-    });
-
-    if (resData) {
-      res.status(200).json(resData);
+    let _id = headers().get('_id');
+    const orders = await Order.findById(_id).lean();
+    if (orders) {
+      return { data: orders, status: 200 };
     } else {
-      sendError(res, 400, 'No order found');
+      return { data: 'No order found', status: 400 };
     }
   } catch (e) {
     console.error(e);
-    sendError(res, 500, 'An error occurred');
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+async function handleEditOrder(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  try {
+    let data = await req.json();
+    const updatedBy = headers().get('updated_by');
+
+    const resData = await Order.findByIdAndUpdate(
+      data?._id,
+      {
+        ...data,
+        updated_by: updatedBy,
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
+
+    if (resData) {
+      return { data: 'Updated the order successfully', status: 200 };
+    } else {
+      return { data: 'Unable to update the order', status: 400 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
   }
 }
 
@@ -848,6 +827,9 @@ export async function POST(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
+    case 'get-all-orders':
+      res = await handleGetAllOrders(req);
+      return NextResponse.json(res.data, { status: res.status });
     case 'create-order':
       res = await handleCreateOrder(req);
       return NextResponse.json(res.data, { status: res.status });
@@ -875,17 +857,11 @@ export async function GET(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
-    case 'get-all-orders':
-      res = await handleGetAllOrderPaginated(req);
-      return NextResponse.json(res.data, { status: res.status });
     case 'get-unfinished-orders':
-      res = await handleGetClientsOnboard(req);
+      res = await handleGetUnfinishedOrders(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-redo-orders':
-      res = await handleGetTestOrdersTrend(req);
-      return NextResponse.json(res.data, { status: res.status });
-    case 'get-all-marketers':
-      res = await handleGetAllMarketers(req);
+      res = await handleGetRedoOrders(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-order-by-id':
       res = await handleGetOrdersById(req);

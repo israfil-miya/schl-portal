@@ -154,7 +154,7 @@ async function handleGetAllClients(req: Request): Promise<{
       const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);
 
       if (!clients) {
-        return { data: 'Unable to retrieve reports', status: 400 };
+        return { data: 'Unable to retrieve clients', status: 400 };
       } else {
         let clientsData = {
           pagination: {

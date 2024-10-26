@@ -4,15 +4,20 @@ import {
   RegexQuery as client_RegexQuery,
 } from '@/app/api/client/route';
 import {
+  Query as order_Query,
+  RegexFields as order_RegexFields,
+  RegexQuery as order_RegexQuery,
+} from '@/app/api/order/route';
+import {
   BooleanFields as report_BooleanFields,
   Query as report_Query,
   RegexFields as report_RegexFields,
   RegexQuery as report_RegexQuery,
 } from '@/app/api/report/route';
 
-type RegexQuery = report_RegexQuery | client_RegexQuery;
-type Query = report_Query | client_Query;
-type RegexFields = report_RegexFields | client_RegexFields;
+type RegexQuery = report_RegexQuery | client_RegexQuery | order_RegexQuery;
+type Query = report_Query | client_Query | order_Query;
+type RegexFields = report_RegexFields | client_RegexFields | order_RegexFields;
 type BooleanFields = report_BooleanFields;
 
 // Helper function to create a regex query
