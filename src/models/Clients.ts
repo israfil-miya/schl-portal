@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export interface ClientDataType {
+export interface ClientType {
   client_code: string;
   client_name: string;
   marketer: string;
@@ -16,9 +16,15 @@ export interface ClientDataType {
   updated_by: string | null;
 }
 
-type Client = mongoose.Document & ClientDataType;
+export type ClientDataType = ClientType & {
+  readonly _id: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
 
-const ClientSchema = new mongoose.Schema<Client>(
+type ClientDocType = mongoose.Document & ClientType;
+
+const ClientSchema = new mongoose.Schema<ClientDocType>(
   {
     client_code: {
       type: String,
@@ -77,7 +83,7 @@ const ClientSchema = new mongoose.Schema<Client>(
 );
 
 const Client =
-  (mongoose.models.Client as mongoose.Model<Client>) ||
-  mongoose.model<Client>('Client', ClientSchema);
+  (mongoose.models.Client as mongoose.Model<ClientDocType>) ||
+  mongoose.model<ClientDocType>('Client', ClientSchema);
 
 export default Client;

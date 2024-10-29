@@ -4,7 +4,7 @@ import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
-import fetchData from '@/utility/fetchData';
+import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -80,9 +80,9 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -118,10 +118,10 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
         setIsFiltered(true);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -152,7 +152,7 @@ const Table = () => {
       if (response.ok) {
         toast.success('Request sent for approval');
       } else {
-        toast.error(response.data.message);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);

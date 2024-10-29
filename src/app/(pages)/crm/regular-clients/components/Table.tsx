@@ -4,7 +4,7 @@ import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import { Report as ReportDataType } from '@/models/Reports';
 import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
-import fetchData from '@/utility/fetchData';
+import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';

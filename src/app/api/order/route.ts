@@ -1,4 +1,4 @@
-import Client from '@/models/Clients';
+import Client, { ClientDataType } from '@/models/Clients';
 import Invoice from '@/models/Invoices';
 import Order, { OrderDataType } from '@/models/Orders';
 import {
@@ -103,10 +103,10 @@ async function handleGetUnfinishedOrders(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const orders = await Order.find({
+    const orders = await Order.find<OrderDataType>({
       status: { $nin: ['Finished', 'Correction'] },
       type: { $ne: 'Test' },
-    }).lean();
+    });
 
     if (orders) {
       const sortedOrders = orders
@@ -130,14 +130,14 @@ async function handleGetUnfinishedOrders(req: Request): Promise<{
 }
 
 async function handleGetRedoOrders(req: Request): Promise<{
-  data: string | OrderDataType[];
+  data: string | (OrderDataType & { timeDifference: number })[];
   status: number;
 }> {
   try {
-    const orders = await Order.find({
+    const orders = await Order.find<OrderDataType>({
       $or: [{ type: 'Test' }, { status: 'Correction' }],
       status: { $ne: 'Finished' },
-    }).lean();
+    });
 
     if (orders) {
       const sortedOrders = orders
@@ -279,7 +279,9 @@ async function handleGetAllOrders(req: Request): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ])) as OrderDataType[];
       } else {
-        orders = await Order.find(searchQuery).lean().sort({ createdAt: -1 });
+        orders = await Order.find<OrderDataType>(searchQuery).sort({
+          createdAt: -1,
+        });
       }
 
       console.log('SEARCH Query:', searchQuery);
@@ -312,7 +314,7 @@ async function handleGetOrdersById(req: Request): Promise<{
 }> {
   try {
     let _id = headers().get('_id');
-    const orders = await Order.findById(_id).lean();
+    const orders = await Order.findById<OrderDataType>(_id);
     if (orders) {
       return { data: orders, status: 200 };
     } else {
@@ -694,18 +696,18 @@ async function handleGetOrdersByCountry(req: Request): Promise<{
 
     const countryFilter =
       country === 'Others' ? { $nin: countriesList } : country;
-    const clientsAll = await Client.find(
+    const clientsAll = await Client.find<ClientDataType>(
       { country: countryFilter },
       { client_code: 1, country: 1 },
-    ).lean();
+    );
 
     const returnData: OrderDetails = { details: [], totalFiles: 0 };
     await Promise.all(
       clientsAll.map(async clientData => {
-        const orders = await Order.find({
+        const orders = await Order.find<OrderDataType>({
           ...query,
           client_code: clientData.client_code,
-        }).lean();
+        });
         orders.forEach(order => {
           returnData.details.push({ ...order, country: clientData.country });
           returnData.totalFiles += order.quantity;

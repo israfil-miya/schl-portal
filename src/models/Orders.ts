@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export interface OrderDataType {
+interface OrderType {
   client_code: string;
   client_name: string;
   folder: string;
@@ -21,9 +21,15 @@ export interface OrderDataType {
   updated_by: string;
 }
 
-type Order = mongoose.Document & OrderDataType;
+export type OrderDataType = OrderType & {
+  readonly _id: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
 
-const OrderSchema = new mongoose.Schema<Order>(
+type OrderDocType = mongoose.Document & OrderType;
+
+const OrderSchema = new mongoose.Schema<OrderDocType>(
   {
     client_code: {
       type: String,
@@ -86,7 +92,7 @@ const OrderSchema = new mongoose.Schema<Order>(
 );
 
 const Order =
-  (mongoose.models.Order as mongoose.Model<Order>) ||
-  mongoose.model<Order>('Order', OrderSchema);
+  (mongoose.models.Order as mongoose.Model<OrderDocType>) ||
+  mongoose.model<OrderDocType>('Order', OrderSchema);
 
 export default Order;

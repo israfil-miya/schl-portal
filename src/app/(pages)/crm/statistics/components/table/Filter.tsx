@@ -2,7 +2,7 @@
 
 import cn from '@/utility/cn';
 import { getTodayDate } from '@/utility/date';
-import fetchData from '@/utility/fetchData';
+import fetchData from '@/utility/fetch';
 import { Filter, X } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
