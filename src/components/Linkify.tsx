@@ -1,12 +1,12 @@
-import React from 'react';
 import Link from 'next/link';
+import React from 'react';
 
 interface PropsType {
   data: string;
   coverText?: string;
 }
 
-const Linkify: React.FC<PropsType> = (props) => {
+const Linkify: React.FC<PropsType> = props => {
   const { data, coverText } = props;
 
   return (
@@ -26,12 +26,6 @@ const Linkify: React.FC<PropsType> = (props) => {
             </Link>
           ),
         )}
-      <style jsx>{`
-        .link {
-          cursor: pointer;
-          text-decoration: underline;
-        }
-      `}</style>
     </>
   );
 };

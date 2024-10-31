@@ -2,8 +2,9 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { ReportDataType } from '@/models/Reports';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
-import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
+import { formatDate } from '@/utility/date';
 import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
@@ -19,7 +20,7 @@ type ReportsState = {
     count: number;
     pageCount: number;
   };
-  items: { [key: string]: any }[];
+  items: ReportDataType[];
 };
 
 const Table = () => {
@@ -79,9 +80,9 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -117,10 +118,10 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
         setIsFiltered(true);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -311,12 +312,10 @@ const Table = () => {
                     >
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
                       <td>
-                        {item.calling_date &&
-                          convertToDDMMYYYY(item.calling_date)}
+                        {item.calling_date && formatDate(item.calling_date)}
                       </td>
                       <td>
-                        {item.followup_date &&
-                          convertToDDMMYYYY(item.followup_date)}
+                        {item.followup_date && formatDate(item.followup_date)}
                       </td>
 
                       <td>{item.country}</td>

@@ -3,7 +3,7 @@
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
-import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
+import { formatDate } from '@/utility/date';
 import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
@@ -312,12 +312,10 @@ const Table = () => {
                     >
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
                       <td>
-                        {item.calling_date &&
-                          convertToDDMMYYYY(item.calling_date)}
+                        {item.calling_date && formatDate(item.calling_date)}
                       </td>
                       <td>
-                        {item.followup_date &&
-                          convertToDDMMYYYY(item.followup_date)}
+                        {item.followup_date && formatDate(item.followup_date)}
                       </td>
 
                       <td>{item.country}</td>

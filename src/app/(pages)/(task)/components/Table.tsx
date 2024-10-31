@@ -1,9 +1,12 @@
-import React from 'react';
+'use client';
 
-const Table = async () => {
+import React from 'react';
+import TestAndCorrectionTable from './TestAndCorrection';
+
+const Table = () => {
   return (
     <>
-      <h2>Under construction!</h2>
+      <TestAndCorrectionTable />
     </>
   );
 };

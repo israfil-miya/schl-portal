@@ -2,8 +2,8 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
-import { Report as ReportDataType } from '@/models/Reports';
-import { YYYY_MM_DD_to_DD_MM_YY as convertToDDMMYYYY } from '@/utility/date';
+import { ReportDataType } from '@/models/Reports';
+import { formatDate } from '@/utility/date';
 import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -78,9 +78,9 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -114,10 +114,10 @@ const Table = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
         setIsFiltered(true);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -316,8 +316,7 @@ const Table = () => {
                     <tr key={String(item._id)}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
                       <td>
-                        {item.onboard_date &&
-                          convertToDDMMYYYY(item.onboard_date)}
+                        {item.onboard_date && formatDate(item.onboard_date)}
                       </td>
                       <td>{item.country}</td>
                       <td className="text-wrap">{item.company_name}</td>

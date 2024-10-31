@@ -1,12 +1,28 @@
 import moment from 'moment-timezone';
 
-export const YYYY_MM_DD_to_DD_MM_YY = (dateString: string): string => {
-  if (!dateString) return '';
-  return moment(dateString, 'YYYY-MM-DD').format('DD-MM-YYYY');
+export const getTodayDate = () => moment().format('YYYY-MM-DD');
+
+export const getTodayDate_DD_MM_YYYY = () => {
+  return moment().format('DD-MM-YYYY');
 };
 
-export const ISO_to_DD_MM_YY = (isoDate: string): string => {
-  return moment(isoDate).format('DD-MM-YYYY');
+export const formatTime = (time24: string) => {
+  return moment(time24, 'HH:mm').format('hh:mm A');
+};
+
+export const formatDate = (dateString: string | Date) => {
+  if (!dateString) return '';
+
+  return moment(dateString).format('Do MMMM, YYYY');
+};
+
+export const getTimeFromISODate = (isoDate: string): string => {
+  if (!isoDate) return '';
+  if (moment(isoDate, moment.ISO_8601, true).isValid()) {
+    return moment(isoDate).format('hh:mm A');
+  } else {
+    return '';
+  }
 };
 
 export const calculateTimeDifference = (
@@ -20,10 +36,6 @@ export const calculateTimeDifference = (
   );
   const asiaDhakaTime = moment.tz('Asia/Dhaka');
   return deliveryDateTime.diff(asiaDhakaTime);
-};
-
-export const getTodayDate = (): string => {
-  return moment().format('YYYY-MM-DD');
 };
 
 export function getDatesInRange(fromTime: string, toTime: string): string[] {
@@ -77,7 +89,3 @@ export function getMonthRange(monthAndYear: string): {
     .format('YYYY-MM-DD');
   return { start: startDate, end: endDate };
 }
-
-export const getTodayDate_DD_MM_YYYY = (): string => {
-  return moment().format('DD-MM-YYYY');
-};

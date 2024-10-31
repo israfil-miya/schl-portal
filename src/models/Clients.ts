@@ -17,9 +17,10 @@ export interface ClientType {
 }
 
 export type ClientDataType = ClientType & {
-  readonly _id: string;
+  readonly _id: mongoose.Types.ObjectId;
   readonly createdAt: string;
   readonly updatedAt: string;
+  readonly __v: number;
 };
 
 type ClientDocType = mongoose.Document & ClientType;

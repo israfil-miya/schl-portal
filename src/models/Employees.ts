@@ -8,7 +8,7 @@ interface ProvidentFundHistory extends mongoose.Document {
   note: string;
 }
 
-export interface EmployeeDataType {
+export interface EmployeeType {
   e_id: string;
   real_name: string;
   joining_date: string;
@@ -32,7 +32,14 @@ export interface EmployeeDataType {
   note: string;
 }
 
-type Employee = mongoose.Document & EmployeeDataType;
+export type EmployeeDataType = EmployeeType & {
+  readonly _id: mongoose.Types.ObjectId;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly __v: number;
+};
+
+type EmployeeDocType = mongoose.Document & EmployeeType;
 
 const ProvidentFundHistorySchema = new mongoose.Schema<ProvidentFundHistory>(
   {
@@ -51,7 +58,7 @@ const ProvidentFundHistorySchema = new mongoose.Schema<ProvidentFundHistory>(
   { _id: false },
 );
 
-const EmployeeSchema = new mongoose.Schema<Employee>(
+const EmployeeSchema = new mongoose.Schema<EmployeeDocType>(
   {
     e_id: {
       type: String,
@@ -130,7 +137,7 @@ const EmployeeSchema = new mongoose.Schema<Employee>(
 );
 
 const Employee =
-  (mongoose.models.Employee as mongoose.Model<Employee>) ||
-  mongoose.model<Employee>('Employee', EmployeeSchema);
+  (mongoose.models.Employee as mongoose.Model<EmployeeDocType>) ||
+  mongoose.model<EmployeeDocType>('Employee', EmployeeSchema);
 
 export default Employee;

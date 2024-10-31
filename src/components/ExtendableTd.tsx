@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { ReactElement, ReactNode, useState } from 'react';
 
 const replaceNewlineWithBr = (text: string) => {
   const lines: string[] = text.split('\n');
@@ -16,7 +16,9 @@ interface PropsType {
   data: string;
 }
 
-const ExtandableTd: React.FC<PropsType> = (props) => {
+const ExtendableTd: React.FC<PropsType> = (
+  props,
+): ReactElement<HTMLTableCellElement> | null => {
   const { data } = props;
 
   const [showFullText, setShowFullText] = useState(false);
@@ -25,30 +27,33 @@ const ExtandableTd: React.FC<PropsType> = (props) => {
     setShowFullText(!showFullText);
   };
 
+  if (data === undefined) return null;
+
   return (
-    <>
-      <td className="text-wrap" style={{ minWidth: '250px' }}>
-        {showFullText ? (
-          <span
-            dangerouslySetInnerHTML={{ __html: replaceNewlineWithBr(data) }}
-          />
-        ) : (
-          <span className="text-nowrap">
-            {data?.length <= 25 ? data : data?.substring(0, 25).trim() + '...'}
-          </span>
-        )}
-        {data?.length > 25 && (
-          <small
-            className="opacity-80 hover:cursor-pointer hover:underline hover:opacity-100"
-            onClick={toggleText}
-          >
-            <br />
-            {showFullText ? 'Show Less' : 'Show More'}
-          </small>
-        )}
-      </td>
-    </>
+    <td
+      className="text-wrap"
+      style={{ padding: '2.5px 10px', minWidth: '250px' }}
+    >
+      {showFullText ? (
+        <span
+          dangerouslySetInnerHTML={{ __html: replaceNewlineWithBr(data) }}
+        />
+      ) : (
+        <span className="text-nowrap">
+          {data?.length <= 25 ? data : data?.substring(0, 25).trim() + '...'}
+        </span>
+      )}
+      {data?.length > 25 && (
+        <small
+          className="opacity-80 hover:cursor-pointer hover:underline hover:opacity-100"
+          onClick={toggleText}
+        >
+          <br />
+          {showFullText ? 'Show Less' : 'Show More'}
+        </small>
+      )}
+    </td>
   );
 };
 
-export default ExtandableTd;
+export default ExtendableTd;

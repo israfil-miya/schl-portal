@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 // Interface for Report document
-export interface ReportDataType {
+export interface ReportType {
   marketer_id: string;
   marketer_name: string;
   calling_date: string;
@@ -31,10 +31,17 @@ export interface ReportDataType {
   updatedAt: string;
 }
 
-export type Report = mongoose.Document & ReportDataType;
+export type ReportDataType = ReportType & {
+  readonly _id: mongoose.Types.ObjectId;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly __v: number;
+};
+
+export type ReportDocType = mongoose.Document & ReportType;
 
 // Create Report schema with type annotations for properties
-const ReportSchema = new mongoose.Schema<Report>(
+const ReportSchema = new mongoose.Schema<ReportDocType>(
   {
     marketer_id: { type: String, required: [true, 'Marketer id is not given'] },
     marketer_name: {
@@ -55,7 +62,7 @@ const ReportSchema = new mongoose.Schema<Report>(
         validator: function (v: string) {
           return /^(http|https):\/\/[^ "]+$/.test(v);
         },
-        message: props => `${props.value} is not a valid website link!`,
+        message: (props: any) => `${props.value} is not a valid website link!`,
       },
     },
     category: {
@@ -96,8 +103,8 @@ const ReportSchema = new mongoose.Schema<Report>(
 
 // Define Report model based on schema, using generics for type safety
 const Report =
-  (mongoose.models.Report as mongoose.Model<Report>) ||
-  mongoose.model<Report>('Report', ReportSchema);
+  (mongoose.models.Report as mongoose.Model<ReportDocType>) ||
+  mongoose.model<ReportDocType>('Report', ReportSchema);
 
 // Export the Report model
 export default Report;

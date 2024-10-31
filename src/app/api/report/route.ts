@@ -5,6 +5,7 @@ import dbConnect from '@/utility/dbConnect';
 import getQuery from '@/utility/getApiQuery';
 
 import { auth } from '@/auth';
+import { ReportDataType } from '@/models/Reports';
 import {
   addBooleanField,
   addIfDefined,
@@ -383,10 +384,10 @@ async function handleGetAllMarketers(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const marketers = await Employee.find({
+    const marketers = (await Employee.find({
       department: 'Marketing',
       status: 'Active',
-    });
+    }).lean()) as EmployeeDataType[];
 
     return { data: marketers, status: 200 };
   } catch (e) {
@@ -537,7 +538,7 @@ async function handleGetAllReports(req: Request): Promise<{
           },
         ]);
       } else {
-        reports = await Report.find(searchQuery).lean();
+        reports = (await Report.find(searchQuery).lean()) as ReportDataType[];
       }
 
       console.log('GET REPORTS: SEARCH Query:', searchQuery);

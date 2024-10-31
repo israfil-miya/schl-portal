@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-export interface InvoiceDataType {
+export interface InvoiceType {
   client_id: string;
   client_code: string;
   created_by: string;
@@ -9,9 +9,16 @@ export interface InvoiceDataType {
   invoice_number: string;
 }
 
-type Invoice = mongoose.Document & InvoiceDataType;
+export type InvoiceDataType = InvoiceType & {
+  readonly _id: mongoose.Types.ObjectId;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly __v: number;
+};
 
-const InvoiceSchema = new mongoose.Schema<Invoice>(
+type InvoiceDocType = mongoose.Document & InvoiceType;
+
+const InvoiceSchema = new mongoose.Schema<InvoiceDocType>(
   {
     client_id: {
       type: String,
@@ -36,7 +43,7 @@ const InvoiceSchema = new mongoose.Schema<Invoice>(
 );
 
 const Invoice =
-  (mongoose.models.Invoice as mongoose.Model<Invoice>) ||
-  mongoose.model<Invoice>('Invoice', InvoiceSchema);
+  (mongoose.models.Invoice as mongoose.Model<InvoiceDocType>) ||
+  mongoose.model<InvoiceDocType>('Invoice', InvoiceSchema);
 
 export default Invoice;

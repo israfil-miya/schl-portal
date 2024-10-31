@@ -22,9 +22,10 @@ interface OrderType {
 }
 
 export type OrderDataType = OrderType & {
-  readonly _id: string;
-  readonly createdAt: string;
-  readonly updatedAt: string;
+  readonly _id?: mongoose.Types.ObjectId | string; // Allow ObjectId or string
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
+  readonly __v?: number;
 };
 
 type OrderDocType = mongoose.Document & OrderType;

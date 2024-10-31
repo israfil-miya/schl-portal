@@ -1,9 +1,6 @@
 'use client';
 import { EmployeeDataType } from '@/models/Employees';
-import {
-  YYYY_MM_DD_to_DD_MM_YY as convertDDMMYY,
-  getTodayDate,
-} from '@/utility/date';
+import { formatDate } from '@/utility/date';
 import fetchData from '@/utility/fetch';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -33,9 +30,9 @@ const DailyStatusTable = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setMarketers(response.data);
+        setMarketers(response.data as EmployeeDataType[]);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -78,7 +75,7 @@ const DailyStatusTable = () => {
                       <td>{marketer.real_name}</td>
                       <td>
                         {marketer.joining_date
-                          ? convertDDMMYY(marketer.joining_date)
+                          ? formatDate(marketer.joining_date)
                           : null}
                       </td>
                       <td>{marketer.phone ? marketer.phone : 'N/A'}</td>

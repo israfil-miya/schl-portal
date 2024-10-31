@@ -37,9 +37,9 @@ const Graphs = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReportsCount(response.data);
+        setReportsCount(response.data as number);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -69,9 +69,9 @@ const Graphs = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setClientsOnboard(response.data);
+        setClientsOnboard(response.data as number);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -104,9 +104,9 @@ const Graphs = () => {
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setTestOrdersTrend(response.data);
+        setTestOrdersTrend(response.data as number);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);

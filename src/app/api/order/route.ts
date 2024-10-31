@@ -1,5 +1,5 @@
 import Client, { ClientDataType } from '@/models/Clients';
-import Invoice from '@/models/Invoices';
+import Invoice, { InvoiceDataType } from '@/models/Invoices';
 import Order, { OrderDataType } from '@/models/Orders';
 import {
   calculateTimeDifference,
@@ -103,10 +103,10 @@ async function handleGetUnfinishedOrders(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const orders = await Order.find<OrderDataType>({
+    const orders = (await Order.find({
       status: { $nin: ['Finished', 'Correction'] },
       type: { $ne: 'Test' },
-    });
+    }).lean()) as OrderDataType[];
 
     if (orders) {
       const sortedOrders = orders
@@ -134,10 +134,10 @@ async function handleGetRedoOrders(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const orders = await Order.find<OrderDataType>({
+    const orders = (await Order.find({
       $or: [{ type: 'Test' }, { status: 'Correction' }],
       status: { $ne: 'Finished' },
-    });
+    }).lean()) as OrderDataType[];
 
     if (orders) {
       const sortedOrders = orders
@@ -279,9 +279,11 @@ async function handleGetAllOrders(req: Request): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ])) as OrderDataType[];
       } else {
-        orders = await Order.find<OrderDataType>(searchQuery).sort({
-          createdAt: -1,
-        });
+        orders = (await Order.find(searchQuery)
+          .sort({
+            createdAt: -1,
+          })
+          .lean()) as OrderDataType[];
       }
 
       console.log('SEARCH Query:', searchQuery);
@@ -314,7 +316,7 @@ async function handleGetOrdersById(req: Request): Promise<{
 }> {
   try {
     let _id = headers().get('_id');
-    const orders = await Order.findById<OrderDataType>(_id);
+    const orders = (await Order.findById(_id)) as OrderDataType;
     if (orders) {
       return { data: orders, status: 200 };
     } else {
@@ -696,18 +698,18 @@ async function handleGetOrdersByCountry(req: Request): Promise<{
 
     const countryFilter =
       country === 'Others' ? { $nin: countriesList } : country;
-    const clientsAll = await Client.find<ClientDataType>(
+    const clientsAll = (await Client.find(
       { country: countryFilter },
       { client_code: 1, country: 1 },
-    );
+    ).lean()) as ClientDataType[];
 
     const returnData: OrderDetails = { details: [], totalFiles: 0 };
     await Promise.all(
       clientsAll.map(async clientData => {
-        const orders = await Order.find<OrderDataType>({
+        const orders = (await Order.find({
           ...query,
           client_code: clientData.client_code,
-        });
+        }).lean()) as OrderDataType[];
         orders.forEach(order => {
           returnData.details.push({ ...order, country: clientData.country });
           returnData.totalFiles += order.quantity;
@@ -742,10 +744,10 @@ async function handleGetOrdersByMonth(req: Request): Promise<{
 
   try {
     const skip = (page - 1) * ITEMS_PER_PAGE;
-    const clients = await Client.find(query, { client_code: 1 })
+    const clients = (await Client.find(query, { client_code: 1 })
       .skip(skip)
       .limit(ITEMS_PER_PAGE)
-      .lean();
+      .lean()) as ClientDataType[];
     const result: ClientOrdersByMonth[] = [];
 
     for (const client of clients) {
@@ -764,10 +766,10 @@ async function handleGetOrdersByMonth(req: Request): Promise<{
         .toDate();
       const endDate = moment().endOf('month').toDate();
 
-      const orders = await Order.find({
+      const orders = (await Order.find({
         client_code: client.client_code,
         createdAt: { $gte: startDate, $lte: endDate },
-      }).lean();
+      }).lean()) as OrderDataType[];
 
       orders.forEach((order: any) => {
         const monthYear = moment(order.createdAt).format('YYYY-MM');
@@ -794,11 +796,11 @@ async function handleGetOrdersByMonth(req: Request): Promise<{
 
         if (count) {
           const { start, end } = getMonthRange(formattedMonthYear);
-          invoiced = !!(await Invoice.findOne({
+          invoiced = !!((await Invoice.findOne({
             client_code: client.client_code,
             'time_period.fromDate': { $gte: start },
             'time_period.toDate': { $lte: end },
-          }).lean());
+          }).lean()) as InvoiceDataType);
         }
 
         clientOrders.orders.push({
