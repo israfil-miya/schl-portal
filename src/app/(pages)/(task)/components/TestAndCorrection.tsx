@@ -50,7 +50,7 @@ function TestAndCorrection() {
 
   return (
     <>
-      <div className="table-responsive text-lg px-2">
+      <div className="table-responsive text-lg">
         <table className="table table-hover border table-bordered">
           <thead>
             <tr className="bg-gray-50">

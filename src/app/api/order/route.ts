@@ -8,6 +8,7 @@ import {
   getLast12Months,
   getMonthRange,
 } from '@/utility/date';
+import dbConnect from '@/utility/dbConnect';
 import {
   addIfDefined,
   addRegexField,
@@ -18,6 +19,7 @@ import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+dbConnect();
 
 export interface RegexQuery {
   $regex: string;
