@@ -166,11 +166,12 @@ async function handleGetAllOrders(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const page: number = Number(headers().get('page')) || 1;
+    const headersList = await headers();
+    const page: number = Number(headersList.get('page')) || 1;
     const ITEMS_PER_PAGE: number =
-      Number(headers().get('items_per_page')) || 30;
-    const isFilter: boolean = headers().get('filtered') === 'true';
-    const paginated: boolean = headers().get('paginated') === 'true';
+      Number(headersList.get('items_per_page')) || 30;
+    const isFilter: boolean = headersList.get('filtered') === 'true';
+    const paginated: boolean = headersList.get('paginated') === 'true';
 
     const filters = await req.json();
 
@@ -317,7 +318,8 @@ async function handleGetOrdersById(req: Request): Promise<{
   status: number;
 }> {
   try {
-    let _id = headers().get('_id');
+    const headersList = await headers();
+    let _id = headersList.get('_id');
     const orders = (await Order.findById(_id)) as OrderDataType;
     if (orders) {
       return { data: orders, status: 200 };
@@ -335,8 +337,9 @@ async function handleEditOrder(req: Request): Promise<{
   status: number;
 }> {
   try {
+    const headersList = await headers();
     let data = await req.json();
-    const updatedBy = headers().get('updated_by');
+    const updatedBy = headersList.get('updated_by');
 
     const resData = await Order.findByIdAndUpdate(
       data?._id,
@@ -480,8 +483,9 @@ async function handleGetOrdersQP(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const fromDate = headers().get('from_date');
-    const toDate = headers().get('to_date');
+    const headersList = await headers();
+    const fromDate = headersList.get('from_date');
+    const toDate = headersList.get('to_date');
 
     let query: any = { type: { $ne: 'Test' } };
 
@@ -540,8 +544,9 @@ async function handleGetOrdersCD(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const fromDate = headers().get('from_date') as string;
-    const toDate = headers().get('to_date') as string;
+    const headersList = await headers();
+    const fromDate = headersList.get('from_date') as string;
+    const toDate = headersList.get('to_date') as string;
     const query: any = { type: { $ne: 'Test' } };
 
     if (fromDate || toDate) {
@@ -678,9 +683,10 @@ async function handleGetOrdersByCountry(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const fromDate = headers().get('from_date');
-    const toDate = headers().get('to_date');
-    const country = headers().get('country');
+    const headersList = await headers();
+    const fromDate = headersList.get('from_date');
+    const toDate = headersList.get('to_date');
+    const country = headersList.get('country');
 
     if (!country) throw new Error('Country must be provided');
 
@@ -731,10 +737,12 @@ async function handleGetOrdersByMonth(req: Request): Promise<{
   data: string | PaginatedData<ClientOrdersByMonth[]>;
   status: number;
 }> {
-  const page: number = Number(headers().get('page')) || 1;
-  const ITEMS_PER_PAGE: number = Number(headers().get('items_per_page')) || 30;
-  // const isFilter: boolean = headers().get('filtered') === 'true';
-  // const paginated: boolean = headers().get('paginated') === 'true';
+  const headersList = await headers();
+  const page: number = Number(headersList.get('page')) || 1;
+  const ITEMS_PER_PAGE: number =
+    Number(headersList.get('items_per_page')) || 30;
+  // const isFilter: boolean = headersList.get('filtered') === 'true';
+  // const paginated: boolean = headersList.get('paginated') === 'true';
 
   const filters = await req.json();
 

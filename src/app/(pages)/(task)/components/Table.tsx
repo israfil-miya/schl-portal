@@ -8,8 +8,9 @@ import TestAndCorrectionTable from './TestAndCorrection';
 
 const Table = () => {
   useEffect(() => {
-    initFlowbite();
+    if (typeof window !== 'undefined') initFlowbite();
   }, []);
+
   return (
     <>
       <div

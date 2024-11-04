@@ -106,11 +106,12 @@ async function handleGetAllClients(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const page: number = Number(headers().get('page')) || 1;
+    const headersList = await headers();
+    const page: number = Number(headersList.get('page')) || 1;
     const ITEMS_PER_PAGE: number =
-      Number(headers().get('items_per_page')) || 30;
-    const isFilter: boolean = headers().get('filtered') === 'true';
-    const paginated: boolean = headers().get('paginated') === 'true';
+      Number(headersList.get('items_per_page')) || 30;
+    const isFilter: boolean = headersList.get('filtered') === 'true';
+    const paginated: boolean = headersList.get('paginated') === 'true';
 
     const filters = await req.json();
 
@@ -178,7 +179,9 @@ async function handleEditClient(req: Request): Promise<{
   status: number;
 }> {
   let data = await req.json();
-  const updated_by = Number(headers().get('name'));
+  const headersList = await headers();
+
+  const updated_by = Number(headersList.get('name'));
   data = { ...data, updated_by };
 
   console.log('Received edit request with data:', data);
@@ -204,7 +207,8 @@ async function handleGetClientByCode(req: Request): Promise<{
   status: number;
 }> {
   try {
-    let client_code = headers().get('client_code');
+    const headersList = await headers();
+    let client_code = headersList.get('client_code');
 
     const client = await Client.findOne({
       client_code,
@@ -226,7 +230,8 @@ async function handleGetClientById(req: Request): Promise<{
   status: number;
 }> {
   try {
-    let client_id = headers().get('client_id');
+    const headersList = await headers();
+    let client_id = headersList.get('client_id');
 
     const client = await Client.findById(client_id).lean();
 

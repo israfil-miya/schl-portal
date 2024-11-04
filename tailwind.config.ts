@@ -1,5 +1,4 @@
 import type { Config } from 'tailwindcss';
-import flowbite from 'flowbite-react/tailwind';
 
 const config = {
   content: [
@@ -7,7 +6,6 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-    flowbite.content(),
   ],
   prefix: '',
   theme: {
@@ -45,11 +43,7 @@ const config = {
       },
     },
   },
-  plugins: [
-    require('tailwindcss-animate'),
-    flowbite.plugin(),
-    require('tailwindcss-tables')(),
-  ],
+  plugins: [require('tailwindcss-animate'), require('tailwindcss-tables')()],
 } satisfies Config;
 
 export default config;

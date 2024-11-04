@@ -401,10 +401,12 @@ async function handleGetAllReports(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const page: number = Number(headers().get('page')) || 1;
-    const ITEMS_PER_PAGE: number = Number(headers().get('item_per_page')) || 30;
-    const isFilter: boolean = headers().get('filtered') === 'true';
-    const paginated: boolean = headers().get('paginated') === 'true';
+    const headersList = await headers();
+    const page: number = Number(headersList.get('page')) || 1;
+    const ITEMS_PER_PAGE: number =
+      Number(headersList.get('item_per_page')) || 30;
+    const isFilter: boolean = headersList.get('filtered') === 'true';
+    const paginated: boolean = headersList.get('paginated') === 'true';
 
     const filters = await req.json();
 
