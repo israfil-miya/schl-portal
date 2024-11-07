@@ -4,12 +4,38 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import fetchData from '@/utility/fetch';
+import { ColDef } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css'; // Mandatory CSS required by the Data Grid
+import 'ag-grid-community/styles/ag-theme-quartz.css'; // Optional Theme applied to the Data Grid
+import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 function TestAndCorrection() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<OrderDataType[]>([]);
+  const [colDefs] = useState([
+    {
+      field: 'SN',
+      headerName: 'S/N',
+      valueGetter: (params: any) => params.node.rowIndex + 1,
+      width: 70,
+      pinned: 'left',
+    },
+    { field: 'client_code', headerName: 'Client Code' },
+    { field: 'folder', headerName: 'Folder' },
+    { field: 'quantity', headerName: 'NOF' },
+    { field: 'download_date', headerName: 'Download Date' },
+    { field: 'DeliveryTime', headerName: 'Delivery Time' },
+    { field: 'Task', headerName: 'Task' },
+    { field: 'ET', headerName: 'E.T' },
+    { field: 'Production', headerName: 'Production' },
+    { field: 'QC1', headerName: 'QC1' },
+    { field: 'Comments', headerName: 'Comments' },
+    { field: 'FolderLocation', headerName: 'Folder Location' },
+    { field: 'Type', headerName: 'Type' },
+    { field: 'Status', headerName: 'Status' },
+  ]);
 
   async function getAllOrders() {
     try {
@@ -50,7 +76,7 @@ function TestAndCorrection() {
 
   return (
     <>
-      <div className="table-responsive text-lg">
+      {/* <div className="table-responsive">
         <table className="table table-hover border table-bordered">
           <thead>
             <tr className="bg-gray-50">
@@ -132,16 +158,24 @@ function TestAndCorrection() {
             )}
           </tbody>
         </table>
-      </div>
+      </div> */}
 
-      <style jsx>
+      {/* <style jsx>
         {`
           th,
           td {
             padding: 2.5px 10px;
           }
         `}
-      </style>
+      </style> */}
+
+      <div className="ag-theme-alpine" style={{ height: 400, width: '100%' }}>
+        <AgGridReact
+          rowData={orders}
+          columnDefs={colDefs}
+          domLayout="autoHeight"
+        />
+      </div>
     </>
   );
 }
