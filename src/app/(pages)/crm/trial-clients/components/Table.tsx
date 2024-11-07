@@ -2,9 +2,8 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
-import countDaysSinceLastCall from '@/utility/countDaysPassed';
-import { formatDate } from '@/utility/date';
-import fetchData from '@/utility/fetch';
+import { formatDate } from '@/lib/date';
+import { fetchApi } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -77,12 +76,12 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -114,13 +113,13 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setReports(response.data);
+        setReports(response.data as ReportsState);
         setIsFiltered(true);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -156,7 +155,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Request sent for approval');

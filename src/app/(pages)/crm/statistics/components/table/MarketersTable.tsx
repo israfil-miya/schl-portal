@@ -1,7 +1,7 @@
 'use client';
+import { formatDate } from '@/lib/date';
+import { fetchApi } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
-import { formatDate } from '@/utility/date';
-import fetchData from '@/utility/fetch';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
@@ -27,7 +27,7 @@ const DailyStatusTable = () => {
         },
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setMarketers(response.data as EmployeeDataType[]);

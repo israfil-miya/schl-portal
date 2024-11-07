@@ -1,20 +1,19 @@
-import Client, { ClientDataType } from '@/models/Clients';
-import Invoice, { InvoiceDataType } from '@/models/Invoices';
-import Order, { OrderDataType } from '@/models/Orders';
 import {
   calculateTimeDifference,
   getDateRange,
   getDatesInRange,
   getLast12Months,
   getMonthRange,
-} from '@/utility/date';
-import dbConnect from '@/utility/dbConnect';
+} from '@/lib/date';
 import {
   addIfDefined,
   addRegexField,
   createRegexQuery,
-} from '@/utility/filterHelpers';
-import getQuery from '@/utility/getApiQuery';
+} from '@/lib/filterHelpers';
+import { dbConnect, escapeRegex, getQuery } from '@/lib/utils';
+import Client, { ClientDataType } from '@/models/Clients';
+import Invoice, { InvoiceDataType } from '@/models/Invoices';
+import Order, { OrderDataType } from '@/models/Orders';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { headers } from 'next/headers';

@@ -14,6 +14,7 @@ import {
   RegexFields as report_RegexFields,
   RegexQuery as report_RegexQuery,
 } from '@/app/api/report/route';
+import { escapeRegex } from '@/lib/utils';
 
 type RegexQuery = report_RegexQuery | client_RegexQuery | order_RegexQuery;
 type Query = report_Query | client_Query | order_Query;
@@ -26,7 +27,10 @@ export const createRegexQuery = (
   exactMatch: boolean = false,
 ): RegexQuery | undefined =>
   value
-    ? { $regex: exactMatch ? `^${value}$` : value, $options: 'i' }
+    ? {
+        $regex: exactMatch ? `^${escapeRegex(value || '')}$` : value,
+        $options: 'i',
+      }
     : undefined;
 
 // Helper function to add boolean fields to the query

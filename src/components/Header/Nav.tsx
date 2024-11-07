@@ -15,7 +15,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import cn from '@/utility/cn';
+import { cn } from '@/lib/utils';
 
 interface PropsType {
   msg?: string | undefined;

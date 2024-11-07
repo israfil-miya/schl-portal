@@ -26,15 +26,17 @@ export const getTimeFromISODate = (isoDate: string): string => {
 };
 
 export const calculateTimeDifference = (
-  deliveryDate: string,
-  deliveryTime: string,
+  fromDate: string,
+  fromTime: string,
 ): number => {
+  if (!fromDate || !fromTime) return 0;
+
   const deliveryDateTime = moment.tz(
-    `${deliveryDate} ${deliveryTime}`,
+    `${fromDate} ${fromTime}`,
     'YYYY-MM-DD HH:mm',
     'Asia/Dhaka',
   );
-  const asiaDhakaTime = moment.tz('Asia/Dhaka');
+  const asiaDhakaTime = moment.tz('Asia/Dhaka'); // Current time in Asia/Dhaka timezone
   return deliveryDateTime.diff(asiaDhakaTime);
 };
 
@@ -89,3 +91,7 @@ export function getMonthRange(monthAndYear: string): {
     .format('YYYY-MM-DD');
   return { start: startDate, end: endDate };
 }
+
+export const getDaysSince = (date: Date): number => {
+  return moment().diff(moment(date), 'days');
+};

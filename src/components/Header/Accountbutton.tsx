@@ -1,5 +1,5 @@
 'use client';
-import cn from '@/utility/cn';
+import { cn } from '@/lib/utils';
 import { UserCog } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import React from 'react';

@@ -2,12 +2,10 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { formatDate } from '@/lib/date';
+import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
-import countDaysSinceLastCall from '@/utility/countDaysPassed';
-import { formatDate } from '@/utility/date';
-import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
@@ -77,7 +75,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setReports(response.data as ReportsState);
@@ -115,7 +113,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setReports(response.data as ReportsState);
@@ -147,7 +145,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Request sent for approval');
@@ -307,7 +305,7 @@ const Table = () => {
 
                   return (
                     <tr
-                      key={item._id}
+                      key={String(item._id)}
                       className={tableRowColor ? tableRowColor : ''}
                     >
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>

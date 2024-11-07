@@ -1,13 +1,12 @@
-import Client, { ClientDataType } from '@/models/Clients';
-import Report from '@/models/Reports';
-import dbConnect from '@/utility/dbConnect';
 import {
   addBooleanField,
   addIfDefined,
   addRegexField,
   createRegexQuery,
-} from '@/utility/filterHelpers';
-import getQuery from '@/utility/getApiQuery';
+} from '@/lib/filterHelpers';
+import { dbConnect, getQuery } from '@/lib/utils';
+import Client, { ClientDataType } from '@/models/Clients';
+import Report from '@/models/Reports';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';

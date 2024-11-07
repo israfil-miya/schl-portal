@@ -1,5 +1,4 @@
-import copy from '@/utility/copyToClipboard';
-import test from 'node:test';
+import { copy } from '@/lib/utils';
 import React from 'react';
 
 function ClickToCopy({ text }: { text: string }) {

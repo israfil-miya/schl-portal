@@ -1,16 +1,15 @@
+import { dbConnect, getQuery } from '@/lib/utils';
 import Employee, { EmployeeDataType } from '@/models/Employees';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
-import dbConnect from '@/utility/dbConnect';
-import getQuery from '@/utility/getApiQuery';
 
 import { auth } from '@/auth';
-import { ReportDataType } from '@/models/Reports';
 import {
   addBooleanField,
   addIfDefined,
   addRegexField,
-} from '@/utility/filterHelpers';
+} from '@/lib/filterHelpers';
+import { ReportDataType } from '@/models/Reports';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';

@@ -1,8 +1,7 @@
 'use client';
 
-import cn from '@/utility/cn';
-import { getTodayDate } from '@/utility/date';
-import fetchData from '@/utility/fetch';
+import { getTodayDate } from '@/lib/date';
+import { cn, fetchApi } from '@/lib/utils';
 import { Filter, X } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -79,10 +78,10 @@ const FilterButton: React.FC<PropsType> = ({
           },
         };
 
-        let response = await fetchData(url, options);
+        let response = await fetchApi(url, options);
 
         if (response.ok) {
-          setReportsStatus(response.data);
+          setReportsStatus(response.data as ReportsStatusState);
           setCallsTarget(
             callsTargetConst * countDays(filters.fromDate, filters.toDate),
           );
@@ -90,7 +89,7 @@ const FilterButton: React.FC<PropsType> = ({
             leadsTargetConst * countDays(filters.fromDate, filters.toDate),
           );
         } else {
-          toast.error(response.data);
+          toast.error(response.data as string);
         }
       } catch (error) {
         console.error(error);

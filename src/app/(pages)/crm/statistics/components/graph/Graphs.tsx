@@ -1,6 +1,6 @@
 'use client';
 
-import fetchData from '@/utility/fetch';
+import { fetchApi } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -34,7 +34,7 @@ const Graphs = () => {
         },
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setReportsCount(response.data as number);
@@ -66,7 +66,7 @@ const Graphs = () => {
         },
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setClientsOnboard(response.data as number);
@@ -101,7 +101,7 @@ const Graphs = () => {
         },
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setTestOrdersTrend(response.data as number);

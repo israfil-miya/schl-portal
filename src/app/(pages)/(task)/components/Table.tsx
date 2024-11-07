@@ -13,7 +13,7 @@ const Table = () => {
   return (
     <Accordion
       type="multiple"
-      className="w-full"
+      className="w-full gap-4 flex flex-col"
       defaultValue={['test-and-correction', 'running-tasks']}
     >
       <AccordionItem value="test-and-correction">
