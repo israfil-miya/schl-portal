@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import React, { useEffect } from 'react';
+import RunningTasksTable from './RunningTasks';
 import TestAndCorrectionTable from './TestAndCorrection';
 
 const Table = () => {
@@ -30,7 +31,7 @@ const Table = () => {
           Running Tasks
         </AccordionTrigger>
         <AccordionContent>
-          <TestAndCorrectionTable />
+          <RunningTasksTable />
         </AccordionContent>
       </AccordionItem>
     </Accordion>

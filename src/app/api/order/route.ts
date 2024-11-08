@@ -113,12 +113,12 @@ async function handleGetUnfinishedOrders(req: Request): Promise<{
       const sortedOrders = orders
         .map(order => ({
           ...order,
-          timeDifference: calculateTimeDifference(
+          time_difference: calculateTimeDifference(
             order.delivery_date,
             order.delivery_bd_time,
           ),
         }))
-        .sort((a, b) => a.timeDifference - b.timeDifference);
+        .sort((a, b) => a.time_difference - b.time_difference);
 
       return { data: sortedOrders, status: 200 };
     } else {

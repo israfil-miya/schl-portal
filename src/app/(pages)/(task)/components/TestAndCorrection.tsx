@@ -3,9 +3,9 @@ import { AgGridReact } from 'ag-grid-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/copyText';
 import ExtendableTd from '@/components/ExtendableTd';
+import { Badge } from '@/components/ui/badge';
 import { fetchApi } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -26,7 +26,15 @@ function TestAndCorrection() {
     },
     { field: 'folder', headerName: 'Folder', filter: 'agTextColumnFilter' },
     { field: 'quantity', headerName: 'NOF' },
-    { field: 'download_date', headerName: 'Download Date' },
+    {
+      field: 'download_date',
+      headerName: 'Download Date',
+      cellRenderer: (props: any) => (
+        <Badge className="text-white bg-blue-800 hover:bg-blue-800">
+          {props.value}
+        </Badge>
+      ),
+    },
     {
       field: 'delivery',
       headerName: 'Delivery Time',
@@ -35,23 +43,60 @@ function TestAndCorrection() {
         time: params.data.delivery_bd_time,
       }),
       cellRenderer: (props: any) => (
-        <span>
+        <Badge className="text-white bg-blue-800 hover:bg-blue-800">
           {props.value.date} | {props.value.time}
-        </span>
+        </Badge>
       ),
     },
-    { field: 'task', headerName: 'Task' },
+    {
+      field: 'task',
+      headerName: 'Task',
+      cellRenderer: (props: any) => {
+        const tasks = props.value.split('+');
+
+        return (
+          <div className="grid-flow-row space-x-2 space-y-1">
+            {tasks.map((task: string, index: number) => (
+              <Badge
+                key={index}
+                className="text-white bg-blue-800 hover:bg-blue-800"
+              >
+                {task.trim()}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
     { field: 'et', headerName: 'E.T' },
     { field: 'production', headerName: 'Production' },
     { field: 'qc1', headerName: 'QC1' },
-    { field: 'comment', headerName: 'Comments' },
     {
       field: 'folder_path',
       headerName: 'Folder Location',
       cellRenderer: (props: any) => <ClickToCopy text={props.value} />,
     },
-    { field: 'type', headerName: 'Type', filter: 'agTextColumnFilter' },
-    { field: 'status', headerName: 'Status', filter: 'agTextColumnFilter' },
+    {
+      field: 'type',
+      headerName: 'Type',
+      filter: 'agTextColumnFilter',
+      cellRenderer: (props: any) => (
+        <Badge className="text-white bg-blue-800 hover:bg-blue-800">
+          {props.value}
+        </Badge>
+      ),
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+      filter: 'agTextColumnFilter',
+      cellRenderer: (props: any) => (
+        <Badge className="text-white bg-blue-800 hover:bg-blue-800">
+          {props.value}
+        </Badge>
+      ),
+    },
+    { field: 'comment', headerName: 'Comments', filter: 'agTextColumnFilter' },
   ]);
 
   const defaultColDef = useMemo<ColDef>(() => {
@@ -59,7 +104,6 @@ function TestAndCorrection() {
       sortable: true,
       resizable: true,
       suppressMovable: true,
-      enableCellTextSelection: true,
     };
   }, []);
 
@@ -101,8 +145,20 @@ function TestAndCorrection() {
 
   const onGridReady = (params: GridReadyEvent) => {
     if (gridRef.current && gridRef.current.api) {
-      gridRef.current.api.sizeColumnsToFit();
-      gridRef.current.api.autoSizeAllColumns();
+      const columnsToAutoSize = [
+        'client_code',
+        'folder',
+        'task',
+        'type',
+        'status',
+        'et',
+        'production',
+        'qc1',
+        'download_date',
+        'delivery',
+        'time_remaining',
+      ];
+      gridRef.current.api.autoSizeColumns(columnsToAutoSize);
     }
   };
 
@@ -111,7 +167,7 @@ function TestAndCorrection() {
   }
 
   return (
-    <div className="ag-theme-quartz" style={{ height: '100%', width: '100%' }}>
+    <div className="ag-theme-quartz" style={{ width: '100%' }}>
       <AgGridReact<ExtendedOrderDataType>
         ref={gridRef}
         rowData={orders}
