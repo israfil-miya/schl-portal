@@ -55,7 +55,7 @@ function TestAndCorrection() {
         const tasks = props.value.split('+');
 
         return (
-          <div className="grid-flow-row space-x-2 space-y-1">
+          <div className="grid-flow-row space-x-1 space-y-1">
             {tasks.map((task: string, index: number) => (
               <Badge
                 key={index}

@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import React from 'react';
 import Table from './components/Table';
 

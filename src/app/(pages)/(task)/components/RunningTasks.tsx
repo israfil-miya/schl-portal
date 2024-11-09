@@ -81,7 +81,7 @@ function RunningTasks() {
         const tasks = props.value.split('+');
 
         return (
-          <div className="grid-flow-row space-x-2 space-y-1">
+          <div className="grid-flow-row space-x-1 space-y-1">
             {tasks.map((task: string, index: number) => (
               <Badge
                 key={index}
@@ -189,34 +189,34 @@ function RunningTasks() {
     }
   };
 
-  const getRowStyle = (params: any): RowStyle | undefined => {
-    const targetDate = moment.tz(
-      `${params.data.delivery_date} ${params.data.delivery_bd_time}`,
-      'YYYY-MM-DD HH:mm',
-      'Asia/Dhaka',
-    );
-    const now = moment().tz('Asia/Dhaka');
-    const diff = targetDate.diff(now, 'minutes');
+  // const getRowStyle = (params: any): RowStyle | undefined => {
+  //   const targetDate = moment.tz(
+  //     `${params.data.delivery_date} ${params.data.delivery_bd_time}`,
+  //     'YYYY-MM-DD HH:mm',
+  //     'Asia/Dhaka',
+  //   );
+  //   const now = moment().tz('Asia/Dhaka');
+  //   const diff = targetDate.diff(now, 'minutes');
 
-    if (diff <= 0) {
-      return {
-        backgroundColor: 'rgb(30 41 59)',
-        color: 'white',
-      };
-    } else if (diff <= 30) {
-      return {
-        backgroundColor: 'rgb(153 27 27)',
-        color: 'white',
-      };
-    } else if (diff <= 60) {
-      return {
-        backgroundColor: 'rgb(154 52 18)',
-        color: 'white',
-      };
-    }
+  //   if (diff <= 0) {
+  //     return {
+  //       backgroundColor: 'rgb(30 41 59)',
+  //       color: 'white',
+  //     };
+  //   } else if (diff <= 30) {
+  //     return {
+  //       backgroundColor: 'rgb(153 27 27)',
+  //       color: 'white',
+  //     };
+  //   } else if (diff <= 60) {
+  //     return {
+  //       backgroundColor: 'rgb(154 52 18)',
+  //       color: 'white',
+  //     };
+  //   }
 
-    return undefined;
-  };
+  //   return undefined;
+  // };
 
   if (loading) {
     return <p className="text-center">Loading...</p>;
@@ -232,7 +232,7 @@ function RunningTasks() {
         gridOptions={gridOptions}
         domLayout="autoHeight"
         onGridReady={onGridReady}
-        getRowStyle={getRowStyle}
+        // getRowStyle={getRowStyle}
       />
     </div>
   );
