@@ -43,10 +43,10 @@ h6 {
     --foreground: 222.2 84% 4.9%;
 
     --primary: 91.56, 43.4%, 45.1%;
-    --primary-foreground: 0, 0%, 0%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 265.26, 43.4%, 45.1%;
-    --secondary-foreground: 0, 0%, 100%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;

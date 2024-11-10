@@ -2,6 +2,15 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import { formatDate } from '@/lib/date';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
@@ -213,46 +222,51 @@ const Table = () => {
       <div className="flex flex-col justify-center sm:flex-row sm:justify-end mb-4 gap-2">
         <div className="items-center flex gap-2">
           <div className="inline-flex rounded-md" role="group">
-            <button
+            <Button
               onClick={handlePrevious}
               disabled={page === 1 || pageCount === 0 || loading}
-              type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              variant="outline"
+              size="sm"
+              className="rounded-r-none"
             >
-              <ChevronLeft size={18} className="stroke-gray-500" />
+              <ChevronLeft className="h-4 w-4" />
               Prev
-            </button>
+            </Button>
             <button
               disabled={true}
-              className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
+              className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm text-nowrap font-medium border"
             >
               <label>
                 Page <b>{reports?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
-            <button
+            <Button
               onClick={handleNext}
               disabled={page === pageCount || pageCount === 0 || loading}
-              type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              variant="outline"
+              size="sm"
+              className="rounded-l-none"
             >
               Next
-              <ChevronRight size={18} className="stroke-gray-500" />
-            </button>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
 
-          <select
-            value={itemPerPage}
-            onChange={e => setItemPerPage(parseInt(e.target.value))}
-            // defaultValue={30}
-            required
-            className="appearance-none bg-gray-50 text-gray-700 border border-gray-200 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          <Select
+            value={itemPerPage.toString()}
+            onValueChange={(value: string) => setItemPerPage(parseInt(value))}
           >
-            <option value={30}>30</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="30" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">30</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+
           <FilterButton
             loading={loading}
             submitHandler={getAllReportsFiltered}
