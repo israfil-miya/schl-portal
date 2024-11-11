@@ -11,13 +11,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import CollapsibleCell from '@/components/CollapsibleCell';
 import { formatDate } from '@/lib/date';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
+import {
+  ColDef,
+  GridOptions,
+  GridReadyEvent,
+  RowStyle,
+} from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+import { AgGridReact } from 'ag-grid-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
@@ -217,6 +228,113 @@ const Table = () => {
     else getAllReportsFiltered();
   }, [itemPerPage]);
 
+  const gridRef = useRef<AgGridReact>(null);
+
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      sortable: true,
+      resizable: true,
+      suppressMovable: false,
+    };
+  }, []);
+
+  const gridOptions = useMemo<GridOptions>(() => {
+    return {
+      copyHeadersToClipboard: true,
+      enableCellTextSelection: true,
+    };
+  }, []);
+
+  const [colDefs] = useState<ColDef<ReportDataType>[]>([
+    {
+      headerName: 'S/N',
+      valueGetter: 'node.rowIndex + 1',
+      sortable: false,
+      filter: false,
+      pinned: 'left',
+    },
+    {
+      field: 'calling_date',
+      headerName: 'Calling Date',
+    },
+    {
+      field: 'followup_date',
+      headerName: 'Folder',
+    },
+    { field: 'country', headerName: 'Country' },
+    {
+      field: 'website',
+      headerName: 'Website',
+      cellRenderer: (props: any) =>
+        props.value.length ? (
+          <Linkify coverText="Click here to visit" data={props.value} />
+        ) : (
+          'No link provided'
+        ),
+    },
+    { field: 'category', headerName: 'Category' },
+    { field: 'company_name', headerName: 'Company Name' },
+    { field: 'contact_person', headerName: 'Contact Person' },
+    { field: 'designation', headerName: 'Designation' },
+    { field: 'contact_number', headerName: 'Contact Number' },
+    { field: 'email_address', headerName: 'Email' },
+    { field: 'country', headerName: 'Country' },
+
+    { field: 'linkedin', headerName: 'Linkedin' },
+    {
+      field: 'test_given_date_history',
+      headerName: 'Test',
+      cellRenderer: (props: any) => {
+        return props.value?.length ? 'Yes' : 'No';
+      },
+    },
+    {
+      field: 'is_prospected',
+      headerName: 'Prospect',
+      cellRenderer: (props: any) => {
+        return props.value
+          ? `Yes (${props.data.followup_done ? 'Dealt' : 'Pending'})`
+          : 'No';
+      },
+    },
+
+    {
+      headerName: 'Action',
+      cellRenderer: (props: any) => {
+        <DeleteButton reportData={props.data} submitHandler={deleteReport} />;
+      },
+    },
+  ]);
+
+  const onGridReady = (params: GridReadyEvent) => {
+    if (gridRef.current && gridRef.current.api) {
+      gridRef.current.api.autoSizeAllColumns();
+    }
+  };
+
+  const getRowStyle = (params: any): RowStyle | undefined => {
+    if (params.data.is_prospected) {
+      if (params.data.prospect_status == 'high_interest') {
+        return {
+          backgroundColor: 'rgb(22 101 52)',
+          color: 'white',
+        };
+      } else if (params.data.prospect_status == 'low_interest') {
+        return {
+          backgroundColor: 'rgb(154 52 18)',
+          color: 'white',
+        };
+      }
+    } else {
+      return {
+        backgroundColor: 'rgb(153 27 27)',
+        color: 'white',
+      };
+    }
+
+    return undefined;
+  };
+
   return (
     <>
       <div className="flex flex-col justify-center sm:flex-row sm:justify-end mb-4 gap-2">
@@ -279,119 +397,20 @@ const Table = () => {
 
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
-      {!loading &&
-        (reports?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap text-sm">
-            <table className="table">
-              <thead className="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Calling Date</th>
-                  <th>Followup Date</th>
-                  <th>Country</th>
-                  <th>Website</th>
-                  <th>Category</th>
-                  <th>Company Name</th>
-                  <th>Contact Person</th>
-                  <th>Designation</th>
-                  <th>Contact Number</th>
-                  <th>Email Address</th>
-                  <th>Calling Status</th>
-                  <th>LinkedIn</th>
-                  <th>Test</th>
-                  <th>Prospected</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports?.items?.map((item, index) => {
-                  let tableRowColor = 'table-secondary';
-
-                  if (item.is_prospected) {
-                    if (item?.prospect_status == 'high_interest') {
-                      tableRowColor = 'table-success';
-                    } else if (item?.prospect_status == 'low_interest') {
-                      tableRowColor = 'table-warning';
-                    }
-                  } else {
-                    tableRowColor = 'table-danger';
-                  }
-
-                  return (
-                    <tr
-                      key={String(item._id)}
-                      className={tableRowColor ? tableRowColor : ''}
-                    >
-                      <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      <td>
-                        {item.calling_date && formatDate(item.calling_date)}
-                      </td>
-                      <td>
-                        {item.followup_date && formatDate(item.followup_date)}
-                      </td>
-
-                      <td>{item.country}</td>
-                      <td>
-                        {item.website.length ? (
-                          <Linkify
-                            coverText="Click here to visit"
-                            data={item.website}
-                          />
-                        ) : (
-                          'No link provided'
-                        )}
-                      </td>
-                      <td>{item.category}</td>
-                      <td className="text-wrap">{item.company_name}</td>
-                      <td className="text-wrap">{item.contact_person}</td>
-                      <td>{item.designation}</td>
-                      <td className="text-wrap">{item.contact_number}</td>
-                      <td className="text-wrap">{item.email_address}</td>
-                      <CallingStatusTd data={item.calling_status} />
-                      <td>
-                        {item.linkedin.length ? (
-                          <Linkify
-                            coverText="Click here to visit"
-                            data={item.linkedin}
-                          />
-                        ) : (
-                          'No link provided'
-                        )}
-                      </td>
-                      <td>
-                        {item.test_given_date_history?.length ? 'Yes' : 'No'}
-                      </td>
-                      <td>
-                        {item.is_prospected
-                          ? `Yes (${item.followup_done ? 'Done' : 'Pending'})`
-                          : 'No'}
-                      </td>
-                      <td
-                        className="text-center"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <div className="inline-block">
-                          <div className="flex gap-2">
-                            <DeleteButton
-                              submitHandler={deleteReport}
-                              reportData={item}
-                            />
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <tr key={0}>
-            <td colSpan={16} className=" align-center text-center">
-              No Reports To Show.
-            </td>
-          </tr>
-        ))}
+      {!loading && (
+        <div className="ag-theme-quartz" style={{ width: '100%' }}>
+          <AgGridReact<ReportDataType>
+            ref={gridRef}
+            rowData={reports.items}
+            columnDefs={colDefs}
+            defaultColDef={defaultColDef}
+            gridOptions={gridOptions}
+            domLayout="autoHeight"
+            onGridReady={onGridReady}
+            getRowStyle={getRowStyle}
+          />
+        </div>
+      )}
       <style jsx>
         {`
           th,

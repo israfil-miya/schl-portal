@@ -18,7 +18,7 @@ const Linkify: React.FC<PropsType> = props => {
           (websiteLink: string, index: number): React.ReactNode => (
             <Link
               key={index}
-              className="block hover:cursor-pointer hover:underline hover:opacity-100 text-blue-700"
+              className="block hover:cursor-pointer opacity-80 hover:underline hover:opacity-100 text-accent"
               target="_blank"
               href={websiteLink}
             >

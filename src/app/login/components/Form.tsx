@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
@@ -95,13 +96,15 @@ const Form: React.FC = () => {
         </div>
       </div>
 
-      <button
+      <Button
+        className="text-md"
+        variant="default"
+        size="lg"
         type="submit"
         disabled={loading}
-        className="rounded-md text-primary-foreground bg-white font-bold hover:bg-gray-100 px-8 py-2.5 focus:outline-none"
       >
         {loading ? 'Logging in...' : 'Login'}
-      </button>
+      </Button>
     </form>
   );
 };
