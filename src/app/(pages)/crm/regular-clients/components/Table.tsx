@@ -2,17 +2,36 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+import CollapsibleCell from '@/components/CollapsibleCell';
 import { formatDate } from '@/lib/date';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
+import {
+  ColDef,
+  GridOptions,
+  GridReadyEvent,
+  RowStyle,
+} from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+import { AgGridReact } from 'ag-grid-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
-import NewReport from './New';
 
 type ReportsState = {
   pagination: {
@@ -28,8 +47,10 @@ const Table = () => {
       count: 0,
       pageCount: 0,
     },
-    items: React.useMemo(() => [], []),
+    items: [],
   });
+
+  const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
@@ -238,51 +259,165 @@ const Table = () => {
     else getAllReportsFiltered();
   }, [itemPerPage]);
 
+  const gridRef = useRef<AgGridReact>(null);
+
+  const defaultColDef = useMemo<ColDef>(() => {
+    return {
+      sortable: true,
+      resizable: true,
+      suppressMovable: false,
+    };
+  }, []);
+
+  const gridOptions = useMemo<GridOptions>(() => {
+    return {
+      copyHeadersToClipboard: true,
+      enableCellTextSelection: true,
+    };
+  }, []);
+
+  const [colDefs] = useState<ColDef<ReportDataType>[]>([
+    {
+      headerName: 'S/N',
+      valueGetter: 'node.rowIndex + 1',
+      sortable: false,
+      filter: false,
+      pinned: 'left',
+    },
+    {
+      field: 'calling_date',
+      headerName: 'Calling Date',
+    },
+    {
+      field: 'followup_date',
+      headerName: 'Folder',
+    },
+    { field: 'country', headerName: 'Country' },
+    {
+      field: 'website',
+      headerName: 'Website',
+      cellRenderer: (props: any) =>
+        props.value.length ? (
+          <Linkify
+            className="text-black"
+            coverText="Click here to visit"
+            data={props.value}
+          />
+        ) : (
+          'No link provided'
+        ),
+    },
+    { field: 'category', headerName: 'Category' },
+    { field: 'company_name', headerName: 'Company Name' },
+    { field: 'contact_person', headerName: 'Contact Person' },
+    { field: 'designation', headerName: 'Designation' },
+    { field: 'contact_number', headerName: 'Contact Number' },
+    { field: 'email_address', headerName: 'Email' },
+    { field: 'country', headerName: 'Country' },
+
+    {
+      field: 'linkedin',
+      headerName: 'Linkedin',
+      cellRenderer: (props: any) =>
+        props.value.length ? (
+          <Linkify
+            className="text-black"
+            coverText="Click here to visit"
+            data={props.value}
+          />
+        ) : (
+          'No link provided'
+        ),
+    },
+    {
+      field: 'test_given_date_history',
+      headerName: 'Test',
+      cellRenderer: (props: any) => {
+        return props.value?.length ? 'Yes' : 'No';
+      },
+    },
+    {
+      field: 'is_prospected',
+      headerName: 'Prospect',
+      cellRenderer: (props: any) => {
+        return props.value
+          ? `Yes (${props.data.followup_done ? 'Dealt' : 'Pending'})`
+          : 'No';
+      },
+    },
+
+    {
+      headerName: 'Action',
+      cellRenderer: (props: any) => {
+        return (
+          <DeleteButton reportData={props.data} submitHandler={deleteReport} />
+        );
+      },
+    },
+  ]);
+
+  const onGridReady = (params: GridReadyEvent) => {
+    if (gridRef.current && gridRef.current.api) {
+      gridRef.current.api.autoSizeAllColumns();
+    }
+  };
+
+  const getRowStyle = (params: any): RowStyle | undefined => {
+    return {
+      backgroundColor: params.node.rowIndex % 2 === 0 ? '#f7f7f7' : '#ffffff',
+    };
+  };
+
   return (
     <>
       <div className="flex flex-col justify-center sm:flex-row sm:justify-end mb-4 gap-2">
         <div className="items-center flex gap-2">
           <div className="inline-flex rounded-md" role="group">
-            <button
+            <Button
               onClick={handlePrevious}
               disabled={page === 1 || pageCount === 0 || loading}
-              type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              variant="outline"
+              size="sm"
+              className="rounded-r-none"
             >
-              <ChevronLeft size={18} className="stroke-gray-500" />
+              <ChevronLeft className="h-4 w-4" />
               Prev
-            </button>
+            </Button>
             <button
               disabled={true}
-              className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
+              className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm text-nowrap font-medium border"
             >
               <label>
                 Page <b>{reports?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
-            <button
+            <Button
               onClick={handleNext}
               disabled={page === pageCount || pageCount === 0 || loading}
-              type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              variant="outline"
+              size="sm"
+              className="rounded-l-none"
             >
               Next
-              <ChevronRight size={18} className="stroke-gray-500" />
-            </button>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
 
-          <select
-            value={itemPerPage}
-            onChange={e => setItemPerPage(parseInt(e.target.value))}
-            // defaultValue={30}
-            required
-            className="appearance-none bg-gray-50 text-gray-700 border border-gray-200 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          <Select
+            value={itemPerPage.toString()}
+            onValueChange={(value: string) => setItemPerPage(parseInt(value))}
           >
-            <option value={30}>30</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="30" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">30</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+
           <FilterButton
             loading={loading}
             submitHandler={getAllReportsFiltered}
@@ -295,74 +430,20 @@ const Table = () => {
 
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
-      {!loading &&
-        (reports?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap text-sm">
-            <table className="table table-striped table-bordered">
-              <thead className="table-dark">
-                <tr>
-                  <th>#</th>
-                  <th>Onboard Date</th>
-                  <th>Country</th>
-                  <th>Company Name</th>
-                  <th>Contact Person</th>
-                  <th>Email Address</th>
-                  <th>Manage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports?.items?.map((item, index) => {
-                  return (
-                    <tr key={String(item._id)}>
-                      <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      <td>
-                        {item.onboard_date && formatDate(item.onboard_date)}
-                      </td>
-                      <td>{item.country}</td>
-                      <td className="text-wrap">{item.company_name}</td>
-                      <td className="text-wrap">{item.contact_person}</td>
-                      <td className="text-wrap">{item.email_address}</td>
-                      <td
-                        className="text-center"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <div className="inline-block">
-                          <div className="flex gap-2">
-                            <DeleteButton
-                              submitHandler={deleteReport}
-                              reportData={item}
-                            />
-                            {!item.permanent_client && (
-                              <NewReport
-                                loading={loading}
-                                clientData={{
-                                  country: item.country,
-                                  client_name: item.company_name,
-                                  contact_person: item.contact_person,
-                                  designation: item.designation,
-                                  contact_number: item.contact_number,
-                                  email: item.email_address,
-                                  marketer: item.marketer_name,
-                                }}
-                                submitHandler={convertToClient}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <tr key={0}>
-            <td colSpan={16} className=" align-center text-center">
-              No Reports To Show.
-            </td>
-          </tr>
-        ))}
+      {!loading && (
+        <div className="ag-theme-quartz" style={{ width: '100%' }}>
+          <AgGridReact<ReportDataType>
+            ref={gridRef}
+            rowData={reports.items}
+            columnDefs={colDefs}
+            defaultColDef={defaultColDef}
+            gridOptions={gridOptions}
+            domLayout="autoHeight"
+            onGridReady={onGridReady}
+            getRowStyle={getRowStyle}
+          />
+        </div>
+      )}
       <style jsx>
         {`
           th,

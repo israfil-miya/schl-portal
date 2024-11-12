@@ -1,9 +1,11 @@
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import React from 'react';
 
 interface PropsType {
   data: string;
   coverText?: string;
+  className?: string;
 }
 
 const Linkify: React.FC<PropsType> = props => {
@@ -18,7 +20,10 @@ const Linkify: React.FC<PropsType> = props => {
           (websiteLink: string, index: number): React.ReactNode => (
             <Link
               key={index}
-              className="block hover:cursor-pointer opacity-80 hover:underline hover:opacity-100 text-accent"
+              className={cn(
+                'block hover:cursor-pointer opacity-80 hover:underline hover:opacity-100 text-accent',
+                props.className,
+              )}
               target="_blank"
               href={websiteLink}
             >

@@ -1,76 +1,72 @@
 'use client';
 
-import { Trash2, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import React, { useState } from 'react';
+import React from 'react';
 
 interface PropsType {
   reportData: { [key: string]: any };
   submitHandler: (reportId: string, reqBy: string) => Promise<void>;
 }
 const DeleteButton: React.FC<PropsType> = props => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
   const { data: session } = useSession();
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
-      >
-        <Trash2 size={18} />
-      </button>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="destructive" size="icon">
+            <Trash2 size={18} />
+          </Button>
+        </DialogTrigger>
 
-      <section
-        onClick={() => setIsOpen(false)}
-        className={`fixed inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
-      >
-        <article
-          onClick={e => e.stopPropagation()}
-          className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-lg shadow relative`}
-        >
-          <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
-            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold dark:text-white uppercase">
-              Delete Report
-            </h3>
-            <button
-              onClick={() => setIsOpen(false)}
-              type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
-              data-modal-toggle="default-modal"
-            >
-              <X size={18} />
-            </button>
-          </header>
-          <div className="overflow-hidden max-h-[70vh] p-4">
-            <p className="text-lg">
-              Are you sure, you want to delete this report?
-            </p>
-          </div>
-          <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-8 py-2 uppercase"
-              type="button"
-            >
-              No
-            </button>
-            <button
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              Are you absolutely sure?
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. Are you sure you want to permanently
+              delete this report from the server?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col space-y-2 sm:flex-row sm:justify-end sm:space-x-2 sm:space-y-0 px-4 py-2">
+            <Button
+              type="submit"
               onClick={() => {
                 props.submitHandler(
                   props.reportData?._id,
                   session?.user.real_name || '',
                 );
-                setIsOpen(false);
               }}
-              className="rounded-md bg-red-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 px-8 py-2 uppercase"
-              type="button"
+              variant="destructive"
+              className="w-full sm:w-auto"
             >
-              Yes
-            </button>
-          </footer>
-        </article>
-      </section>
+              Confirm
+            </Button>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

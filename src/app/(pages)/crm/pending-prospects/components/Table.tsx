@@ -280,7 +280,16 @@ const Table = () => {
     { field: 'email_address', headerName: 'Email' },
     { field: 'country', headerName: 'Country' },
 
-    { field: 'linkedin', headerName: 'Linkedin' },
+    {
+      field: 'linkedin',
+      headerName: 'Linkedin',
+      cellRenderer: (props: any) =>
+        props.value.length ? (
+          <Linkify coverText="Click here to visit" data={props.value} />
+        ) : (
+          'No link provided'
+        ),
+    },
     {
       field: 'test_given_date_history',
       headerName: 'Test',
@@ -301,7 +310,9 @@ const Table = () => {
     {
       headerName: 'Action',
       cellRenderer: (props: any) => {
-        <DeleteButton reportData={props.data} submitHandler={deleteReport} />;
+        return (
+          <DeleteButton reportData={props.data} submitHandler={deleteReport} />
+        );
       },
     },
   ]);
@@ -316,18 +327,18 @@ const Table = () => {
     if (params.data.is_prospected) {
       if (params.data.prospect_status == 'high_interest') {
         return {
-          backgroundColor: 'rgb(22 101 52)',
+          backgroundColor: 'rgb(22 163 74)',
           color: 'white',
         };
       } else if (params.data.prospect_status == 'low_interest') {
         return {
-          backgroundColor: 'rgb(154 52 18)',
+          backgroundColor: 'rgb(234 88 12)',
           color: 'white',
         };
       }
     } else {
       return {
-        backgroundColor: 'rgb(153 27 27)',
+        backgroundColor: 'rgb(220 38 38)',
         color: 'white',
       };
     }
