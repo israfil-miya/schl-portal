@@ -5,8 +5,8 @@ import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
-  reportData: { [key: string]: any };
-  submitHandler: (reportId: string, reqBy: string) => Promise<void>;
+  orderData: { [key: string]: any };
+  submitHandler: (orderId: string, reqBy: string) => Promise<void>;
 }
 const DeleteButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -30,13 +30,13 @@ const DeleteButton: React.FC<PropsType> = props => {
           className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-lg shadow relative`}
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
-            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold uppercase">
+            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold  uppercase">
               Delete Report
             </h3>
             <button
               onClick={() => setIsOpen(false)}
               type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center "
             >
               <X size={18} />
             </button>
@@ -57,7 +57,7 @@ const DeleteButton: React.FC<PropsType> = props => {
             <button
               onClick={() => {
                 props.submitHandler(
-                  props.reportData?._id,
+                  props.orderData?._id,
                   session?.user.real_name || '',
                 );
                 setIsOpen(false);

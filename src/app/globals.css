@@ -20,7 +20,7 @@ body {
   padding: 0;
   margin: 0;
   font-family: 'Andika', sans-serif;
-  font-size: 14px;
+  font-size: 1rem;
 }
 
 /* For titles and headings */
@@ -32,7 +32,7 @@ h5,
 h6 {
   font-family: 'Andika', sans-serif;
   text-transform: capitalize;
-  font-size: 16px;
+  font-size: 1.2rem;
 }
 
 :root:has(.disable-page-scroll) {

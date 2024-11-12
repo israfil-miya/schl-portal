@@ -64,7 +64,7 @@ const DailyStatusTable = () => {
               <th>Email</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-base">
             {!loading ? (
               <>
                 {marketers.map((marketer, index) => {

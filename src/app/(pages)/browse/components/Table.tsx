@@ -1,9 +1,12 @@
 'use client';
 
+import Badge from '@/components/Badge';
+import ClickToCopy from '@/components/CopyText';
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { OrderDataType } from '@/models/Orders';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
-import { formatDate } from '@/utility/date';
+import { formatDate, formatTime } from '@/utility/date';
 import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
@@ -14,16 +17,16 @@ import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
 
-type ReportsState = {
+type OrdersState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: { [key: string]: any }[];
+  items: OrderDataType[];
 };
 
 const Table = () => {
-  const [reports, setReports] = useState<ReportsState>({
+  const [orders, setOrders] = useState<OrdersState>({
     pagination: {
       count: 0,
       pageCount: 0,
@@ -43,24 +46,24 @@ const Table = () => {
   const prevPage = useRef<number>(1);
 
   const { data: session } = useSession();
+  const userRole = session?.user.role;
 
   const [filters, setFilters] = useState({
-    country: '',
-    companyName: '',
-    category: '',
     fromDate: '',
     toDate: '',
-    test: false,
-    prospectStatus: '',
+    folder: '',
+    clientCode: '',
+    task: '',
+    type: '',
     generalSearchString: '',
   });
 
-  async function getAllReports() {
+  async function getAllOrders() {
     try {
       // setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/report?action=get-all-reports';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -71,33 +74,33 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prospect: true,
-          test: false,
+          staleClient: true,
           regularClient: false,
+          test: false,
         }),
       };
 
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data as ReportsState);
+        setOrders(response.data as OrdersState);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving reports data');
+      toast.error('An error occurred while retrieving orders data');
     } finally {
       setLoading(false);
     }
   }
 
-  async function getAllReportsFiltered() {
+  async function getAllOrdersFiltered() {
     try {
       // setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/report?action=get-all-reports';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -109,30 +112,30 @@ const Table = () => {
         },
         body: JSON.stringify({
           ...filters,
-          prospect: true,
-          test: false,
+          staleClient: true,
           regularClient: false,
+          test: false,
         }),
       };
 
       let response = await fetchData(url, options);
 
       if (response.ok) {
-        setReports(response.data as ReportsState);
+        setOrders(response.data as OrdersState);
         setIsFiltered(true);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving reports data');
+      toast.error('An error occurred while retrieving orders data');
     } finally {
       setLoading(false);
     }
     return;
   }
 
-  async function deleteReport(reportId: string, reqBy: string) {
+  async function deleteOrder(orderId: string, reqBy: string) {
     try {
       let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
       let options: {} = {
@@ -141,9 +144,9 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Report Delete',
+          req_type: 'Task Delete',
           req_by: reqBy,
-          id: reportId,
+          id: orderId,
         }),
       };
 
@@ -152,7 +155,7 @@ const Table = () => {
       if (response.ok) {
         toast.success('Request sent for approval');
       } else {
-        toast.error(response.data as string);
+        toast.error(response.data.message);
       }
     } catch (error) {
       console.error(error);
@@ -162,7 +165,7 @@ const Table = () => {
   }
 
   useEffect(() => {
-    getAllReports();
+    getAllOrders();
   }, []);
 
   function handlePrevious() {
@@ -181,24 +184,24 @@ const Table = () => {
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
-      if (reports?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllReports();
-      else getAllReportsFiltered();
+      if (orders?.pagination?.pageCount == 1) return;
+      if (!isFiltered) getAllOrders();
+      else getAllOrdersFiltered();
     }
     prevPage.current = page;
   }, [page]);
 
   useEffect(() => {
-    if (reports?.pagination?.pageCount !== undefined) {
+    if (orders?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllReportsFiltered();
+        if (!isFiltered) getAllOrdersFiltered();
       }
-      if (reports) setPageCount(reports?.pagination?.pageCount);
-      prevPageCount.current = reports?.pagination?.pageCount;
+      if (orders) setPageCount(orders?.pagination?.pageCount);
+      prevPageCount.current = orders?.pagination?.pageCount;
       prevPage.current = 1;
     }
-  }, [reports?.pagination?.pageCount]);
+  }, [orders?.pagination?.pageCount]);
 
   useEffect(() => {
     // Reset to first page when itemPerPage changes
@@ -206,8 +209,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllReports();
-    else getAllReportsFiltered();
+    if (!isFiltered) getAllOrders();
+    else getAllOrdersFiltered();
   }, [itemPerPage]);
 
   return (
@@ -229,7 +232,7 @@ const Table = () => {
               className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
             >
               <label>
-                Page <b>{reports?.items?.length !== 0 ? page : 0}</b> of{' '}
+                Page <b>{orders?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
@@ -257,7 +260,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllReportsFiltered}
+            submitHandler={getAllOrdersFiltered}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
@@ -268,115 +271,120 @@ const Table = () => {
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
       {!loading &&
-        (reports?.items?.length !== 0 ? (
+        (orders?.items?.length !== 0 ? (
           <div className="table-responsive text-nowrap text-base">
-            <table className="table">
+            <table className="table border table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
-                  <th>#</th>
-                  <th>Calling Date</th>
-                  <th>Followup Date</th>
-                  <th>Country</th>
-                  <th>Website</th>
-                  <th>Category</th>
-                  <th>Company Name</th>
-                  <th>Contact Person</th>
-                  <th>Designation</th>
-                  <th>Contact Number</th>
-                  <th>Email Address</th>
-                  <th>Calling Status</th>
-                  <th>LinkedIn</th>
-                  <th>Test</th>
-                  <th>Prospected</th>
+                  <th>S/N</th>
+                  <th>Client Code</th>
+                  {userRole == 'admin' || userRole == 'super' ? (
+                    <th>Client Name</th>
+                  ) : null}
+                  <th>Folder</th>
+                  <th>NOF</th>
+                  <th>Download Date</th>
+                  <th>Delivery Time</th>
+                  <th>Task</th>
+                  <th>E.T.</th>
+                  <th>Production</th>
+                  <th>QC1</th>
+                  <th>Folder Location</th>
+                  <th>Type</th>
+                  <th>Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {reports?.items?.map((item, index) => {
-                  let tableRowColor = 'table-secondary';
+                {orders?.items?.map((order, index) => (
+                  <tr key={String(order._id)}>
+                    <td>{index + 1 + itemPerPage * (page - 1)}</td>
+                    <td className="text-wrap">{order.client_code}</td>
 
-                  if (item.is_prospected) {
-                    if (item?.prospect_status == 'high_interest') {
-                      tableRowColor = 'table-success';
-                    } else if (item?.prospect_status == 'low_interest') {
-                      tableRowColor = 'table-warning';
-                    }
-                  } else {
-                    tableRowColor = 'table-danger';
-                  }
+                    {userRole == 'admin' || userRole == 'super' ? (
+                      <td className="text-wrap">{order.client_name}</td>
+                    ) : null}
 
-                  return (
-                    <tr
-                      key={item._id}
-                      className={tableRowColor ? tableRowColor : ''}
+                    <td className="text-wrap">{order.folder}</td>
+                    <td className="text-wrap">{order.quantity}</td>
+                    <td className="text-wrap">
+                      {order.download_date
+                        ? formatDate(order.download_date)
+                        : null}
+                    </td>
+                    <td className="text-wrap">
+                      {order.download_date
+                        ? formatDate(order.download_date)
+                        : null}
+                      {' | '}
+                      {order.delivery_bd_time
+                        ? formatTime(order.delivery_bd_time)
+                        : null}
+                    </td>
+                    <td
+                      className="uppercase text-wrap"
+                      style={{ verticalAlign: 'middle' }}
                     >
-                      <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      <td>
-                        {item.calling_date && formatDate(item.calling_date)}
-                      </td>
-                      <td>
-                        {item.followup_date && formatDate(item.followup_date)}
-                      </td>
-
-                      <td>{item.country}</td>
-                      <td>
-                        {item.website.length ? (
-                          <Linkify
-                            coverText="Click here to visit"
-                            data={item.website}
+                      {order.task?.split('+').map((task, index) => {
+                        return <Badge key={index} value={task} />;
+                      })}
+                    </td>
+                    <td className="text-wrap">{order.et}</td>
+                    <td className="text-wrap">{order.production}</td>
+                    <td className="text-wrap">{order.qc1}</td>
+                    <td className="text-wrap">
+                      <ClickToCopy text={order.folder_path} />
+                    </td>
+                    <td
+                      className="uppercase text-wrap"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <Badge value={order.type} />
+                    </td>
+                    <td
+                      className="uppercase text-wrap"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      {order.status.trim().toLocaleLowerCase() == 'finished' ? (
+                        <Badge
+                          value={order.status}
+                          className="bg-green-800 text-white border-green-800"
+                        />
+                      ) : order.status.trim().toLocaleLowerCase() ==
+                        'client hold' ? (
+                        <Badge
+                          value={order.status}
+                          className="bg-gray-600 text-white border-gray-600"
+                        />
+                      ) : (
+                        <Badge
+                          value={order.status}
+                          className="bg-amber-600 text-white border-amber-600"
+                        />
+                      )}
+                    </td>
+                    <td
+                      className="text-center"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <div className="inline-block">
+                        <div className="flex gap-2">
+                          <DeleteButton
+                            orderData={order}
+                            submitHandler={deleteOrder}
                           />
-                        ) : (
-                          'No link provided'
-                        )}
-                      </td>
-                      <td>{item.category}</td>
-                      <td className="text-wrap">{item.company_name}</td>
-                      <td className="text-wrap">{item.contact_person}</td>
-                      <td>{item.designation}</td>
-                      <td className="text-wrap">{item.contact_number}</td>
-                      <td className="text-wrap">{item.email_address}</td>
-                      <CallingStatusTd data={item.calling_status} />
-                      <td>
-                        {item.linkedin.length ? (
-                          <Linkify
-                            coverText="Click here to visit"
-                            data={item.linkedin}
-                          />
-                        ) : (
-                          'No link provided'
-                        )}
-                      </td>
-                      <td>
-                        {item.test_given_date_history?.length ? 'Yes' : 'No'}
-                      </td>
-                      <td>
-                        {item.is_prospected
-                          ? `Yes (${item.followup_done ? 'Dealt' : 'Pending'})`
-                          : 'No'}
-                      </td>
-                      <td
-                        className="text-center"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <div className="inline-block">
-                          <div className="flex gap-2">
-                            <DeleteButton
-                              submitHandler={deleteReport}
-                              reportData={item}
-                            />
-                          </div>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         ) : (
           <tr key={0}>
             <td colSpan={16} className=" align-center text-center">
-              No Reports To Show.
+              No Orders To Show.
             </td>
           </tr>
         ))}

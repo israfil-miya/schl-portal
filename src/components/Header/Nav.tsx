@@ -63,7 +63,7 @@ const Nav: React.FC<PropsType> = props => {
             !['super', 'admin'].includes(userRole || '') && 'hidden',
           )}
         >
-          <span className="flex gap-1 items-end align-bottom justify-between">
+          <span className="flex gap-1 items-center justify-between">
             <span>Admin</span>
             <ChevronDown size={17} />
           </span>
@@ -203,7 +203,7 @@ const Nav: React.FC<PropsType> = props => {
             !['super', 'admin'].includes(userRole || '') && 'hidden',
           )}
         >
-          <span className="flex gap-1 items-end align-bottom justify-between">
+          <span className="flex gap-1 items-center justify-between">
             <span>Accountancy</span>
             <ChevronDown size={17} />
           </span>
@@ -279,7 +279,7 @@ const Nav: React.FC<PropsType> = props => {
             userRole !== 'super' && 'hidden',
           )}
         >
-          <span className="flex gap-1 items-end align-bottom justify-between">
+          <span className="flex gap-1 items-center justify-between">
             <span>CRM</span>
             <ChevronDown size={17} />
           </span>

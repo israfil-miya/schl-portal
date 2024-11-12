@@ -404,7 +404,7 @@ async function handleGetAllReports(req: Request): Promise<{
     const headersList = await headers();
     const page: number = Number(headersList.get('page')) || 1;
     const ITEMS_PER_PAGE: number =
-      Number(headersList.get('item_per_page')) || 30;
+      Number(headersList.get('items_per_page')) || 30;
     const isFilter: boolean = headersList.get('filtered') === 'true';
     const paginated: boolean = headersList.get('paginated') === 'true';
 

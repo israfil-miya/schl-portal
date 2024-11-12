@@ -66,7 +66,7 @@ const Table = () => {
         headers: {
           filtered: false,
           paginated: true,
-          item_per_page: itemPerPage,
+          items_per_page: itemPerPage,
           page,
           'Content-Type': 'application/json',
         },
@@ -103,7 +103,7 @@ const Table = () => {
         headers: {
           filtered: true,
           paginated: true,
-          item_per_page: itemPerPage,
+          items_per_page: itemPerPage,
           page,
           'Content-Type': 'application/json',
         },
@@ -219,7 +219,7 @@ const Table = () => {
               onClick={handlePrevious}
               disabled={page === 1 || pageCount === 0 || loading}
               type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={18} className="stroke-gray-500" />
               Prev
@@ -237,7 +237,7 @@ const Table = () => {
               onClick={handleNext}
               disabled={page === pageCount || pageCount === 0 || loading}
               type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500 disabled:cursor-not-allowed"
             >
               Next
               <ChevronRight size={18} className="stroke-gray-500" />
@@ -249,7 +249,7 @@ const Table = () => {
             onChange={e => setItemPerPage(parseInt(e.target.value))}
             // defaultValue={30}
             required
-            className="appearance-none bg-gray-50 text-gray-700 border border-gray-200 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            className="appearance-none cursor-pointer px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           >
             <option value={30}>30</option>
             <option value={50}>50</option>
@@ -269,7 +269,7 @@ const Table = () => {
 
       {!loading &&
         (reports?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap text-sm">
+          <div className="table-responsive text-nowrap text-base">
             <table className="table">
               <thead className="table-dark">
                 <tr>
@@ -307,7 +307,7 @@ const Table = () => {
 
                   return (
                     <tr
-                      key={item._id}
+                      key={String(item._id)}
                       className={tableRowColor ? tableRowColor : ''}
                     >
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
@@ -351,7 +351,7 @@ const Table = () => {
                       </td>
                       <td>
                         {item.is_prospected
-                          ? `Yes (${item.followup_done ? 'Done' : 'Pending'})`
+                          ? `Yes (${item.followup_done ? 'Dealt' : 'Pending'})`
                           : 'No'}
                       </td>
                       <td

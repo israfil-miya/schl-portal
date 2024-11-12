@@ -51,7 +51,7 @@ const DailyStatusTable = () => {
               <th>Leads</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-base">
             {!loading ? (
               <>
                 {Object.keys(reportsStatus).map((key, index) => {
@@ -61,8 +61,8 @@ const DailyStatusTable = () => {
                         className={`${
                           callsTarget - reportsStatus[key].totalCalls <= 0 &&
                           leadsTarget - reportsStatus[key].totalLeads <= 0
-                            ? 'bg-green-500'
-                            : 'bg-red-500'
+                            ? 'bg-green-800'
+                            : 'bg-red-800'
                         } sm:max-w-8 text-wrap lg:text-nowrap text-left text-white ps-3`}
                       >
                         {index + 1}. {key}

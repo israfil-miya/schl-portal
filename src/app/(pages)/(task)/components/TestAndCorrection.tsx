@@ -66,19 +66,19 @@ function TestAndCorrection() {
               <th>Client Code</th>
               <th>Folder</th>
               <th>NOF</th>
-              <th>Download Date</th>
-              <th>Delivery Time</th>
+              <th>Download</th>
+              <th>Delivery</th>
               <th>Task</th>
               <th>E.T</th>
               <th>Production</th>
               <th>QC1</th>
-              <th>Comments</th>
               <th>Folder Location</th>
               <th>Type</th>
               <th>Status</th>
+              <th>Comments</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-base">
             {!loading ? (
               <>
                 {orders?.map((order, index) => {
@@ -95,6 +95,10 @@ function TestAndCorrection() {
                           : null}
                       </td>
                       <td>
+                        {order.download_date
+                          ? formatDate(order.download_date)
+                          : null}
+                        {' | '}
                         {order.delivery_bd_time
                           ? formatTime(order.delivery_bd_time)
                           : null}
@@ -111,7 +115,6 @@ function TestAndCorrection() {
                       <td>{order.et}</td>
                       <td>{order.production}</td>
                       <td>{order.qc1}</td>
-                      <ExtendableTd data={order.comment} />
                       <td>
                         <ClickToCopy text={order.folder_path} />
                       </td>
@@ -127,6 +130,7 @@ function TestAndCorrection() {
                       >
                         <Badge value={order.status} />
                       </td>
+                      <ExtendableTd data={order.comment} />
                     </tr>
                   );
                 })}

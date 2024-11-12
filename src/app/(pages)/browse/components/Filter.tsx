@@ -8,13 +8,13 @@ interface PropsType {
   className?: string;
   submitHandler: () => void;
   filters: {
-    country: string;
-    companyName: string;
-    category: string;
+    generalSearchString: string;
     fromDate: string;
     toDate: string;
-    prospect: boolean;
-    generalSearchString: string;
+    folder: string;
+    clientCode: string;
+    task: string;
+    type: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   loading: boolean;
@@ -47,12 +47,12 @@ const FilterButton: React.FC<PropsType> = props => {
 
   const handleResetFilters = () => {
     setFilters({
-      country: '',
-      companyName: '',
-      category: '',
       fromDate: '',
       toDate: '',
-      prospect: false,
+      folder: '',
+      clientCode: '',
+      task: '',
+      type: '',
       generalSearchString: '',
     });
   };
@@ -103,100 +103,93 @@ const FilterButton: React.FC<PropsType> = props => {
             </button>
           </header>
           <div className="overflow-y-scroll max-h-[70vh] p-4">
-            <div className="regular-search">
-              <div className="grid grid-cols-1 gap-x-3 gap-y-4">
-                <div className="">
-                  <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
-                    Date Picker
-                  </label>
-
-                  <div className="inline-flex w-full" role="group">
-                    <input
-                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="fromDate"
-                      value={filters.fromDate}
-                      onChange={handleChange}
-                      type="date"
-                    />
-                    <span className="inline-flex items-center px-4 py-2 m-0 text-sm font-medium border">
-                      <b>to</b>
-                    </span>
-                    <input
-                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      name="toDate"
-                      value={filters.toDate}
-                      onChange={handleChange}
-                      type="date"
-                    />
-                  </div>
-                </div>
-
-                <div className="">
-                  <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
-                    Country Name
-                  </label>
-                  <input
-                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="country"
-                    value={filters.country}
-                    onChange={handleChange}
-                    type="text"
-                  />
-                </div>
-                <div className="">
-                  <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-                    Category
-                  </label>
-                  <input
-                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="category"
-                    value={filters.category}
-                    onChange={handleChange}
-                    type="text"
-                  />
-                </div>
-                <div className="">
-                  <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-                    Company Name
-                  </label>
-                  <input
-                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    name="companyName"
-                    value={filters.companyName}
-                    onChange={handleChange}
-                    type="text"
-                  />
-                </div>
-              </div>
-              <div className="checkboxes flex flex-col sm:flex-row gap-4 my-4">
-                <div className="flex gap-2 items-center">
-                  <input
-                    name="prospect"
-                    checked={filters.prospect}
-                    onChange={handleChange}
-                    id="prospect-checkbox"
-                    type="checkbox"
-                    className="w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label htmlFor="prospect-checkbox" className="uppercase ">
-                    Prospect
-                  </label>
-                </div>
-              </div>
-
-              <div className="w-full">
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4 mb-4">
+              <div>
                 <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
-                  String Search
+                  Date Picker
                 </label>
 
+                <div className="inline-flex w-full" role="group">
+                  <input
+                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    name="fromDate"
+                    value={filters.fromDate}
+                    onChange={handleChange}
+                    type="date"
+                  />
+                  <span className="inline-flex items-center px-4 py-2 m-0 text-sm font-medium border">
+                    <b>to</b>
+                  </span>
+                  <input
+                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    name="toDate"
+                    value={filters.toDate}
+                    onChange={handleChange}
+                    type="date"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
+                  Client Code
+                </label>
                 <input
-                  placeholder="Search for any text"
-                  name="generalSearchString"
-                  value={filters.generalSearchString}
-                  onChange={handleChange}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="clientCode"
+                  value={filters.clientCode}
+                  onChange={handleChange}
+                  type="text"
                 />
               </div>
+              <div>
+                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                  Folder
+                </label>
+                <input
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="folder"
+                  value={filters.folder}
+                  onChange={handleChange}
+                  type="text"
+                />
+              </div>
+              <div>
+                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                  Task
+                </label>
+                <input
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="task"
+                  value={filters.task}
+                  onChange={handleChange}
+                  type="text"
+                />
+              </div>
+              <div>
+                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                  Type
+                </label>
+                <input
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="type"
+                  value={filters.type}
+                  onChange={handleChange}
+                  type="text"
+                />
+              </div>
+            </div>
+            <div className="w-full">
+              <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
+                String Search
+              </label>
+
+              <input
+                placeholder="Search for any text"
+                name="generalSearchString"
+                value={filters.generalSearchString}
+                onChange={handleChange}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              />
             </div>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">

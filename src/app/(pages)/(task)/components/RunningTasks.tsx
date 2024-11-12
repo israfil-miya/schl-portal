@@ -3,11 +3,12 @@ import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
-import fetchData from '@/utility/fetch';
+import fetchApi from '@/utility/fetch';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import TimeRemainingRenderer from './TimeRemainingRenderer';
 
 function RunningTasks() {
   const [loading, setLoading] = useState(true);
@@ -22,21 +23,18 @@ function RunningTasks() {
   async function getAllOrders() {
     try {
       setLoading(true);
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-redo-orders';
-      let options: {} = {
+      const url =
+        process.env.NEXT_PUBLIC_BASE_URL +
+        '/api/order?action=get-unfinished-orders';
+      const options = {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       };
+      const response = await fetchApi(url, options);
 
-      let response = await fetchData(url, options);
-
+      console.log(response.data);
       if (response.ok) {
         setOrders(response.data as OrderDataType[]);
-        console.log(response.data);
       } else {
         toast.error(response.data as string);
       }
@@ -66,19 +64,19 @@ function RunningTasks() {
               <th>Client Code</th>
               <th>Folder</th>
               <th>NOF</th>
-              <th>Download Date</th>
-              <th>Delivery Time</th>
+              <th>Download</th>
+              <th>Delivery</th>
+              <th>Remaining</th>
               <th>Task</th>
               <th>E.T</th>
               <th>Production</th>
               <th>QC1</th>
-              <th>Comments</th>
               <th>Folder Location</th>
               <th>Type</th>
-              <th>Status</th>
+              <th>Comments</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-base">
             {!loading ? (
               <>
                 {orders?.map((order, index) => {
@@ -87,7 +85,7 @@ function RunningTasks() {
                       <td>{index + 1}</td>
                       <td>{order.client_code}</td>
 
-                      <td>{order.folder}</td>
+                      <td className="text-pretty">{order.folder}</td>
                       <td>{order.quantity}</td>
                       <td>
                         {order.download_date
@@ -105,6 +103,13 @@ function RunningTasks() {
                       </td>
 
                       <td
+                        className="uppercase text-nowrap"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <TimeRemainingRenderer data={order} />
+                      </td>
+
+                      <td
                         className="uppercase text-wrap"
                         style={{ verticalAlign: 'middle' }}
                       >
@@ -115,7 +120,6 @@ function RunningTasks() {
                       <td>{order.et}</td>
                       <td>{order.production}</td>
                       <td>{order.qc1}</td>
-                      <ExtendableTd data={order.comment} />
                       <td>
                         <ClickToCopy text={order.folder_path} />
                       </td>
@@ -125,12 +129,7 @@ function RunningTasks() {
                       >
                         <Badge value={order.type} />
                       </td>
-                      <td
-                        className="uppercase text-wrap"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <Badge value={order.status} />
-                      </td>
+                      <ExtendableTd data={order.comment} />
                     </tr>
                   );
                 })}

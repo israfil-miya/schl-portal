@@ -93,13 +93,13 @@ const FilterButton: React.FC<PropsType> = props => {
           className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-lg lg:w-[35vw] md:w-[70vw] sm:w-[80vw] shadow relative`}
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
-            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold dark:text-white uppercase">
+            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold  uppercase">
               Filter Reports
             </h3>
             <button
               onClick={() => setIsOpen(false)}
               type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center "
             >
               <X size={18} />
             </button>
@@ -204,7 +204,7 @@ const FilterButton: React.FC<PropsType> = props => {
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">
             <button
               onClick={handleResetFilters}
-              className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-8 py-2 uppercase"
+              className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100px-4 py-1"
               type="button"
               disabled={props.loading}
             >
@@ -212,7 +212,7 @@ const FilterButton: React.FC<PropsType> = props => {
             </button>
             <button
               onClick={props.submitHandler}
-              className="rounded-md bg-blue-600 text-white   hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-8 py-2 uppercase"
+              className="rounded-md bg-blue-600 text-white   hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
               type="button"
               disabled={props.loading}
             >

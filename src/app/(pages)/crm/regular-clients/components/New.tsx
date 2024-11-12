@@ -259,7 +259,7 @@ const CreateButton: React.FC<PropsType> = props => {
             <div className="buttons space-x-2 ">
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-8 py-2 uppercase"
+                className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
                 Close
@@ -269,7 +269,7 @@ const CreateButton: React.FC<PropsType> = props => {
                   props.submitHandler(editedData, setEditedData);
                   setIsOpen(false);
                 }}
-                className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-8 py-2 uppercase"
+                className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
                 Submit
