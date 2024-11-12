@@ -13,7 +13,7 @@ export const formatTime = (time24: string) => {
 export const formatDate = (dateString: string | Date) => {
   if (!dateString) return '';
 
-  return moment(dateString).format('Do MMMM, YYYY');
+  return moment(dateString).format("Do MMM. 'YY");
 };
 
 export const getTimeFromISODate = (isoDate: string): string => {
