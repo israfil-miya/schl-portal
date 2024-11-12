@@ -129,14 +129,12 @@ const Nav: React.FC<PropsType> = props => {
                   aria-labelledby="adminUsersDropdownButton"
                 >
                   <li>
-                    <li>
-                      <Link
-                        className={cn('block px-4 py-2 hover:bg-primary')}
-                        href={'/admin/users/roles'}
-                      >
-                        Manage Roles
-                      </Link>
-                    </li>
+                    <Link
+                      className={cn('block px-4 py-2 hover:bg-primary')}
+                      href={'/admin/users/roles'}
+                    >
+                      Manage Roles
+                    </Link>
                   </li>
                   <li>
                     <Link
@@ -172,14 +170,12 @@ const Nav: React.FC<PropsType> = props => {
                   aria-labelledby="adminNoticesDropdownButton"
                 >
                   <li>
-                    <li>
-                      <Link
-                        className={cn('block px-4 py-2 hover:bg-primary')}
-                        href={'/admin/notices/new'}
-                      >
-                        Send New
-                      </Link>
-                    </li>
+                    <Link
+                      className={cn('block px-4 py-2 hover:bg-primary')}
+                      href={'/admin/notices/new'}
+                    >
+                      Send New
+                    </Link>
                   </li>
                   <li>
                     <Link
@@ -252,14 +248,12 @@ const Nav: React.FC<PropsType> = props => {
                   aria-labelledby="accountancyInvoicesDropdownButton"
                 >
                   <li>
-                    <li>
-                      <Link
-                        className={cn('block px-4 py-2 hover:bg-primary')}
-                        href={'/accountancy/invoices/new'}
-                      >
-                        Create New
-                      </Link>
-                    </li>
+                    <Link
+                      className={cn('block px-4 py-2 hover:bg-primary')}
+                      href={'/accountancy/invoices/new'}
+                    >
+                      Create New
+                    </Link>
                   </li>
                   <li>
                     <Link

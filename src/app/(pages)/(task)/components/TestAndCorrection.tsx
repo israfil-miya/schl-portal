@@ -1,15 +1,23 @@
 import Badge from '@/components/Badge';
-import ClickToCopy from '@/components/copyText';
+import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import fetchData from '@/utility/fetch';
+import 'flowbite';
+import { initFlowbite } from 'flowbite';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 function TestAndCorrection() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<OrderDataType[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      initFlowbite();
+    }
+  }, []);
 
   async function getAllOrders() {
     try {
