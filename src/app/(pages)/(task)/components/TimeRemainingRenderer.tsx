@@ -39,28 +39,28 @@ const TimeRemainingRenderer = (props: any) => {
   if (diff <= 0) {
     return (
       <Badge
-        className="bg-gray-800 text-white border-gray-800"
+        className="bg-gray-600 text-white border-gray-600"
         value={timeRemaining}
       />
     );
   } else if (diff <= 30 * 60 * 1000) {
     return (
       <Badge
-        className="bg-red-800 text-white border-red-800"
+        className="bg-red-600 text-white border-red-600"
         value={timeRemaining}
       />
     );
   } else if (diff <= 60 * 60 * 1000) {
     return (
       <Badge
-        className="bg-orange-800 text-white border-orange-800"
+        className="bg-amber-600 text-white border-amber-600"
         value={timeRemaining}
       />
     );
   } else
     return (
       <Badge
-        className="bg-green-800 text-white hover:bg-green-800"
+        className="bg-green-600 text-white hover:bg-green-600"
         value={timeRemaining}
       />
     );

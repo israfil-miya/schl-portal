@@ -128,7 +128,10 @@ function TestAndCorrection() {
                         className="uppercase text-wrap"
                         style={{ verticalAlign: 'middle' }}
                       >
-                        <Badge value={order.status} />
+                        <Badge
+                          value={order.status}
+                          className="bg-amber-600 text-white border-amber-600"
+                        />
                       </td>
                       <ExtendableTd data={order.comment} />
                     </tr>

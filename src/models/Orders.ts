@@ -11,7 +11,7 @@ interface OrderType {
   delivery_bd_time: string;
   task: string;
   et: number;
-  production: string;
+  production: number;
   qc1: number;
   comment: string;
   type: string;
@@ -64,7 +64,7 @@ const OrderSchema = new mongoose.Schema<OrderDocType>(
       type: Number,
     },
     production: {
-      type: String,
+      type: Number,
     },
     qc1: {
       type: Number,

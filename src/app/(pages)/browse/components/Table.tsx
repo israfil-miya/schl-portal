@@ -8,7 +8,7 @@ import { OrderDataType } from '@/models/Orders';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
 import { formatDate, formatTime } from '@/utility/date';
 import fetchData from '@/utility/fetch';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookCheck, ChevronLeft, ChevronRight, Redo2 } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -162,6 +162,108 @@ const Table = () => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
+  }
+
+  const finishOrder = async (orderData: OrderDataType) => {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=finish-order';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderData._id,
+        }),
+      };
+
+      if (
+        orderData.production >= orderData.quantity &&
+        orderData.qc1 >= orderData.quantity
+      ) {
+        const response = await fetchData(url, options);
+
+        if (response.ok) {
+          toast.success('Changed the status to FINISHED');
+          if (!isFiltered) await getAllOrders();
+          else await getAllOrdersFiltered();
+        } else {
+          toast.error('Unable to change status');
+        }
+      } else {
+        if (orderData.production < orderData.quantity) {
+          toast.error('Production is not completed');
+        } else if (orderData.qc1 < orderData.quantity) {
+          toast.error('QC1 is not completed');
+        } else {
+          toast.error('Unable to change status');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while changing the status');
+    }
+    return;
+  };
+
+  const redoOrder = async (orderData: OrderDataType) => {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=redo-order';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderData._id,
+        }),
+      };
+
+      const response = await fetchData(url, options);
+
+      if (response.ok) {
+        toast.success('Changed the status to CORRECTION');
+        if (!isFiltered) await getAllOrders();
+        else await getAllOrdersFiltered();
+      } else {
+        toast.error('Unable to change status');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while changing the status');
+    }
+    return;
+  };
+
+  async function editOrder(editedOrderData: OrderDataType) {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=edit-order';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          updated_by: session?.user.real_name,
+        },
+        body: JSON.stringify(editedOrderData),
+      };
+
+      const response = await fetchData(url, options);
+
+      if (response.ok) {
+        toast.success('Updated the order data');
+
+        if (!isFiltered) await getAllOrders();
+        else await getAllOrdersFiltered();
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while updating the order');
+    }
   }
 
   useEffect(() => {
@@ -348,7 +450,7 @@ const Table = () => {
                       {order.status.trim().toLocaleLowerCase() == 'finished' ? (
                         <Badge
                           value={order.status}
-                          className="bg-green-800 text-white border-green-800"
+                          className="bg-green-600 text-white border-green-800"
                         />
                       ) : order.status.trim().toLocaleLowerCase() ==
                         'client hold' ? (
@@ -373,6 +475,22 @@ const Table = () => {
                             orderData={order}
                             submitHandler={deleteOrder}
                           />
+                          {order.status.trim().toLocaleLowerCase() ==
+                          'finished' ? (
+                            <button
+                              onClick={() => redoOrder(order)}
+                              className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                            >
+                              <Redo2 size={18} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => finishOrder(order)}
+                              className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                            >
+                              <BookCheck size={18} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </td>
