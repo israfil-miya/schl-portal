@@ -4,7 +4,7 @@ import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
-import { OrderDataType } from '@/models/Orders';
+import { mapFormDataToFields, parseFormData } from '@/utility/actionHelpers';
 import countDaysSinceLastCall from '@/utility/countDaysPassed';
 import { formatDate, formatTime } from '@/utility/date';
 import fetchData from '@/utility/fetch';
@@ -14,7 +14,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { OrderDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
+import EditButton from './Edit';
 import FilterButton from './Filter';
 
 type OrdersState = {
@@ -239,6 +241,15 @@ const Table = () => {
 
   async function editOrder(editedOrderData: OrderDataType) {
     try {
+      setLoading(true);
+      const parsed = validationSchema.safeParse(editedOrderData);
+
+      if (!parsed.success) {
+        console.error(parsed.error.issues.map(issue => issue.message));
+        toast.error('Invalid form data');
+        return;
+      }
+
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=edit-order';
       let options: {} = {
@@ -247,7 +258,7 @@ const Table = () => {
           'Content-Type': 'application/json',
           updated_by: session?.user.real_name,
         },
-        body: JSON.stringify(editedOrderData),
+        body: JSON.stringify(parsed.data),
       };
 
       const response = await fetchData(url, options);
@@ -263,6 +274,8 @@ const Table = () => {
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while updating the order');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -491,6 +504,11 @@ const Table = () => {
                               <BookCheck size={18} />
                             </button>
                           )}
+                          <EditButton
+                            orderData={order}
+                            submitHandler={editOrder}
+                            loading={loading}
+                          />
                         </div>
                       </div>
                     </td>

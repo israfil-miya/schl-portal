@@ -340,9 +340,11 @@ async function handleEditOrder(req: Request): Promise<{
     const headersList = await headers();
     let data = await req.json();
     const updatedBy = headersList.get('updated_by');
+    const { _id } = data;
+    delete data._id;
 
     const resData = await Order.findByIdAndUpdate(
-      data?._id,
+      _id,
       {
         ...data,
         updated_by: updatedBy,

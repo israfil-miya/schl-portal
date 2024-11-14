@@ -1,5 +1,6 @@
 'use client';
 
+import { parseFormData } from '@/utility/actionHelpers';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -8,30 +9,24 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
+import { SquarePen, X } from 'lucide-react';
 import React, { useActionState, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
-import { toast } from 'sonner';
-import { editProduct } from '../actions';
-import { ProductDataTypes, validationSchema } from '../schema';
+import { OrderDataType, validationSchema } from '../schema';
 
 const baseZIndex = 50; // 52
 
 interface PropsType {
-  productData: ProductDataTypes;
-  storesList: string[];
-  categoriesList: string[];
-  suppliersList: string[];
+  loading: boolean;
+  orderData: OrderDataType;
+  submitHandler: (editedOrderData: OrderDataType) => Promise<void>;
 }
 
 const EditButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const [state, formAction, loading] = useActionState(editProduct, {
-    error: false,
-    message: '',
-  });
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
@@ -51,71 +46,41 @@ const EditButton: React.FC<PropsType> = props => {
     setValue,
     reset,
     formState: { errors },
-  } = useForm<ProductDataTypes>({
+  } = useForm<OrderDataType>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
-      ...props.productData,
-      ...(state?.fields ?? {}),
+      ...props.orderData!,
     },
   });
 
-  const storeOptions = props.storesList.map(store => ({
-    value: store,
-    label: store.charAt(0).toUpperCase() + store.slice(1),
-  }));
-
-  const categoryOptions = props.categoriesList.map(category => ({
-    value: category,
-    label: category.charAt(0).toUpperCase() + category.slice(1),
-  }));
-
-  const supplierOptions = props.suppliersList.map(supplier => ({
-    value: supplier,
-    label: supplier.charAt(0).toUpperCase() + supplier.slice(1),
-  }));
+  const statusOptions = [
+    { value: 'running', label: 'Running' },
+    { value: 'uploaded', label: 'Uploaded' },
+    { value: 'paused', label: 'Paused' },
+    { value: 'client hold', label: 'Client hold' },
+  ];
+  const typeOptions = [
+    { value: 'general', label: 'General' },
+    { value: 'test', label: 'Test' },
+  ];
 
   useEffect(() => {
     initFlowbite();
   }, []);
 
-  useEffect(() => {
-    if (state.error) {
-      if (state?.message !== '') {
-        toast.error(state.message);
-      }
-    } else if (state?.message !== '') {
-      toast.success(state.message);
-      if (state.fields) {
-        reset(state.fields as ProductDataTypes);
-      }
-      setIsOpen(false);
-    } else {
-      console.log('Nothing was returned from the server');
-    }
-  }, [state, reset]);
+  const onSubmit = async (data: OrderDataType) => {
+    await props.submitHandler(data);
+  };
 
   return (
     <>
       <button
-        disabled={loading}
         onClick={() => {
           setIsOpen(true);
         }}
-        className="items-center gap-2 rounded-sm bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2"
+        className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          viewBox="0 0 16 16"
-        >
-          <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
-          <path
-            fillRule="evenodd"
-            d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"
-          />
-        </svg>
+        <SquarePen size={18} />
       </button>
 
       <section
@@ -128,84 +93,105 @@ const EditButton: React.FC<PropsType> = props => {
           className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-sm shadow relative md:w-[60vw] lg:w-[40vw]  text-wrap`}
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
-            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold dark:text-white uppercase">
-              Edit Product
+            <h3 className="text-gray-900 text-base lg:text-lg font-semibold uppercase">
+              Edit Order
             </h3>
             <button
               onClick={() => setIsOpen(false)}
               type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-sm text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center "
             >
-              <svg
-                className="w-5 h-5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
+              <X size={18} />
             </button>
           </header>
 
           <form
-            action={formAction}
             ref={formRef}
             className="overflow-x-hidden overflow-y-scroll max-h-[70vh] p-4 text-start"
-            onSubmit={e => {
-              console.log('Form submitted');
-              e.preventDefault();
-              handleSubmit(() => {
-                const formData = new FormData(formRef.current!);
-                formData.append('_id', props.productData._id!);
-                console.log('Form data', formData);
-                formAction(formData);
-              })(e);
-            }}
+            onSubmit={handleSubmit(onSubmit)}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-4">
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase flex items-center gap-2">
-                    Batch*
-                    <span className="cursor-pointer has-tooltip text-xs">
-                      &#9432;
-                      <span className="tooltip italic font-medium rounded-sm text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
-                        Auto generated
-                      </span>
-                    </span>
-                  </span>
+                  <span className="uppercase">Folder*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.batch && errors.batch?.message}
+                    {errors.folder && errors.folder.message}
                   </span>
                 </label>
-
                 <input
-                  {...register('batch')}
+                  {...register('folder')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
-                  readOnly
                 />
               </div>
-
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Name*</span>
+                  <span className="uppercase">NOF*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.name && errors.name.message}
+                    {errors.quantity && errors.quantity.message}
                   </span>
                 </label>
                 <input
-                  {...register('name')}
+                  {...register('quantity', { valueAsNumber: true })}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="text"
+                  type="number"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Rate</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.rate && errors.rate.message}
+                  </span>
+                </label>
+                <input
+                  {...register('rate', { valueAsNumber: true })}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="number"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Download Date*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.download_date && errors.download_date.message}
+                  </span>
+                </label>
+                <input
+                  {...register('download_date')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="date"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Delivery Date*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.delivery_date && errors.delivery_date.message}
+                  </span>
+                </label>
+                <input
+                  {...register('delivery_date')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="date"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Delivery Time*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.delivery_bd_time && errors.delivery_bd_time.message}
+                  </span>
+                </label>
+                <input
+                  {...register('delivery_bd_time')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="time"
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Store*</span>
                   <span className="text-red-700 text-wrap block text-xs">
@@ -412,7 +398,7 @@ const EditButton: React.FC<PropsType> = props => {
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   placeholder="What's the product about?"
                 />
-              </div>
+              </div> */}
             </div>
           </form>
 
@@ -420,21 +406,21 @@ const EditButton: React.FC<PropsType> = props => {
             <div className="buttons space-x-2 ">
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-sm bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-2 uppercase"
+                className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
-                disabled={loading}
+                disabled={props.loading}
               >
                 Close
               </button>
               <button
-                disabled={loading}
+                disabled={props.loading}
                 onClick={() => {
                   formRef.current?.requestSubmit();
                 }}
-                className="rounded-sm bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-2 uppercase"
+                className="rounded-md bg-blue-600 text-white   hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
-                {loading ? 'Submitting...' : 'Submit'}
+                {props.loading ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </footer>

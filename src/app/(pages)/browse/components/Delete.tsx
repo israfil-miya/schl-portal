@@ -30,7 +30,7 @@ const DeleteButton: React.FC<PropsType> = props => {
           className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-lg shadow relative`}
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
-            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold  uppercase">
+            <h3 className="text-gray-900 text-base lg:text-lg font-semibold  uppercase">
               Delete Report
             </h3>
             <button
