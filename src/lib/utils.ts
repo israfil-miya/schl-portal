@@ -50,3 +50,7 @@ export const dbConnect = async (): Promise<void> => {
     console.error('Error connecting to MongoDB:', error);
   }
 };
+
+export function escapeRegex(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
