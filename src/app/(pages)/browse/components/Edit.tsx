@@ -1,6 +1,5 @@
 'use client';
 
-import { parseFormData } from '@/utility/actionHelpers';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -10,7 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { SquarePen, X } from 'lucide-react';
-import React, { use, useActionState, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { OrderDataType, validationSchema } from '../schema';
@@ -22,6 +21,51 @@ interface PropsType {
   orderData: OrderDataType;
   submitHandler: (editedOrderData: OrderDataType) => Promise<void>;
 }
+
+const statusOptions = [
+  { value: 'Running', label: 'Running' },
+  { value: 'Uploaded', label: 'Uploaded' },
+  { value: 'Paused', label: 'Paused' },
+  { value: 'Client hold', label: 'Client hold' },
+];
+export const taskOptions = [
+  { value: 'Ghost Mannequine', label: 'Ghost Mannequine' },
+  { value: 'Banner', label: 'Banner' },
+  { value: 'Background erase', label: 'Background erase' },
+  { value: 'Color correction', label: 'Color correction' },
+  { value: 'Illustrator work', label: 'Illustrator work' },
+  { value: 'Retouch', label: 'Retouch' },
+  { value: 'Shadow', label: 'Shadow' },
+  { value: 'Neck shot', label: 'Neck shot' },
+  { value: 'SPM', label: 'SPM' },
+  { value: 'CP', label: 'CP' },
+  { value: 'Neck', label: 'Neck' },
+  { value: 'Multipath', label: 'Multipath' },
+  { value: 'Pattern change', label: 'Pattern change' },
+  { value: 'Color change', label: 'Color change' },
+  { value: 'Clipping path', label: 'Clipping path' },
+  { value: '3D Neck shot', label: '3D Neck shot' },
+  { value: 'Liquify retouch', label: 'Liquify retouch' },
+  { value: 'Trade retouch', label: 'Trade retouch' },
+  { value: 'Language change', label: 'Language change' },
+  { value: 'Simple retouch', label: 'Simple retouch' },
+  { value: 'High-end retouch', label: 'High-end retouch' },
+  { value: 'Liquify', label: 'Liquify' },
+  { value: 'Shadow original', label: 'Shadow original' },
+  { value: 'Symmetry liquify', label: 'Symmetry liquify' },
+  { value: 'Video Retouch', label: 'Video Retouch' },
+  { value: 'Resize', label: 'Resize' },
+];
+
+export const typeOptions = [
+  { value: 'General', label: 'General' },
+  { value: 'Test', label: 'Test' },
+];
+const priorityOptions = [
+  { value: 'High', label: 'High priority' },
+  { value: 'Medium', label: 'Medium priority' },
+  { value: 'Low', label: 'Low priority' },
+];
 
 const EditButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -52,51 +96,6 @@ const EditButton: React.FC<PropsType> = props => {
       ...props.orderData,
     },
   });
-
-  const statusOptions = [
-    { value: 'Running', label: 'Running' },
-    { value: 'Uploaded', label: 'Uploaded' },
-    { value: 'Paused', label: 'Paused' },
-    { value: 'Client hold', label: 'Client hold' },
-  ];
-  const taskOptions = [
-    { value: 'Ghost Mannequine', label: 'Ghost Mannequine' },
-    { value: 'Banner', label: 'Banner' },
-    { value: 'Background erase', label: 'Background erase' },
-    { value: 'Color correction', label: 'Color correction' },
-    { value: 'Illustrator work', label: 'Illustrator work' },
-    { value: 'Retouch', label: 'Retouch' },
-    { value: 'Shadow', label: 'Shadow' },
-    { value: 'Neck shot', label: 'Neck shot' },
-    { value: 'SPM', label: 'SPM' },
-    { value: 'CP', label: 'CP' },
-    { value: 'Neck', label: 'Neck' },
-    { value: 'Multipath', label: 'Multipath' },
-    { value: 'Pattern change', label: 'Pattern change' },
-    { value: 'Color change', label: 'Color change' },
-    { value: 'Clipping path', label: 'Clipping path' },
-    { value: '3D Neck shot', label: '3D Neck shot' },
-    { value: 'Liquify retouch', label: 'Liquify retouch' },
-    { value: 'Trade retouch', label: 'Trade retouch' },
-    { value: 'Language change', label: 'Language change' },
-    { value: 'Simple retouch', label: 'Simple retouch' },
-    { value: 'High-end retouch', label: 'High-end retouch' },
-    { value: 'Liquify', label: 'Liquify' },
-    { value: 'Shadow original', label: 'Shadow original' },
-    { value: 'Symmetry liquify', label: 'Symmetry liquify' },
-    { value: 'Video Retouch', label: 'Video Retouch' },
-    { value: 'Resize', label: 'Resize' },
-  ];
-
-  const typeOptions = [
-    { value: 'General', label: 'General' },
-    { value: 'Test', label: 'Test' },
-  ];
-  const priorityOptions = [
-    { value: 'High', label: 'High priority' },
-    { value: 'Medium', label: 'Medium priority' },
-    { value: 'Low', label: 'Low priority' },
-  ];
 
   useEffect(() => {
     initFlowbite();
@@ -151,7 +150,7 @@ const EditButton: React.FC<PropsType> = props => {
             className="overflow-x-hidden overflow-y-scroll max-h-[70vh] p-4 text-start"
             onSubmit={handleSubmit(onSubmit)}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Folder*</span>
@@ -245,11 +244,10 @@ const EditButton: React.FC<PropsType> = props => {
                   control={control}
                   render={({ field }) => (
                     <Select
-                      {...field}
                       {...setClassNameAndIsDisabled(isOpen)}
                       options={typeOptions}
                       closeMenuOnSelect={true}
-                      placeholder="Select store"
+                      placeholder="Select type"
                       classNamePrefix="react-select"
                       menuPortalTarget={setMenuPortalTarget}
                       styles={setCalculatedZIndex(baseZIndex)}
@@ -296,20 +294,6 @@ const EditButton: React.FC<PropsType> = props => {
                       }
                     />
                   )}
-                />
-              </div>
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Description</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.comment && errors.comment?.message}
-                  </span>
-                </label>
-                <textarea
-                  {...register('comment')}
-                  rows={5}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  placeholder="What's the product about?"
                 />
               </div>
 
@@ -406,6 +390,53 @@ const EditButton: React.FC<PropsType> = props => {
                   )}
                 />
               </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Status*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.status && errors.status?.message}
+                  </span>
+                </label>
+
+                <Controller
+                  name="priority"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      {...setClassNameAndIsDisabled(isOpen)}
+                      options={priorityOptions}
+                      closeMenuOnSelect={true}
+                      placeholder="Select status"
+                      classNamePrefix="react-select"
+                      menuPortalTarget={setMenuPortalTarget}
+                      styles={setCalculatedZIndex(baseZIndex)}
+                      value={
+                        priorityOptions.find(
+                          option => option.value === field.value,
+                        ) || null
+                      }
+                      onChange={option =>
+                        field.onChange(option ? option.value : '')
+                      }
+                    />
+                  )}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                <span className="uppercase">Comment</span>
+                <span className="text-red-700 text-wrap block text-xs">
+                  {errors.comment && errors.comment?.message}
+                </span>
+              </label>
+              <textarea
+                {...register('comment')}
+                rows={5}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                placeholder="Write any instructions or note about the order"
+              />
             </div>
           </form>
 

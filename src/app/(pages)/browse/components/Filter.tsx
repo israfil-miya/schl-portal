@@ -1,8 +1,15 @@
 'use client';
 
-import cn from '@/utility/cn';
+import { cn } from '@/lib/utils';
+import {
+  setCalculatedZIndex,
+  setClassNameAndIsDisabled,
+  setMenuPortalTarget,
+} from '@/utility/selectHelpers';
 import { Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+
+const baseZIndex = 50; // 52
 
 interface PropsType {
   className?: string;
@@ -20,6 +27,9 @@ interface PropsType {
   loading: boolean;
 }
 
+import Select from 'react-select';
+import { taskOptions, typeOptions } from '../components/Edit';
+
 const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { filters, setFilters } = props;
@@ -33,12 +43,12 @@ const FilterButton: React.FC<PropsType> = props => {
     const { name, type, value } = e.target;
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFilters((prevData: {}) => ({
+      setFilters((prevData: PropsType['filters']) => ({
         ...prevData,
         [name]: checked,
       }));
     } else {
-      setFilters((prevData: {}) => ({
+      setFilters((prevData: PropsType['filters']) => ({
         ...prevData,
         [name]: value,
       }));
@@ -83,7 +93,7 @@ const FilterButton: React.FC<PropsType> = props => {
 
       <section
         onClick={handleClickOutside}
-        className={`fixed z-50 inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
+        className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
       >
         <article
           ref={popupRef}
@@ -157,24 +167,48 @@ const FilterButton: React.FC<PropsType> = props => {
                 <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
                   Task
                 </label>
-                <input
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="task"
-                  value={filters.task}
-                  onChange={handleChange}
-                  type="text"
+                <Select
+                  {...setClassNameAndIsDisabled(isOpen)}
+                  options={taskOptions}
+                  closeMenuOnSelect={true}
+                  classNamePrefix="react-select"
+                  menuPortalTarget={setMenuPortalTarget}
+                  styles={setCalculatedZIndex(baseZIndex)}
+                  value={
+                    taskOptions.find(option => option.value === filters.task) ||
+                    null
+                  }
+                  onChange={selectedOption =>
+                    setFilters((prevFilters: PropsType['filters']) => ({
+                      ...prevFilters,
+                      task: selectedOption?.value || '',
+                    }))
+                  }
+                  placeholder="Select task"
                 />
               </div>
               <div>
                 <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
                   Type
                 </label>
-                <input
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="type"
-                  value={filters.type}
-                  onChange={handleChange}
-                  type="text"
+                <Select
+                  {...setClassNameAndIsDisabled(isOpen)}
+                  options={typeOptions}
+                  closeMenuOnSelect={true}
+                  classNamePrefix="react-select"
+                  menuPortalTarget={setMenuPortalTarget}
+                  styles={setCalculatedZIndex(baseZIndex)}
+                  value={
+                    typeOptions.find(option => option.value === filters.type) ||
+                    null
+                  }
+                  onChange={selectedOption =>
+                    setFilters((prevFilters: PropsType['filters']) => ({
+                      ...prevFilters,
+                      type: selectedOption?.value || '',
+                    }))
+                  }
+                  placeholder="Select type"
                 />
               </div>
             </div>

@@ -1,8 +1,8 @@
-import React from 'react';
-import cn from '@/utility/cn';
-import { Line } from 'react-chartjs-2';
+import { cn } from '@/lib/utils';
+import { ChartData, ChartOptions } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { ChartOptions, ChartData } from 'chart.js';
+import React from 'react';
+import { Line } from 'react-chartjs-2';
 
 // Registering the datalabels plugin
 import { Chart as ChartJS } from 'chart.js/auto';
@@ -24,7 +24,7 @@ const LineChart: React.FC<LineChartProps> = ({
       datalabels: {
         anchor: 'end',
         align: 'top',
-        formatter: (value) => {
+        formatter: value => {
           if (typeof value === 'number') {
             if (value % 1 === 0) {
               return value.toFixed(0); // Display as integer (no decimal)
@@ -53,7 +53,7 @@ const LineChart: React.FC<LineChartProps> = ({
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value) => {
+          callback: value => {
             if (typeof value === 'number') {
               if (value % 1 === 0) {
                 return value.toFixed(0); // Display as integer (no decimal)

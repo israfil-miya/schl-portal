@@ -1,6 +1,6 @@
 'use client';
 
-import cn from '@/utility/cn';
+import { cn } from '@/lib/utils';
 
 import { initFlowbite } from 'flowbite';
 import { ChevronDown, ChevronRight } from 'lucide-react';

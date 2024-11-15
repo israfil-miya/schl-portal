@@ -1,3 +1,4 @@
+import { dbConnect, getQuery } from '@/lib/utils';
 import Client, { ClientDataType } from '@/models/Clients';
 import Invoice, { InvoiceDataType } from '@/models/Invoices';
 import Order, { OrderDataType } from '@/models/Orders';
@@ -8,15 +9,12 @@ import {
   getLast12Months,
   getMonthRange,
 } from '@/utility/date';
-import dbConnect from '@/utility/dbConnect';
 import {
   addIfDefined,
   addRegexField,
   createRegexQuery,
 } from '@/utility/filterHelpers';
-import getQuery from '@/utility/getApiQuery';
 import moment from 'moment-timezone';
-import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 dbConnect();

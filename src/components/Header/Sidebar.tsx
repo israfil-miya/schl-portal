@@ -1,16 +1,16 @@
 'use client';
 
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import React, { useState } from 'react';
 import Drawer from '../Drawer';
-import cn from '@/utility/cn';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 
 interface PropsType {
   className?: string | undefined;
   LogoutAction: () => Promise<void>;
 }
-const FilterButton: React.FC<PropsType> = (props) => {
+const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState(false);
   let pathname = usePathname();
 

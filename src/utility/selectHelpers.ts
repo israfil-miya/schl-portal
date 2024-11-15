@@ -1,4 +1,4 @@
-import cn from './cn';
+import { cn } from '@/lib/utils';
 
 // setCalculatedZIndex: set the z-index of the menu and menuPortal
 const setCalculatedZIndex = (baseZIndex: number = 50) => {

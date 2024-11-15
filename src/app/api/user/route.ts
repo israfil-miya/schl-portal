@@ -1,6 +1,5 @@
+import { dbConnect, getQuery } from '@/lib/utils';
 import User from '@/models/Users';
-import dbConnect from '@/utility/dbConnect';
-import getQuery from '@/utility/getApiQuery';
 import { NextResponse } from 'next/server';
 dbConnect();
 

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import LineChart from '@/components/Charts/Line.chart';
-import { transparentize } from '@/utility/transparentize';
+import { transparentize } from '@/utility/chart';
+import React, { useEffect, useState } from 'react';
 
 interface ReportsCountGraphProps {
   isLoading: boolean;
@@ -37,7 +37,7 @@ const ReportsCountGraph: React.FC<ReportsCountGraphProps> = ({
 
   useEffect(() => {
     const dataLabels: string[] = Object.keys(data).map(
-      (monthName) =>
+      monthName =>
         monthName.charAt(0).toUpperCase() +
         monthName.replace('_', ' ').slice(1),
     );

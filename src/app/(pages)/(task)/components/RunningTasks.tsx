@@ -1,9 +1,9 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
+import { fetchApi } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
-import fetchApi from '@/utility/fetch';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import React, { useEffect, useState } from 'react';

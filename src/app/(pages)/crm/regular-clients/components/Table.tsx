@@ -2,9 +2,9 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
 import { formatDate } from '@/utility/date';
-import fetchData from '@/utility/fetch';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -75,7 +75,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setReports(response.data as ReportsState);
@@ -111,7 +111,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setReports(response.data as ReportsState);
@@ -143,7 +143,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Request sent for approval');
@@ -173,7 +173,7 @@ const Table = () => {
         body: JSON.stringify({ ...editedData, marketer: editedData.marketer }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Successfully created new client');

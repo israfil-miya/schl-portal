@@ -4,10 +4,12 @@ import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
-import { mapFormDataToFields, parseFormData } from '@/utility/actionHelpers';
-import countDaysSinceLastCall from '@/utility/countDaysPassed';
-import { formatDate, formatTime } from '@/utility/date';
-import fetchData from '@/utility/fetch';
+import { fetchApi } from '@/lib/utils';
+import {
+  getDaysSince as countDaysSinceLastCall,
+  formatDate,
+  formatTime,
+} from '@/utility/date';
 import { BookCheck, ChevronLeft, ChevronRight, Redo2 } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -82,7 +84,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setOrders(response.data as OrdersState);
@@ -120,7 +122,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setOrders(response.data as OrdersState);
@@ -152,7 +154,7 @@ const Table = () => {
         }),
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Request sent for approval');
@@ -184,7 +186,7 @@ const Table = () => {
         orderData.production >= orderData.quantity &&
         orderData.qc1 >= orderData.quantity
       ) {
-        const response = await fetchData(url, options);
+        const response = await fetchApi(url, options);
 
         if (response.ok) {
           toast.success('Changed the status to FINISHED');
@@ -223,7 +225,7 @@ const Table = () => {
         }),
       };
 
-      const response = await fetchData(url, options);
+      const response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Changed the status to CORRECTION');
@@ -261,7 +263,7 @@ const Table = () => {
         body: JSON.stringify(parsed.data),
       };
 
-      const response = await fetchData(url, options);
+      const response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Updated the order data');
@@ -463,7 +465,7 @@ const Table = () => {
                       {order.status.trim().toLocaleLowerCase() == 'finished' ? (
                         <Badge
                           value={order.status}
-                          className="bg-green-600 text-white border-green-800"
+                          className="bg-green-600 text-white border-green-600"
                         />
                       ) : order.status.trim().toLocaleLowerCase() ==
                         'client hold' ? (

@@ -1,7 +1,7 @@
 import '@/app/globals.css';
 import { auth } from '@/auth';
 import Header from '@/components/Header';
-import cn from '@/utility/cn';
+import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { Karla, Lato } from 'next/font/google';

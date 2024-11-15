@@ -89,3 +89,9 @@ export function getMonthRange(monthAndYear: string): {
     .format('YYYY-MM-DD');
   return { start: startDate, end: endDate };
 }
+
+export const getDaysSince = (date: Date | string): number => {
+  const currentDate = moment();
+  const inputDate = moment(date);
+  return currentDate.diff(inputDate, 'days');
+};

@@ -1,4 +1,4 @@
-import cn from '@/utility/cn';
+import { cn } from '@/lib/utils';
 import React, { ReactElement } from 'react';
 
 function Badge({

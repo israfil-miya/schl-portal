@@ -1,9 +1,9 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
+import { fetchApi } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
-import fetchData from '@/utility/fetch';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import React, { useEffect, useState } from 'react';
@@ -32,7 +32,7 @@ function TestAndCorrection() {
         },
       };
 
-      let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
       if (response.ok) {
         setOrders(response.data as OrderDataType[]);

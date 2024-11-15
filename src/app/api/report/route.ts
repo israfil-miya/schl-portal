@@ -1,8 +1,7 @@
+import { dbConnect, getQuery } from '@/lib/utils';
 import Employee, { EmployeeDataType } from '@/models/Employees';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
-import dbConnect from '@/utility/dbConnect';
-import getQuery from '@/utility/getApiQuery';
 
 import { auth } from '@/auth';
 import { ReportDataType } from '@/models/Reports';

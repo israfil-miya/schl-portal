@@ -21,7 +21,9 @@ export const validationSchema = z.object({
     invalid_type_error: "Delivery date can't be empty",
   }),
   delivery_bd_time: z.string(),
-  task: z.string({ invalid_type_error: "Task can't be empty" }).minLength(1),
+  task: z
+    .string({ invalid_type_error: "Task can't be empty" })
+    .min(1, { message: "Task can't be empty" }),
   et: z.coerce
     .number({ invalid_type_error: "ET can't be empty" })
     .min(1, "ET can't be less than 1min")
