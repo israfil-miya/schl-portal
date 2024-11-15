@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { SquarePen, X } from 'lucide-react';
-import React, { useActionState, useEffect, useRef, useState } from 'react';
+import React, { use, useActionState, useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { OrderDataType, validationSchema } from '../schema';
@@ -49,19 +49,53 @@ const EditButton: React.FC<PropsType> = props => {
   } = useForm<OrderDataType>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
-      ...props.orderData!,
+      ...props.orderData,
     },
   });
 
   const statusOptions = [
-    { value: 'running', label: 'Running' },
-    { value: 'uploaded', label: 'Uploaded' },
-    { value: 'paused', label: 'Paused' },
-    { value: 'client hold', label: 'Client hold' },
+    { value: 'Running', label: 'Running' },
+    { value: 'Uploaded', label: 'Uploaded' },
+    { value: 'Paused', label: 'Paused' },
+    { value: 'Client hold', label: 'Client hold' },
   ];
+  const taskOptions = [
+    { value: 'Ghost Mannequine', label: 'Ghost Mannequine' },
+    { value: 'Banner', label: 'Banner' },
+    { value: 'Background erase', label: 'Background erase' },
+    { value: 'Color correction', label: 'Color correction' },
+    { value: 'Illustrator work', label: 'Illustrator work' },
+    { value: 'Retouch', label: 'Retouch' },
+    { value: 'Shadow', label: 'Shadow' },
+    { value: 'Neck shot', label: 'Neck shot' },
+    { value: 'SPM', label: 'SPM' },
+    { value: 'CP', label: 'CP' },
+    { value: 'Neck', label: 'Neck' },
+    { value: 'Multipath', label: 'Multipath' },
+    { value: 'Pattern change', label: 'Pattern change' },
+    { value: 'Color change', label: 'Color change' },
+    { value: 'Clipping path', label: 'Clipping path' },
+    { value: '3D Neck shot', label: '3D Neck shot' },
+    { value: 'Liquify retouch', label: 'Liquify retouch' },
+    { value: 'Trade retouch', label: 'Trade retouch' },
+    { value: 'Language change', label: 'Language change' },
+    { value: 'Simple retouch', label: 'Simple retouch' },
+    { value: 'High-end retouch', label: 'High-end retouch' },
+    { value: 'Liquify', label: 'Liquify' },
+    { value: 'Shadow original', label: 'Shadow original' },
+    { value: 'Symmetry liquify', label: 'Symmetry liquify' },
+    { value: 'Video Retouch', label: 'Video Retouch' },
+    { value: 'Resize', label: 'Resize' },
+  ];
+
   const typeOptions = [
-    { value: 'general', label: 'General' },
-    { value: 'test', label: 'Test' },
+    { value: 'General', label: 'General' },
+    { value: 'Test', label: 'Test' },
+  ];
+  const priorityOptions = [
+    { value: 'High', label: 'High priority' },
+    { value: 'Medium', label: 'Medium priority' },
+    { value: 'Low', label: 'Low priority' },
   ];
 
   useEffect(() => {
@@ -71,6 +105,13 @@ const EditButton: React.FC<PropsType> = props => {
   const onSubmit = async (data: OrderDataType) => {
     await props.submitHandler(data);
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      reset(props.orderData);
+    }
+    console.log(props.orderData);
+  }, [isOpen]);
 
   return (
     <>
@@ -191,30 +232,29 @@ const EditButton: React.FC<PropsType> = props => {
                 />
               </div>
 
-              {/* <div>
+              <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Store*</span>
+                  <span className="uppercase">Type*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.store && errors.store?.message}
+                    {errors.type && errors.type?.message}
                   </span>
                 </label>
 
                 <Controller
-                  name="store"
+                  name="type"
                   control={control}
                   render={({ field }) => (
                     <Select
                       {...field}
                       {...setClassNameAndIsDisabled(isOpen)}
-                      options={storeOptions}
+                      options={typeOptions}
                       closeMenuOnSelect={true}
                       placeholder="Select store"
                       classNamePrefix="react-select"
                       menuPortalTarget={setMenuPortalTarget}
                       styles={setCalculatedZIndex(baseZIndex)}
-                      // Map selected values back to the option objects
                       value={
-                        storeOptions.find(
+                        typeOptions.find(
                           option => option.value === field.value,
                         ) || null
                       }
@@ -225,180 +265,147 @@ const EditButton: React.FC<PropsType> = props => {
                   )}
                 />
               </div>
-
               <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
-                  <span className="uppercase">Category*</span>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Status*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.category && errors.category?.message}
+                    {errors.status && errors.status?.message}
                   </span>
                 </label>
 
                 <Controller
-                  name="category"
+                  name="status"
                   control={control}
                   render={({ field }) => (
                     <Select
                       {...field}
                       {...setClassNameAndIsDisabled(isOpen)}
-                      options={categoryOptions}
-                      isMulti
-                      closeMenuOnSelect={false}
-                      placeholder="Select categories"
+                      options={statusOptions}
+                      closeMenuOnSelect={true}
+                      placeholder="Select status"
                       classNamePrefix="react-select"
                       menuPortalTarget={setMenuPortalTarget}
                       styles={setCalculatedZIndex(baseZIndex)}
-                      // Map selected values back to the option objects
-                      value={categoryOptions.filter(option =>
-                        field.value.includes(option.value),
-                      )}
-                      onChange={selectedOptions =>
-                        field.onChange(
-                          selectedOptions.map(option => option.value),
-                        )
+                      value={
+                        statusOptions.find(
+                          option => option.value === field.value,
+                        ) || null
+                      }
+                      onChange={option =>
+                        field.onChange(option ? option.value : '')
                       }
                     />
                   )}
                 />
               </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Supplier*</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.supplier && errors.supplier?.message}
-                  </span>
-                </label>
-
-                <Controller
-                  name="supplier"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      {...setClassNameAndIsDisabled(isOpen)}
-                      options={supplierOptions}
-                      isMulti
-                      closeMenuOnSelect={false}
-                      placeholder="Select suppliers"
-                      classNamePrefix="react-select"
-                      menuPortalTarget={setMenuPortalTarget}
-                      styles={setCalculatedZIndex(baseZIndex)}
-                      // Map selected values back to the option objects
-                      value={supplierOptions.filter(option =>
-                        field.value.includes(option.value),
-                      )}
-                      onChange={selectedOptions =>
-                        field.onChange(
-                          selectedOptions.map(option => option.value),
-                        )
-                      }
-                    />
-                  )}
-                />
-              </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Quantity*</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.quantity && errors.quantity?.message}
-                  </span>
-                </label>
-                <input
-                  {...register('quantity', { valueAsNumber: true })}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                />
-              </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Cost Price* (BDT)</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.cost_price && errors.cost_price?.message}
-                  </span>
-                </label>
-                <input
-                  {...register('cost_price', { valueAsNumber: true })}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                  step=".01"
-                />
-              </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Selling Price* (BDT)</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.selling_price && errors.selling_price?.message}
-                  </span>
-                </label>
-                <input
-                  {...register('selling_price', { valueAsNumber: true })}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                  step=".01"
-                />
-              </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">VAT Rate</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.vat_rate && errors.vat_rate?.message}
-                  </span>
-                </label>
-                <input
-                  {...register('vat_rate', { valueAsNumber: true })}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                  step=".01"
-                />
-              </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Mft. Date</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.mft_date && errors.mft_date?.message}
-                  </span>
-                </label>
-                <input
-                  {...register('mft_date')}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="date"
-                />
-              </div>
-
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Exp. Date</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.exp_date && errors.exp_date?.message}
-                  </span>
-                </label>
-                <input
-                  {...register('exp_date')}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="date"
-                />
-              </div>
-
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Description</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.description && errors.description?.message}
+                    {errors.comment && errors.comment?.message}
                   </span>
                 </label>
                 <textarea
-                  {...register('description')}
+                  {...register('comment')}
                   rows={5}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   placeholder="What's the product about?"
                 />
-              </div> */}
+              </div>
+
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Est. Time (min)*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.et && errors.et.message}
+                  </span>
+                </label>
+                <input
+                  {...register('et')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="number"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Production*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.production && errors.production.message}
+                  </span>
+                </label>
+                <input
+                  {...register('production')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="number"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">QC1*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.qc1 && errors.qc1.message}
+                  </span>
+                </label>
+                <input
+                  {...register('qc1')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="number"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Folder Path*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.folder_path && errors.folder_path.message}
+                  </span>
+                </label>
+                <input
+                  {...register('folder_path')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="text"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Assigned Tasks*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.task && errors.task?.message}
+                  </span>
+                </label>
+
+                <Controller
+                  name="task"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      {...setClassNameAndIsDisabled(isOpen)}
+                      isSearchable={true}
+                      isMulti={true}
+                      options={taskOptions}
+                      closeMenuOnSelect={false}
+                      placeholder="Select tasks"
+                      classNamePrefix="react-select"
+                      menuPortalTarget={setMenuPortalTarget}
+                      styles={setCalculatedZIndex(baseZIndex)}
+                      menuPlacement="auto"
+                      menuPosition="fixed" // Prevent clipping by parent containers
+                      value={
+                        taskOptions.filter(option =>
+                          field.value?.split('+').includes(option.value),
+                        ) || null
+                      }
+                      onChange={selectedOptions =>
+                        field.onChange(
+                          selectedOptions
+                            ?.map(option => option.value)
+                            .join('+') || '',
+                        )
+                      }
+                    />
+                  )}
+                />
+              </div>
             </div>
           </form>
 
