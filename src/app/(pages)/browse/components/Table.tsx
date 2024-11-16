@@ -395,9 +395,9 @@ const Table = () => {
                 <tr>
                   <th>S/N</th>
                   <th>Client Code</th>
-                  {userRole == 'admin' || userRole == 'super' ? (
+                  {(userRole == 'super' || userRole == 'admin') && (
                     <th>Client Name</th>
-                  ) : null}
+                  )}
                   <th>Folder</th>
                   <th>NOF</th>
                   <th>Download Date</th>
@@ -418,9 +418,9 @@ const Table = () => {
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
                     <td className="text-wrap">{order.client_code}</td>
 
-                    {userRole == 'admin' || userRole == 'super' ? (
+                    {(userRole == 'admin' || userRole == 'super') && (
                       <td className="text-wrap">{order.client_name}</td>
-                    ) : null}
+                    )}
 
                     <td className="text-wrap">{order.folder}</td>
                     <td className="text-wrap">{order.quantity}</td>
@@ -462,12 +462,13 @@ const Table = () => {
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}
                     >
-                      {order.status.trim().toLocaleLowerCase() == 'finished' ? (
+                      {order.status?.trim().toLocaleLowerCase() ==
+                      'finished' ? (
                         <Badge
                           value={order.status}
                           className="bg-green-600 text-white border-green-600"
                         />
-                      ) : order.status.trim().toLocaleLowerCase() ==
+                      ) : order.status?.trim().toLocaleLowerCase() ==
                         'client hold' ? (
                         <Badge
                           value={order.status}
@@ -486,26 +487,31 @@ const Table = () => {
                     >
                       <div className="inline-block">
                         <div className="flex gap-2">
-                          <DeleteButton
-                            orderData={order}
-                            submitHandler={deleteOrder}
-                          />
-                          {order.status.trim().toLocaleLowerCase() ==
-                          'finished' ? (
-                            <button
-                              onClick={() => redoOrder(order)}
-                              className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                            >
-                              <Redo2 size={18} />
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => finishOrder(order)}
-                              className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                            >
-                              <BookCheck size={18} />
-                            </button>
+                          {(userRole == 'super' || userRole == 'admin') && (
+                            <>
+                              <DeleteButton
+                                orderData={order}
+                                submitHandler={deleteOrder}
+                              />
+                              {order.status?.trim().toLocaleLowerCase() ==
+                              'finished' ? (
+                                <button
+                                  onClick={() => redoOrder(order)}
+                                  className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                >
+                                  <Redo2 size={18} />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => finishOrder(order)}
+                                  className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                >
+                                  <BookCheck size={18} />
+                                </button>
+                              )}
+                            </>
                           )}
+
                           <EditButton
                             orderData={order}
                             submitHandler={editOrder}

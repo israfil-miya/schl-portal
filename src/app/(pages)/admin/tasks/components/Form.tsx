@@ -1,20 +1,82 @@
 'use client';
+import {
+  priorityOptions,
+  statusOptions,
+  taskOptions,
+  typeOptions,
+} from '@/app/(pages)/browse/components/Edit';
 import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
 import { fetchApi } from '@/lib/utils';
+import { ClientDataType } from '@/models/Clients';
+import { getTodayDate } from '@/utility/date';
+import { setMenuPortalTarget } from '@/utility/selectHelpers';
+import { zodResolver } from '@hookform/resolvers/zod';
+import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import Select from 'react-select';
 
 import { toast } from 'sonner';
 
-const Form: React.FC = props => {
+interface PropsType {
+  clientsData: ClientDataType[];
+}
+
+const Form: React.FC<PropsType> = props => {
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
 
-  async function createOrder(editedOrderData: OrderDataType) {
+  const clientNames = props.clientsData.map(client => client.client_name);
+  const clientCodes = props.clientsData.map(client => client.client_code);
+
+  let clientNameOptions = (clientNames || []).map(clientName => ({
+    value: clientName,
+    label: clientName,
+  }));
+
+  let clientCodeOptions = (clientCodes || []).map(clientCode => ({
+    value: clientCode,
+    label: clientCode,
+  }));
+
+  const {
+    watch,
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<OrderDataType>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
+      client_code: '',
+      client_name: '',
+      folder: '',
+      rate: 0,
+      quantity: 0,
+      download_date: moment().format('YYYY-MM-DD'),
+      delivery_date: moment().add(1, 'days').format('YYYY-MM-DD'),
+      delivery_bd_time: moment().format('HH:mm'),
+      task: '',
+      et: 0,
+      production: 0,
+      qc1: 0,
+      comment: '',
+      type: 'General',
+      status: 'Running',
+      folder_path: '',
+      priority: '',
+      updated_by: session?.user.real_name || '',
+    },
+  });
+
+  async function createOrder(orderData: OrderDataType) {
     try {
       setLoading(true);
-      const parsed = validationSchema.safeParse(editedOrderData);
+      const parsed = validationSchema.safeParse(orderData);
 
       if (!parsed.success) {
         console.error(parsed.error.issues.map(issue => issue.message));
@@ -37,11 +99,13 @@ const Form: React.FC = props => {
 
       if (response.ok) {
         toast.success('Created new order successfully');
-
+        reset();
         // reset the form after successful submission
       } else {
         toast.error(response.data as string);
       }
+
+      console.log('data', parsed.data, orderData);
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while creating new order');
@@ -50,329 +114,410 @@ const Form: React.FC = props => {
     }
   }
 
-  return (
-    <form onSubmit={handleAddNewReportFormSubmit}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-4">
-        <div>
-          <label
-            className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
-            htmlFor="grid-first-name"
-          >
-            Calling Date
-            <span className="cursor-pointer has-tooltip">
-              &#9432;
-              <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
-                Filled automatically
-              </span>
-            </span>
-          </label>
+  const onSubmit = async (data: OrderDataType) => {
+    await createOrder(data);
+  };
 
-          <input
-            disabled
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            value={props.todayDate}
-            type="date"
-            name="callingDate"
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="">
-          <label
-            className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
-            htmlFor="grid-last-name"
-          >
-            Followup Date
-          </label>
-          <input
-            required={!reportData.followupDone}
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            value={reportData.followupDate}
-            name="followupDate"
-            onChange={handleChange}
-            type="date"
-          />
-        </div>
-        <div className="">
-          <label
-            className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
-            htmlFor="grid-password"
-          >
-            Country*
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="country"
-            value={reportData.country}
-            onChange={handleChange}
-            type="text"
-            required
-            placeholder="Company's country name"
-          />
-        </div>
-        <div className="">
-          <label
-            className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
-            htmlFor="grid-password"
-          >
-            Website*
-            <span className="cursor-pointer has-tooltip">
-              &#9432;
-              <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
-                Separated by space
-              </span>
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0,
+      borderRight: 'none',
+      width: '200px',
+      paddingTop: '0.25rem' /* 12px */,
+      paddingBottom: '0.25rem' /* 12px */,
+      cursor: 'pointer',
+      backgroundColor: '#f3f4f6',
+      '&:hover': {
+        borderColor: '#e5e7eb',
+      },
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      width: '200px',
+    }),
+  };
+
+  const getClientNameOnFocus = () => {
+    try {
+      const clientCode = watch('client_code');
+
+      if (clientCode === '') return;
+
+      const client = props.clientsData.find(
+        client => client.client_code === clientCode,
+      );
+
+      if (client) {
+        setValue('client_name', client.client_name);
+      } else {
+        toast.info('No client found with the code provided');
+      }
+    } catch (e) {
+      console.error(
+        'An error occurred while retrieving client name on input focus',
+      );
+    } finally {
+      return;
+    }
+  };
+
+  return (
+    <form className="" onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Client Code*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.client_code && errors.client_code.message}
             </span>
           </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="website"
-            value={reportData.website}
-            onChange={handleChange}
-            type="text"
-            required
-            placeholder="Company's website link"
-          />
-        </div>
-        <div className="">
-          <label
-            className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-            htmlFor="grid-password"
-          >
-            Category*
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="category"
-            value={reportData.category}
-            onChange={handleChange}
-            type="text"
-            required
-            placeholder="Company's category"
-          />
-        </div>
-        <div className="">
-          <label
-            className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-            htmlFor="grid-password"
-          >
-            Company*
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="company"
-            value={reportData.company}
-            onChange={handleChange}
-            type="text"
-            required
-            placeholder="Company's name"
-          />
-        </div>
-        <div className="">
-          <label
-            className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-            htmlFor="grid-password"
-          >
-            Contact Person*
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="contactPerson"
-            value={reportData.contactPerson}
-            onChange={handleChange}
-            type="text"
-            required
-            placeholder="Contact person's name"
-          />
-        </div>
-        <div className="">
-          <label
-            className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-            htmlFor="grid-password"
-          >
-            Contact Number
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="contactNumber"
-            value={reportData.contactNumber}
-            onChange={handleChange}
-            type="text"
-            placeholder="Contact number"
-          />
-        </div>
-        <div className="">
-          <label
-            className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-            htmlFor="grid-password"
-          >
-            Designation*
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="designation"
-            value={reportData.designation}
-            onChange={handleChange}
-            type="text"
-            required
-            placeholder="Contact person's designation"
-          />
-        </div>
-        <div className="">
-          <label
-            className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
-            htmlFor="grid-password"
-          >
-            Email address
-            <span className="cursor-pointer has-tooltip">
-              &#9432;
-              <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
-                Separated by <span>&ldquo; / &rdquo;</span>
-              </span>
-            </span>
-          </label>
-          <input
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="email"
-            value={reportData.email}
-            onChange={handleChange}
-            type="text"
-            placeholder="Contact person's/company's email"
-          />
-        </div>
-        <div className="">
-          <label
-            className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-            htmlFor="grid-password"
-          >
-            Status
-          </label>
-          <textarea
-            rows={5}
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            name="status"
-            value={reportData.status}
-            onChange={handleChange}
-            placeholder="Calling status/feedback/update"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <div>
-            <label
-              className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
-              htmlFor="grid-password"
-            >
-              Linkedin
-              <span className="cursor-pointer has-tooltip">
-                &#9432;
-                <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
-                  Separated by space
-                </span>
-              </span>
-            </label>
+          <div className="flex">
+            <Select
+              options={clientCodeOptions}
+              value={
+                clientCodeOptions.find(
+                  (code?: { value: string; label: string }) =>
+                    code?.value === watch('client_code'),
+                ) || null
+              }
+              styles={customStyles}
+              onChange={(
+                selectedOption: { value: string; label: string } | null,
+              ) => {
+                setValue(
+                  'client_code',
+                  selectedOption ? selectedOption.value : '',
+                );
+              }}
+              placeholder="Select an option"
+              isSearchable={true}
+              classNamePrefix="react-select"
+              isClearable={true}
+            />
             <input
-              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              {...register('client_code')}
+              className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
               type="text"
-              name="linkedin"
-              value={reportData.linkedin}
-              onChange={handleChange}
-              placeholder="Contact person's/company's linkedin link"
             />
           </div>
-          {reportData.prospecting && (
-            <div>
-              <label
-                className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
-                htmlFor="grid-last-name"
-              >
-                Prospect Status
-              </label>
-              <select
-                value={reportData.prospectingStatus}
-                onChange={e =>
-                  setReportData(prevData => ({
-                    ...prevData,
-                    prospectingStatus: e.target.value,
-                  }))
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Client Name*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.client_name && errors.client_name.message}
+            </span>
+          </label>
+          <div className="flex">
+            <Select
+              options={clientNameOptions}
+              value={
+                clientNameOptions.find(
+                  (name?: { value: string; label: string }) =>
+                    name?.value === watch('client_name'),
+                ) || null
+              }
+              styles={customStyles}
+              onChange={(
+                selectedOption: { value: string; label: string } | null,
+              ) => {
+                setValue(
+                  'client_name',
+                  selectedOption ? selectedOption.value : '',
+                );
+              }}
+              placeholder="Select an option"
+              isSearchable={true}
+              classNamePrefix="react-select"
+              isClearable={true}
+            />
+            <input
+              {...register('client_name')}
+              className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              type="text"
+              onFocus={getClientNameOnFocus}
+            />
+          </div>
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Folder*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.folder && errors.folder.message}
+            </span>
+          </label>
+          <input
+            {...register('folder')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="text"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">NOF*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.quantity && errors.quantity.message}
+            </span>
+          </label>
+          <input
+            {...register('quantity', { valueAsNumber: true })}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Rate</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.rate && errors.rate.message}
+            </span>
+          </label>
+          <input
+            {...register('rate', { valueAsNumber: true })}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Download Date*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.download_date && errors.download_date.message}
+            </span>
+          </label>
+          <input
+            {...register('download_date')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="date"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Delivery Date*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.delivery_date && errors.delivery_date.message}
+            </span>
+          </label>
+          <input
+            {...register('delivery_date')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="date"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Delivery Time*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.delivery_bd_time && errors.delivery_bd_time.message}
+            </span>
+          </label>
+          <input
+            {...register('delivery_bd_time')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="time"
+          />
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Type*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.type && errors.type?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="type"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={typeOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select type"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                value={
+                  typeOptions.find(option => option.value === field.value) ||
+                  null
                 }
-                // defaultValue={''}
-                required
-                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              >
-                <option value={''} className="text-gray-400">
-                  Select prospect status
-                </option>
-                <option value="high_interest">High Interest</option>
-                <option value="low_interest">Low Interest</option>
-              </select>
-            </div>
-          )}
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Status*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.status && errors.status?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                options={statusOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select status"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                value={
+                  statusOptions.find(option => option.value === field.value) ||
+                  null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
+          />
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Est. Time (min)*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.et && errors.et.message}
+            </span>
+          </label>
+          <input
+            {...register('et')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Production*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.production && errors.production.message}
+            </span>
+          </label>
+          <input
+            {...register('production')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">QC1*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.qc1 && errors.qc1.message}
+            </span>
+          </label>
+          <input
+            {...register('qc1')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Folder Path*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.folder_path && errors.folder_path.message}
+            </span>
+          </label>
+          <input
+            {...register('folder_path')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="text"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Assigned Tasks*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.task && errors.task?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="task"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                isSearchable={true}
+                isMulti={true}
+                options={taskOptions}
+                closeMenuOnSelect={false}
+                placeholder="Select task(s)"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                menuPlacement="auto"
+                menuPosition="fixed" // Prevent clipping by parent containers
+                value={
+                  taskOptions.filter(option =>
+                    field.value?.split('+').includes(option.value),
+                  ) || null
+                }
+                onChange={selectedOptions =>
+                  field.onChange(
+                    selectedOptions?.map(option => option.value).join('+') ||
+                      '',
+                  )
+                }
+              />
+            )}
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Priority*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.priority && errors.priority?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                options={priorityOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select priority"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                value={
+                  priorityOptions.find(
+                    option => option.value === field.value,
+                  ) || null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
+          />
         </div>
       </div>
-
-      <div className="checkboxes flex flex-col sm:flex-row gap-4 mt-4">
-        <div className="flex gap-2 items-center">
-          <input
-            name="testJob"
-            checked={reportData.testJob}
-            onChange={handleChange}
-            id="test-job-checkbox"
-            type="checkbox"
-            className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-          />
-          <label htmlFor="test-job-checkbox" className="uppercase ">
-            Test Job
-          </label>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <input
-            name="prospecting"
-            checked={reportData.prospecting}
-            onChange={handleChange}
-            id="prospecting-checkbox"
-            type="checkbox"
-            className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-          />
-          <label htmlFor="prospecting-checkbox" className="uppercase ">
-            Prospecting
-          </label>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <input
-            name="followupDone"
-            checked={!reportData.followupDone}
-            onChange={handleChange}
-            id="prospect-interested-checkbox"
-            type="checkbox"
-            className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-          />
-          <label htmlFor="prospect-interested-checkbox" className="uppercase ">
-            Followup Pending
-          </label>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <input
-            name="newLead"
-            checked={reportData.newLead || NewLeadQuery.current}
-            onChange={handleChange}
-            id="new-lead-checkbox"
-            type="checkbox"
-            className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-          />
-          <label htmlFor="new-lead-checkbox" className="uppercase ">
-            New Lead
-          </label>
-        </div>
+      <div>
+        <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+          <span className="uppercase">Comment</span>
+          <span className="text-red-700 text-wrap block text-xs">
+            {errors.comment && errors.comment?.message}
+          </span>
+        </label>
+        <textarea
+          {...register('comment')}
+          rows={5}
+          className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          placeholder="Write any instructions or note about the order"
+        />
       </div>
 
       <button
+        disabled={loading}
         className="rounded-md bg-primary text-white hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-10 py-2 mt-6 uppercase"
         type="submit"
-        disabled={loading}
       >
-        {loading ? 'Submitting...' : 'Submit this report'}
+        {loading ? 'Creating...' : 'Create this task'}
       </button>
     </form>
   );

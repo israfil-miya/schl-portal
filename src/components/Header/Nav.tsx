@@ -2,11 +2,10 @@
 
 import { cn } from '@/lib/utils';
 
+import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-// import Link from 'next/link';
-import 'flowbite';
 import { usePathname } from 'next/navigation';
 import React, { useEffect } from 'react';
 import Link from '../NextLink';
@@ -25,7 +24,7 @@ const Nav: React.FC<PropsType> = props => {
   const userRole = session?.user.role;
 
   useEffect(() => {
-    if (typeof window !== 'undefined') initFlowbite();
+    initFlowbite();
   }, []);
 
   return (

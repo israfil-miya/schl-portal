@@ -1,22 +1,60 @@
-import Header from '@/components/Header';
+import { fetchApi } from '@/lib/utils';
+import { ClientDataType } from '@/models/Clients';
 import moment from 'moment-timezone';
 import React, { Suspense } from 'react';
 import InputForm from './components/Form';
 
-const MakeACallPage = () => {
+type ClientsResponseState = {
+  pagination: {
+    count: number;
+    pageCount: number;
+  };
+  items: ClientDataType[];
+};
+
+let clients: ClientDataType[];
+
+const getAllClients = async () => {
+  try {
+    let url: string =
+      process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
+    let options: {} = {
+      method: 'POST',
+      headers: {
+        paginated: false,
+        filtered: false,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    };
+
+    const response = await fetchApi(url, options);
+    if (response.ok) {
+      let data: ClientsResponseState = response.data as ClientsResponseState;
+      clients = data.items;
+    } else {
+      console.error('Unable to fetch clients');
+    }
+  } catch (e) {
+    console.error(e);
+    console.log('An error occurred while fetching client names');
+  }
+};
+
+const CreateTaskPage = async () => {
+  await getAllClients();
   return (
     <>
-      <Header />
       <div className="px-4 mt-8 mb-4 flex flex-col justify-center md:w-[70vw] mx-auto">
-        <h1 className="text-2xl font-semibold text-left mb-4 underline underline-offset-4 uppercase">
-          Add a new report
+        <h1 className="text-2xl font-semibold text-left mb-8 underline underline-offset-4 uppercase">
+          Add a new task
         </h1>
         <Suspense fallback={<p className="text-center">Loading...</p>}>
-          <InputForm />
+          <InputForm clientsData={clients} />
         </Suspense>
       </div>
     </>
   );
 };
 
-export default MakeACallPage;
+export default CreateTaskPage;

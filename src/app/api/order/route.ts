@@ -369,7 +369,7 @@ async function handleCreateOrder(req: Request): Promise<{
   status: number;
 }> {
   try {
-    const orderData = req.json();
+    const orderData = await req.json();
     const resData = await Order.create(orderData);
 
     if (resData) {

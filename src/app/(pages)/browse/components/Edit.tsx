@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -22,7 +23,7 @@ interface PropsType {
   submitHandler: (editedOrderData: OrderDataType) => Promise<void>;
 }
 
-const statusOptions = [
+export const statusOptions = [
   { value: 'Running', label: 'Running' },
   { value: 'Uploaded', label: 'Uploaded' },
   { value: 'Paused', label: 'Paused' },
@@ -61,7 +62,7 @@ export const typeOptions = [
   { value: 'General', label: 'General' },
   { value: 'Test', label: 'Test' },
 ];
-const priorityOptions = [
+export const priorityOptions = [
   { value: 'High', label: 'High priority' },
   { value: 'Medium', label: 'Medium priority' },
   { value: 'Low', label: 'Low priority' },
@@ -84,6 +85,7 @@ const EditButton: React.FC<PropsType> = props => {
   };
 
   const {
+    watch,
     register,
     handleSubmit,
     control,
@@ -440,11 +442,23 @@ const EditButton: React.FC<PropsType> = props => {
             </div>
           </form>
 
-          <footer className="flex items-center px-4 py-2 border-t justify-end gap-6 border-gray-200 rounded-b">
-            <div className="buttons space-x-2 ">
+          <footer
+            className={cn(
+              'flex items-center px-4 py-2 border-t justify-between gap-6 border-gray-200 rounded-b',
+              !watch('updated_by') && 'justify-end',
+            )}
+          >
+            {watch('updated_by') && (
+              <div className="flex justify-start items-center me-auto text-gray-400">
+                <span className="me-1">Last updated by </span>
+
+                <span className="font-semibold">{watch('updated_by')}</span>
+              </div>
+            )}
+            <div className="space-x-2 justify-end">
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
+                className="rounded-md bg-gray-600 text-white hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
                 disabled={props.loading}
               >
@@ -455,7 +469,7 @@ const EditButton: React.FC<PropsType> = props => {
                 onClick={() => {
                   formRef.current?.requestSubmit();
                 }}
-                className="rounded-md bg-blue-600 text-white   hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
+                className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
                 {props.loading ? 'Submitting...' : 'Submit'}

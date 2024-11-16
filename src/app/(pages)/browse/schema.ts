@@ -2,8 +2,12 @@ import mongoose from 'mongoose';
 import { z } from 'zod';
 
 export const validationSchema = z.object({
-  client_code: z.string(),
-  client_name: z.string(),
+  client_code: z
+    .string({ invalid_type_error: "Client code can't be empty" })
+    .min(1, "Client code can't be empty"),
+  client_name: z
+    .string({ invalid_type_error: "Client name can't be empty" })
+    .min(1, "Client name can't be empty"),
   folder: z.string(),
   rate: z.optional(
     z.coerce
@@ -23,7 +27,7 @@ export const validationSchema = z.object({
   delivery_bd_time: z.string(),
   task: z
     .string({ invalid_type_error: "Task can't be empty" })
-    .min(1, { message: "Task can't be empty" }),
+    .min(1, "Task can't be empty"),
   et: z.coerce
     .number({ invalid_type_error: "ET can't be empty" })
     .min(1, "ET can't be less than 1min")
