@@ -39,7 +39,7 @@ export const validationSchema = z.object({
   status: z.string(),
   folder_path: z.string(),
   priority: z.string(),
-  updated_by: z.optional(z.string()),
+  updated_by: z.optional(z.string()).nullable().default(null),
   _id: z.optional(
     z.string().refine(val => {
       return mongoose.Types.ObjectId.isValid(val);

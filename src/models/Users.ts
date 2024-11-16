@@ -1,16 +1,21 @@
 import mongoose from 'mongoose';
 
-// Interface for User document
-interface User extends mongoose.Document {
+export interface UserType {
   real_name: string;
-  provided_name: string;
+  provided_name?: string;
   name: string;
   password: string;
   role: string;
 }
 
-// Create User schema with type annotations for properties
-const UserSchema = new mongoose.Schema<User>({
+export type UserDataType = UserType & {
+  readonly _id: mongoose.Types.ObjectId;
+  readonly __v: number;
+};
+
+type UserDocType = mongoose.Document & UserType;
+
+const UserSchema = new mongoose.Schema<UserDocType>({
   name: {
     type: String,
     required: [true, 'Name id is not given'],
@@ -22,10 +27,8 @@ const UserSchema = new mongoose.Schema<User>({
   role: { type: String, required: [true, 'Role is not given'] },
 });
 
-// Define User model based on schema, using generics for type safety
 const User =
-  (mongoose.models.User as mongoose.Model<User>) ||
-  mongoose.model<User>('User', UserSchema);
+  (mongoose.models.User as mongoose.Model<UserDocType>) ||
+  mongoose.model<UserDocType>('User', UserSchema);
 
-// Export the User model
 export default User;

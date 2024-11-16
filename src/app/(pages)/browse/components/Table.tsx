@@ -5,11 +5,7 @@ import ClickToCopy from '@/components/CopyText';
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import { fetchApi } from '@/lib/utils';
-import {
-  getDaysSince as countDaysSinceLastCall,
-  formatDate,
-  formatTime,
-} from '@/utility/date';
+import { formatDate, formatTime } from '@/utility/date';
 import { BookCheck, ChevronLeft, ChevronRight, Redo2 } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -116,9 +112,6 @@ const Table = () => {
         },
         body: JSON.stringify({
           ...filters,
-          staleClient: true,
-          regularClient: false,
-          test: false,
         }),
       };
 
