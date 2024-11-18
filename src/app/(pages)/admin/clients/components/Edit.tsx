@@ -174,7 +174,6 @@ const EditButton: React.FC<PropsType> = props => {
                   )}
                 />
               </div>
-
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Contact Person</span>
@@ -278,7 +277,7 @@ const EditButton: React.FC<PropsType> = props => {
                 {...register('prices')}
                 rows={5}
                 className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                placeholder="Write any instructions or note about the order"
+                placeholder="List cost of services pitched to client"
               />
             </div>
           </form>

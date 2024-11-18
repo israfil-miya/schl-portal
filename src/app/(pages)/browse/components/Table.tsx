@@ -4,9 +4,15 @@ import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
-import { fetchApi } from '@/lib/utils';
+import { cn, fetchApi } from '@/lib/utils';
 import { formatDate, formatTime } from '@/utility/date';
-import { BookCheck, ChevronLeft, ChevronRight, Redo2 } from 'lucide-react';
+import {
+  BookCheck,
+  ChevronLeft,
+  ChevronRight,
+  CirclePlus,
+  Redo2,
+} from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -325,7 +331,24 @@ const Table = () => {
 
   return (
     <>
-      <div className="flex flex-col justify-center sm:flex-row sm:justify-end mb-4 gap-2">
+      <div
+        className={cn(
+          'flex flex-col sm:flex-row justify-between mb-4 gap-2',
+          (userRole == 'super' || userRole == 'admin') &&
+            'justify-center sm:flex-row sm:justify-end',
+        )}
+      >
+        {(userRole == 'super' || userRole == 'admin') && (
+          <button
+            onClick={() =>
+              router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/tasks')
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Add new task
+            <CirclePlus size={18} />
+          </button>
+        )}
         <div className="items-center flex gap-2">
           <div className="inline-flex rounded-md" role="group">
             <button

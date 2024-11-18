@@ -29,7 +29,7 @@ export type RegexFields = Extract<
   'country' | 'client_code' | 'contact_person' | 'marketer'
 >;
 
-async function handleCreateNewClient(req: Request): Promise<{
+async function handleCreateClient(req: Request): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
@@ -38,14 +38,15 @@ async function handleCreateNewClient(req: Request): Promise<{
 
     console.log('Received data:', data);
 
-    const resData = await Client.findOneAndUpdate(
-      { client_code: data.client_code },
-      data,
-      {
-        new: true,
-        upsert: true,
-      },
-    );
+    const docCount = await Client.countDocuments({
+      client_code: data.client_code.trim(),
+    });
+
+    if (docCount > 0) {
+      return { data: 'Client with the same code already exists', status: 400 };
+    }
+
+    const resData = await Client.create(data);
 
     if (resData) {
       return { data: 'Added the client successfully', status: 200 };
@@ -278,14 +279,11 @@ export async function POST(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
-    case 'create-new-client':
-      res = await handleCreateNewClient(req);
+    case 'create-client':
+      res = await handleCreateClient(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'convert-to-permanent':
       res = await handleConvertToPermanent(req);
-      return NextResponse.json(res.data, { status: res.status });
-    case 'create-new-client':
-      res = await handleCreateNewClient(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-all-clients':
       res = await handleGetAllClients(req);
