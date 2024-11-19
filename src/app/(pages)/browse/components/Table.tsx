@@ -334,7 +334,8 @@ const Table = () => {
       <div
         className={cn(
           'flex flex-col sm:flex-row justify-between mb-4 gap-2',
-          (userRole == 'super' || userRole == 'admin') &&
+          userRole !== 'super' &&
+            userRole !== 'admin' &&
             'justify-center sm:flex-row sm:justify-end',
         )}
       >
