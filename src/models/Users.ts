@@ -6,6 +6,7 @@ export interface UserType {
   name: string;
   password: string;
   role: string;
+  comment: string;
 }
 
 export type UserDataType = UserType & {
@@ -25,6 +26,7 @@ const UserSchema = new mongoose.Schema<UserDocType>({
   provided_name: { type: String, required: [true, 'Fake name is not given'] },
   password: { type: String, required: [true, 'Password is not given'] },
   role: { type: String, required: [true, 'Role is not given'] },
+  comment: { type: String },
 });
 
 const User =

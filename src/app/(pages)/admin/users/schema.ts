@@ -16,6 +16,9 @@ export const validationSchema = z
     role: z.enum(['admin', 'marketer', 'super', 'manager'], {
       message: "Role can't be empty",
     }),
+    comment: z
+      .string({ invalid_type_error: "Password can't be empty" })
+      .min(1, "Password can't be empty"),
     _id: z.optional(
       z.string().refine(val => {
         return mongoose.Types.ObjectId.isValid(val);
@@ -30,4 +33,4 @@ export const validationSchema = z
     path: ['provided_name'],
   });
 
-export type ClientDataType = z.infer<typeof validationSchema>;
+export type UserDataType = z.infer<typeof validationSchema>;

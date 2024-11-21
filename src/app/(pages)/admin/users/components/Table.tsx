@@ -1,4 +1,4 @@
-'use client';
+'use user';
 
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
@@ -8,7 +8,6 @@ import {
 } from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import { fetchApi } from '@/lib/utils';
-import { UserDataType } from '@/models/Users';
 import {
   getDaysSince as countDaysSinceLastCall,
   formatDate,
@@ -26,21 +25,21 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ClientDataType, validationSchema } from '../schema';
+import { UserDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
 
-type ClientsState = {
+type UsersState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: ClientDataType[];
+  items: UserDataType[];
 };
 
 const Table = () => {
-  const [clients, setClients] = useState<ClientsState>({
+  const [users, setUsers] = useState<UsersState>({
     pagination: {
       count: 0,
       pageCount: 0,
@@ -62,20 +61,18 @@ const Table = () => {
   const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
-    marketerName: '',
-    clientCode: '',
-    contactPerson: '',
-    countryName: '',
+    role: '',
+    generalSearchString: '',
   });
 
   const [marketerNames, setMarketerNames] = useState<string[]>([]);
 
-  async function getAllClients() {
+  async function getAllUsers() {
     try {
       // setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-users';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -86,8 +83,8 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          staleClient: true,
-          regularClient: false,
+          staleUser: true,
+          regularUser: false,
           test: false,
         }),
       };
@@ -95,24 +92,24 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setClients(response.data as ClientsState);
+        setUsers(response.data as UsersState);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving clients data');
+      toast.error('An error occurred while retrieving users data');
     } finally {
       setLoading(false);
     }
   }
 
-  async function getAllClientsFiltered() {
+  async function getAllUsersFiltered() {
     try {
       // setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-users';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -130,21 +127,21 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setClients(response.data as ClientsState);
+        setUsers(response.data as UsersState);
         setIsFiltered(true);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving clients data');
+      toast.error('An error occurred while retrieving users data');
     } finally {
       setLoading(false);
     }
     return;
   }
 
-  async function deleteClient(clientId: string, reqBy: string) {
+  async function deleteUser(userId: string, reqBy: string) {
     try {
       let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
       let options: {} = {
@@ -153,9 +150,9 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Client Delete',
+          req_type: 'User Delete',
           req_by: reqBy,
-          id: clientId,
+          id: userId,
         }),
       };
 
@@ -199,10 +196,10 @@ const Table = () => {
     }
   }
 
-  async function editClient(editedClientData: ClientDataType) {
+  async function editUser(editedUserData: UserDataType) {
     try {
       setLoading(true);
-      const parsed = validationSchema.safeParse(editedClientData);
+      const parsed = validationSchema.safeParse(editedUserData);
 
       if (!parsed.success) {
         console.error(parsed.error.issues.map(issue => issue.message));
@@ -211,12 +208,11 @@ const Table = () => {
       }
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=edit-client';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=edit-user';
       let options: {} = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          updated_by: session?.user.real_name,
         },
         body: JSON.stringify(parsed.data),
       };
@@ -224,23 +220,23 @@ const Table = () => {
       const response = await fetchApi(url, options);
 
       if (response.ok) {
-        toast.success('Updated the client data');
+        toast.success('Updated the user data');
 
-        if (!isFiltered) await getAllClients();
-        else await getAllClientsFiltered();
+        if (!isFiltered) await getAllUsers();
+        else await getAllUsersFiltered();
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while updating the client');
+      toast.error('An error occurred while updating the user');
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    getAllClients();
+    getAllUsers();
     getAllMarketers();
   }, []);
 
@@ -260,24 +256,24 @@ const Table = () => {
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
-      if (clients?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllClients();
-      else getAllClientsFiltered();
+      if (users?.pagination?.pageCount == 1) return;
+      if (!isFiltered) getAllUsers();
+      else getAllUsersFiltered();
     }
     prevPage.current = page;
   }, [page]);
 
   useEffect(() => {
-    if (clients?.pagination?.pageCount !== undefined) {
+    if (users?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllClientsFiltered();
+        if (!isFiltered) getAllUsersFiltered();
       }
-      if (clients) setPageCount(clients?.pagination?.pageCount);
-      prevPageCount.current = clients?.pagination?.pageCount;
+      if (users) setPageCount(users?.pagination?.pageCount);
+      prevPageCount.current = users?.pagination?.pageCount;
       prevPage.current = 1;
     }
-  }, [clients?.pagination?.pageCount]);
+  }, [users?.pagination?.pageCount]);
 
   useEffect(() => {
     // Reset to first page when itemPerPage changes
@@ -285,8 +281,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllClients();
-    else getAllClientsFiltered();
+    if (!isFiltered) getAllUsers();
+    else getAllUsersFiltered();
   }, [itemPerPage]);
 
   return (
@@ -295,12 +291,12 @@ const Table = () => {
         <button
           onClick={() =>
             router.push(
-              process.env.NEXT_PUBLIC_BASE_URL + '/admin/clients/create-client',
+              process.env.NEXT_PUBLIC_BASE_URL + '/admin/users/create-user',
             )
           }
           className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
         >
-          Add new client
+          Add new user
           <CirclePlus size={18} />
         </button>
         <div className="items-center flex gap-2">
@@ -319,7 +315,7 @@ const Table = () => {
               className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
             >
               <label>
-                Page <b>{clients?.items?.length !== 0 ? page : 0}</b> of{' '}
+                Page <b>{users?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
@@ -347,7 +343,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllClientsFiltered}
+            submitHandler={getAllUsersFiltered}
             setFilters={setFilters}
             filters={filters}
             marketerNames={marketerNames}
@@ -359,14 +355,14 @@ const Table = () => {
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
       {!loading &&
-        (clients?.items?.length !== 0 ? (
+        (users?.items?.length !== 0 ? (
           <div className="table-responsive text-nowrap text-base">
             <table className="table border table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
                   <th>S/N</th>
-                  <th>Client Code</th>
-                  <th>Client Name</th>
+                  <th>User Code</th>
+                  <th>User Name</th>
                   <th>Marketer</th>
                   <th>Contact Person</th>
                   <th>Email</th>
@@ -376,17 +372,13 @@ const Table = () => {
                 </tr>
               </thead>
               <tbody>
-                {clients?.items?.map((client, index) => (
-                  <tr key={String(client._id)}>
+                {users?.items?.map((user, index) => (
+                  <tr key={String(user._id)}>
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                    <td className="text-wrap">{client.client_code}</td>
+                    <td className="text-wrap">{user.real_name}</td>
 
-                    <td className="text-wrap">{client.client_name}</td>
-                    <td className="text-wrap">{client.marketer}</td>
-                    <td className="text-wrap">{client.contact_person}</td>
-                    <td className="text-wrap">{client.email}</td>
-                    <td className="text-wrap">{client.country}</td>
-                    <ExtendableTd data={client.prices || ''} />
+                    <td className="text-wrap">{user.name}</td>
+                    <ExtendableTd data={user.comment} />
 
                     <td
                       className="text-center"
@@ -395,16 +387,16 @@ const Table = () => {
                       <div className="inline-block">
                         <div className="flex gap-2">
                           <DeleteButton
-                            clientData={client}
-                            submitHandler={deleteClient}
+                            userData={user}
+                            submitHandler={deleteUser}
                           />
-
+                          {/* 
                           <EditButton
-                            clientData={client}
+                            userData={user}
                             marketerNames={marketerNames}
-                            submitHandler={editClient}
+                            submitHandler={editUser}
                             loading={loading}
-                          />
+                          /> */}
                         </div>
                       </div>
                     </td>
@@ -416,7 +408,7 @@ const Table = () => {
         ) : (
           <tr key={0}>
             <td colSpan={16} className=" align-center text-center">
-              No Clients To Show.
+              No Users To Show.
             </td>
           </tr>
         ))}
