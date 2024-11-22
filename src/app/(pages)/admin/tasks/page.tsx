@@ -37,7 +37,7 @@ const getAllClients = async () => {
     }
   } catch (e) {
     console.error(e);
-    console.log('An error occurred while fetching client names');
+    console.log('An error occurred while fetching clients');
   }
 };
 

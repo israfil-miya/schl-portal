@@ -1,4 +1,4 @@
-'use user';
+'use client';
 
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
@@ -8,6 +8,7 @@ import {
 } from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import { fetchApi } from '@/lib/utils';
+import { EmployeeDataType } from '@/models/Employees';
 import {
   getDaysSince as countDaysSinceLastCall,
   formatDate,
@@ -38,7 +39,7 @@ type UsersState = {
   items: UserDataType[];
 };
 
-const Table = () => {
+const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
   const [users, setUsers] = useState<UsersState>({
     pagination: {
       count: 0,
@@ -64,8 +65,6 @@ const Table = () => {
     role: '',
     generalSearchString: '',
   });
-
-  const [marketerNames, setMarketerNames] = useState<string[]>([]);
 
   async function getAllUsers() {
     try {
@@ -170,32 +169,6 @@ const Table = () => {
     return;
   }
 
-  async function getAllMarketers() {
-    try {
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
-      let options: {} = {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
-
-      let response = await fetchApi(url, options);
-
-      if (response.ok) {
-        let marketers = response.data as UserDataType[];
-        let marketerNames = marketers.map(marketer => marketer.provided_name!);
-        setMarketerNames(marketerNames);
-      } else {
-        toast.error(response.data as string);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving marketers data');
-    }
-  }
-
   async function editUser(editedUserData: UserDataType) {
     try {
       setLoading(true);
@@ -237,7 +210,6 @@ const Table = () => {
 
   useEffect(() => {
     getAllUsers();
-    getAllMarketers();
   }, []);
 
   function handlePrevious() {
@@ -346,7 +318,6 @@ const Table = () => {
             submitHandler={getAllUsersFiltered}
             setFilters={setFilters}
             filters={filters}
-            marketerNames={marketerNames}
             className="w-full justify-between sm:w-auto"
           />
         </div>
@@ -361,13 +332,9 @@ const Table = () => {
               <thead className="table-dark">
                 <tr>
                   <th>S/N</th>
-                  <th>User Code</th>
-                  <th>User Name</th>
-                  <th>Marketer</th>
-                  <th>Contact Person</th>
-                  <th>Email</th>
-                  <th>Country</th>
-                  <th>Prices</th>
+                  <th>Full Name</th>
+                  <th>Username</th>
+                  <th>Comment</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -376,9 +343,8 @@ const Table = () => {
                   <tr key={String(user._id)}>
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
                     <td className="text-wrap">{user.real_name}</td>
-
                     <td className="text-wrap">{user.name}</td>
-                    <ExtendableTd data={user.comment} />
+                    <ExtendableTd data={user.comment || ''} />
 
                     <td
                       className="text-center"
@@ -390,13 +356,13 @@ const Table = () => {
                             userData={user}
                             submitHandler={deleteUser}
                           />
-                          {/* 
+
                           <EditButton
                             userData={user}
-                            marketerNames={marketerNames}
+                            employeesData={props.employeesData}
                             submitHandler={editUser}
                             loading={loading}
-                          /> */}
+                          />
                         </div>
                       </div>
                     </td>
