@@ -108,29 +108,29 @@ const Nav: React.FC<PropsType> = props => {
             <li>
               <span
                 role="button"
-                id="adminUsersDropdownButton"
-                data-dropdown-toggle="adminUsersDropdown"
+                id="adminAccountsDropdownButton"
+                data-dropdown-toggle="adminAccountsDropdown"
                 data-dropdown-trigger="hover"
                 data-dropdown-placement="right-start"
                 className="block px-4 py-2 hover:bg-primary"
               >
                 <span className="flex gap-1 items-end align-bottom justify-between">
-                  <span>Users</span>
+                  <span>Accounts</span>
                   <ChevronRight size={17} />
                 </span>
               </span>
               <div
-                id="adminUsersDropdown"
+                id="adminAccountsDropdown"
                 className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
               >
                 <ul
                   className="py-2 text-white"
-                  aria-labelledby="adminUsersDropdownButton"
+                  aria-labelledby="adminAccountsDropdownButton"
                 >
                   <li>
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/users/roles'}
+                      href={'/admin/roles'}
                     >
                       Manage Roles
                     </Link>

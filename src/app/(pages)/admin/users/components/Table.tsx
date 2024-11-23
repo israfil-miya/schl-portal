@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CirclePlus,
+  ClipboardCopy,
   Redo2,
 } from 'lucide-react';
 import moment from 'moment-timezone';
@@ -334,6 +335,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                   <th>S/N</th>
                   <th>Full Name</th>
                   <th>Username</th>
+                  <th>Role</th>
                   <th>Comment</th>
                   <th>Action</th>
                 </tr>
@@ -344,7 +346,13 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
                     <td className="text-wrap">{user.real_name}</td>
                     <td className="text-wrap">{user.name}</td>
-                    <ExtendableTd data={user.comment || ''} />
+                    <td
+                      className="text-center"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <Badge value={user.role} className="text-sm uppercase" />
+                    </td>
+                    <ExtendableTd data={user?.comment || ''} />
 
                     <td
                       className="text-center"
@@ -363,6 +371,20 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                             submitHandler={editUser}
                             loading={loading}
                           />
+
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                `${user.name} ${user.password}`,
+                              );
+                              toast.info('Copied to clipboard', {
+                                position: 'bottom-right',
+                              });
+                            }}
+                            className="rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                          >
+                            <ClipboardCopy size={18} />
+                          </button>
                         </div>
                       </div>
                     </td>

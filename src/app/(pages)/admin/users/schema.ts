@@ -16,9 +16,8 @@ export const validationSchema = z
     role: z.enum(['admin', 'marketer', 'super', 'manager'], {
       message: "Role can't be empty",
     }),
-    comment: z
-      .string({ invalid_type_error: "Password can't be empty" })
-      .min(1, "Password can't be empty"),
+
+    comment: z.optional(z.string()),
     _id: z.optional(
       z.string().refine(val => {
         return mongoose.Types.ObjectId.isValid(val);
@@ -28,7 +27,7 @@ export const validationSchema = z
     updatedAt: z.optional(z.union([z.date(), z.string()])),
     __v: z.optional(z.number()),
   })
-  .refine(data => data.role === 'marketer' && !data.provided_name?.length, {
+  .refine(data => data.role === 'marketer' && data.provided_name?.length, {
     message: "Provided name can't be empty",
     path: ['provided_name'],
   });

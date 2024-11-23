@@ -5,7 +5,6 @@ import {
   taskOptions,
   typeOptions,
 } from '@/app/(pages)/browse/components/Edit';
-import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
 import { fetchApi } from '@/lib/utils';
 import {
   setClassNameAndIsDisabled,
@@ -17,7 +16,7 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
-import { ClientDataType } from '../../schema';
+import { ClientDataType, validationSchema } from '../../schema';
 
 import { toast } from 'sonner';
 
@@ -106,29 +105,8 @@ const Form: React.FC<PropsType> = props => {
     await createClient(data);
   };
 
-  const customStyles = {
-    control: (provided: any) => ({
-      ...provided,
-      borderTopRightRadius: 0,
-      borderBottomRightRadius: 0,
-      borderRight: 'none',
-      width: '200px',
-      paddingTop: '0.25rem' /* 12px */,
-      paddingBottom: '0.25rem' /* 12px */,
-      cursor: 'pointer',
-      backgroundColor: '#f3f4f6',
-      '&:hover': {
-        borderColor: '#e5e7eb',
-      },
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      width: '200px',
-    }),
-  };
-
   return (
-    <form className="" onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">

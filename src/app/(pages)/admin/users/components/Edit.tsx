@@ -299,7 +299,7 @@ const EditButton: React.FC<PropsType> = props => {
                 {...register('comment')}
                 rows={5}
                 className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                placeholder="Write any instructions or note about the order"
+                placeholder="Write any note about the user"
               />
             </div>
           </form>

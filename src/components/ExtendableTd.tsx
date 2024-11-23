@@ -14,13 +14,13 @@ const replaceNewlineWithBr = (text: string) => {
 
 interface PropsType {
   data: string;
+  len?: number;
 }
 
-const ExtendableTd: React.FC<PropsType> = (
-  props,
-): ReactElement<HTMLTableCellElement> | null => {
-  const { data } = props;
-
+const ExtendableTd: React.FC<PropsType> = ({
+  data,
+  len = 25,
+}): ReactElement<HTMLTableCellElement> | null => {
   const [showFullText, setShowFullText] = useState(false);
 
   const toggleText = () => {
@@ -40,10 +40,10 @@ const ExtendableTd: React.FC<PropsType> = (
         />
       ) : (
         <span className="text-nowrap">
-          {data?.length <= 25 ? data : data?.substring(0, 25).trim() + '...'}
+          {data?.length <= len ? data : data?.substring(0, len).trim() + '...'}
         </span>
       )}
-      {data?.length > 25 && (
+      {data?.length > len && (
         <small
           className="opacity-80 hover:cursor-pointer hover:underline hover:opacity-100"
           onClick={toggleText}

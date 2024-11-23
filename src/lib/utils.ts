@@ -54,3 +54,53 @@ export const dbConnect = async (): Promise<void> => {
 export function escapeRegex(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+
+export function generatePassword(
+  inputString: string,
+  specifiedDigits?: number | string,
+): string {
+  // Ensure input string is trimmed and properly formatted
+  const baseString = inputString.trim();
+
+  // If no input string is provided, use a random English word from a predefined list
+  const words = [
+    'apple',
+    'table',
+    'piano',
+    'river',
+    'house',
+    'stars',
+    'plane',
+    'green',
+    'light',
+    'cloud',
+    'dream',
+    'stone',
+    'beach',
+    'ocean',
+    'mount',
+    'space',
+    'bird',
+    'plane',
+    'flower',
+    'grape',
+  ];
+
+  const finalBaseString =
+    baseString || words[Math.floor(Math.random() * words.length)];
+
+  // Validate and process the specified digits
+  const digits = specifiedDigits
+    ? specifiedDigits.toString().slice(0, 4) // Convert to string and limit to 4 digits
+    : Math.floor(100 + Math.random() * 900); // Generate random 3-digit number if not provided
+
+  // Define a set of simple patterns for special characters
+  const specialChars = ['!', '@', '#', '$', '%', '&', '*'];
+  const randomChar =
+    specialChars[Math.floor(Math.random() * specialChars.length)];
+
+  // Create the password
+  const password = `${finalBaseString.charAt(0).toUpperCase()}${finalBaseString.slice(1)}${randomChar}${digits}`;
+
+  return password;
+}
