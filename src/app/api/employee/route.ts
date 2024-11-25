@@ -1,10 +1,12 @@
 import { auth } from '@/auth';
 import { dbConnect, getQuery } from '@/lib/utils';
 import Employee, { EmployeeDataType } from '@/models/Employees';
+import { getTodayDate } from '@/utility/date';
 import {
   addBooleanField,
   addIfDefined,
   addRegexField,
+  createRegexQuery,
 } from '@/utility/filterHelpers';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
@@ -18,22 +20,8 @@ export interface RegexQuery {
 }
 
 export interface Query {
-  country?: RegexQuery;
-  company_name?: RegexQuery;
-  category?: RegexQuery;
-  marketer_name?:
-    | RegexQuery
-    | { [key: string]: RegexQuery | string | undefined };
-  // is_test?: boolean;
-  is_prospected?: boolean;
-  is_lead?: boolean;
-  followup_done?: boolean;
-  regular_client?: boolean;
-  permanent_client?: boolean;
-  onboard_date?: string | { [key: string]: RegexQuery | string | undefined };
-  prospect_status?: RegexQuery;
-  calling_date_history?: { [key: string]: any };
-  test_given_date_history?: { [key: string]: any };
+  joining_date?: { $gte?: string; $lte?: string; $lt?: string; $gt?: string };
+  blood_group?: string;
   $or?: { [key: string]: RegexQuery }[];
 }
 
@@ -51,6 +39,31 @@ export type RegexFields = Extract<
   'country' | 'company_name' | 'category' | 'marketer_name' | 'prospect_status'
 >;
 
+async function handleCreateEmployee(req: Request): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  const data = await req.json();
+
+  try {
+    const docCount = await Employee.countDocuments({ e_id: data.e_id });
+
+    if (docCount > 0) {
+      return { data: 'Employee with this id already exists', status: 400 };
+    } else {
+      const employeeData = await Employee.create(data);
+      if (employeeData) {
+        return { data: employeeData, status: 200 };
+      } else {
+        return { data: 'Unable to create employee', status: 400 };
+      }
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
 async function handleGetAllEmployees(req: Request): Promise<{
   data: string | Object;
   status: number;
@@ -64,17 +77,57 @@ async function handleGetAllEmployees(req: Request): Promise<{
     const paginated: boolean = headersList.get('paginated') === 'true';
 
     const filters = await req.json();
+    const { blood_group, service_time } = filters;
 
     const { generalSearchString } = filters;
 
     const query: Query = {};
 
-    //   addIfDefined(query, 'role', filters.role);
+    addIfDefined(query, 'blood_group', blood_group);
+
+    if (service_time) {
+      const [year, month, date] = moment()
+        .utc()
+        .format('YYYY-MM-DD')
+        .split('-');
+
+      switch (service_time) {
+        case 'lessThan1Year':
+          query['joining_date'] = {
+            $gt: `${Number(year) - 1}-${month}-${date}`,
+          };
+          break;
+        case 'atLeast1Year':
+          query['joining_date'] = {
+            $lte: `${Number(year) - 1}-${month}-${date}`,
+          };
+          break;
+        case 'atLeast2Years':
+          query['joining_date'] = {
+            $lte: `${Number(year) - 2}-${month}-${date}`,
+          };
+          break;
+        case 'atLeast3Years':
+          query['joining_date'] = {
+            $lte: `${Number(year) - 3}-${month}-${date}`,
+          };
+          break;
+        case 'moreThan3Years':
+          query['joining_date'] = {
+            $lt: `${Number(year) - 3}-${month}-${date}`,
+          };
+          break;
+        default:
+          console.warn(`Invalid service time option: ${service_time}`);
+          break;
+      }
+    }
 
     const searchQuery: Query = { ...query };
 
     let sortQuery: Record<string, 1 | -1> = {
-      createdAt: -1,
+      priority: 1,
+      e_id: 1,
     };
 
     if (!query && isFilter == true && !generalSearchString) {
@@ -84,8 +137,14 @@ async function handleGetAllEmployees(req: Request): Promise<{
 
       if (generalSearchString) {
         searchQuery['$or'] = [
-          { real_name: { $regex: generalSearchString, $options: 'i' } },
-          { name: { $regex: generalSearchString, $options: 'i' } },
+          { e_id: createRegexQuery(generalSearchString.trim(), true)! },
+          {
+            company_provided_name: createRegexQuery(
+              generalSearchString.trim(),
+            )!,
+          },
+          { real_name: createRegexQuery(generalSearchString.trim())! },
+          { nid: createRegexQuery(generalSearchString.trim(), true)! },
         ];
       }
 
@@ -95,19 +154,59 @@ async function handleGetAllEmployees(req: Request): Promise<{
       if (paginated) {
         employees = await Employee.aggregate([
           { $match: searchQuery },
+          {
+            $addFields: {
+              permanentInfo: {
+                $cond: {
+                  if: { $lt: ['$joining_date', getTodayDate()] }, // Example condition, replace with actual logic
+                  then: true,
+                  else: false,
+                },
+              },
+              priority: {
+                $switch: {
+                  branches: [
+                    { case: { $eq: ['$status', 'Active'] }, then: 1 },
+                    { case: { $eq: ['$status', 'Inactive'] }, then: 2 },
+                    { case: { $eq: ['$status', 'Fired'] }, then: 3 },
+                    { case: { $eq: ['$status', 'Resigned'] }, then: 4 },
+                  ],
+                  default: 5,
+                },
+              },
+            },
+          },
           { $sort: sortQuery },
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              hasFollowupDate: 0, // Remove the added field from the final output
-            },
-          },
         ]);
       } else {
-        employees = (await Employee.find(
-          searchQuery,
-        ).lean()) as EmployeeDataType[];
+        employees = await Employee.aggregate([
+          { $match: searchQuery },
+          {
+            $addFields: {
+              permanentInfo: {
+                $cond: {
+                  if: { $lt: ['$joining_date', getTodayDate()] }, // Example condition, replace with actual logic
+                  then: true,
+                  else: false,
+                },
+              },
+              priority: {
+                $switch: {
+                  branches: [
+                    { case: { $eq: ['$status', 'Active'] }, then: 1 },
+                    { case: { $eq: ['$status', 'Inactive'] }, then: 2 },
+                    { case: { $eq: ['$status', 'Fired'] }, then: 3 },
+                    { case: { $eq: ['$status', 'Resigned'] }, then: 4 },
+                  ],
+                  default: 5,
+                },
+              },
+            },
+          },
+          { $sort: sortQuery },
+        ]);
       }
 
       const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);
@@ -115,7 +214,7 @@ async function handleGetAllEmployees(req: Request): Promise<{
       if (!employees) {
         return { data: 'Unable to retrieve employees', status: 400 };
       } else {
-        let employeesData = {
+        const employeesData = {
           pagination: {
             count,
             pageCount,
