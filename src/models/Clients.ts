@@ -12,6 +12,7 @@ export interface ClientType {
   address: string;
   prices: string;
   currency: string;
+  category: string;
   last_invoice_number: string | null;
   updated_by: string | null;
 }
@@ -68,6 +69,10 @@ const ClientSchema = new mongoose.Schema<ClientDocType>(
       default: '',
     },
     currency: {
+      type: String,
+      default: '',
+    },
+    category: {
       type: String,
       default: '',
     },
