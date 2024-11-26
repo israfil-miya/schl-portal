@@ -46,7 +46,7 @@ const BrowsePage = async () => {
 
   return (
     <>
-      <div className="px-4 mt-8 mb-4">
+      <div className="px-4 mt-8 mb-4 container">
         <Table employeesData={employees || []} />
       </div>
     </>

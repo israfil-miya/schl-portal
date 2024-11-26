@@ -258,6 +258,9 @@ export async function POST(req: Request) {
     case 'get-all-employees':
       res = await handleGetAllEmployees(req);
       return NextResponse.json(res.data, { status: res.status });
+    case 'create-employee':
+      res = await handleCreateEmployee(req);
+      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }

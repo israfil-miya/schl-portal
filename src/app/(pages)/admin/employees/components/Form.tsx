@@ -1,15 +1,7 @@
-'use employee';
-import {
-  priorityOptions,
-  statusOptions,
-  taskOptions,
-  typeOptions,
-} from '@/app/(pages)/browse/components/Edit';
+'use client';
 import { fetchApi } from '@/lib/utils';
-import { EmployeeDataType } from '@/models/Clients';
 import { setMenuPortalTarget } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -18,20 +10,38 @@ import { EmployeeDataType, validationSchema } from '../schema';
 
 import { toast } from 'sonner';
 
+export const bloodGroupOptions = [
+  { value: 'A+', label: 'A+' },
+  { value: 'A-', label: 'A-' },
+  { value: 'B+', label: 'B+' },
+  { value: 'B-', label: 'B-' },
+  { value: 'AB+', label: 'AB+' },
+  { value: 'AB-', label: 'AB-' },
+  { value: 'O+', label: 'O+' },
+  { value: 'O-', label: 'O-' },
+];
+
+export const departmentOptions = [
+  { value: 'production', label: 'Production' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'software', label: 'Software' },
+  { value: 'accounting', label: 'Accounting' },
+  { value: 'management', label: 'Management' },
+  { value: 'hr', label: 'HR' },
+  { value: 'administration', label: 'Administration' },
+  { value: 'others', label: 'Others' },
+];
+
+export const statusOptions = [
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+  { value: 'resigned', label: 'Resigned' },
+  { value: 'fired', label: 'Fired' },
+];
+
 const Form: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
-
-  const bloodGroupOptions = [
-    { value: 'A+', label: 'A+' },
-    { value: 'A-', label: 'A-' },
-    { value: 'B+', label: 'B+' },
-    { value: 'B-', label: 'B-' },
-    { value: 'AB+', label: 'AB+' },
-    { value: 'AB-', label: 'AB-' },
-    { value: 'O+', label: 'O+' },
-    { value: 'O-', label: 'O-' },
-  ];
 
   const {
     watch,
@@ -85,7 +95,6 @@ const Form: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          updated_by: session?.user.real_name,
         },
         body: JSON.stringify(parsed.data),
       };
@@ -118,71 +127,93 @@ const Form: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Client Code*</span>
+            <span className="uppercase">Employee ID*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.employee_code && errors.employee_code.message}
+              {errors.e_id && errors.e_id.message}
             </span>
           </label>
           <input
-            {...register('employee_code')}
+            {...register('e_id')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Client Name*</span>
+            <span className="uppercase">Full Name*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.employee_name && errors.employee_name.message}
+              {errors.real_name && errors.real_name.message}
             </span>
           </label>
           <input
-            {...register('employee_name')}
+            {...register('real_name')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Marketer Name*</span>
+            <span className="uppercase">Joining Date*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.marketer && errors.marketer?.message}
+              {errors.joining_date && errors.joining_date.message}
             </span>
           </label>
-
-          <Controller
-            name="marketer"
-            control={control}
-            render={({ field }) => (
-              <Select
-                options={marketerOptions}
-                closeMenuOnSelect={true}
-                placeholder="Select marketer"
-                classNamePrefix="react-select"
-                menuPortalTarget={setMenuPortalTarget}
-                menuPlacement="auto"
-                menuPosition="fixed"
-                value={
-                  marketerOptions.find(
-                    option => option.value === field.value,
-                  ) || null
-                }
-                onChange={option => field.onChange(option ? option.value : '')}
-              />
-            )}
+          <input
+            {...register('joining_date')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="date"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Contact Person</span>
+            <span className="uppercase">Phone*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.contact_person && errors.contact_person.message}
+              {errors.phone && errors.phone.message}
             </span>
           </label>
           <input
-            {...register('contact_person')}
+            {...register('phone')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Email</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.email && errors.email.message}
+            </span>
+          </label>
+          <input
+            {...register('email')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="email"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">NID Number*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.nid && errors.nid.message}
+            </span>
+          </label>
+          <input
+            {...register('nid')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Birth Date*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.birth_date && errors.birth_date.message}
+            </span>
+          </label>
+          <input
+            {...register('birth_date')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="date"
           />
         </div>
         <div>
@@ -200,82 +231,211 @@ const Form: React.FC = () => {
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Contact Number</span>
+            <span className="uppercase">Branch*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.contact_number && errors.contact_number.message}
+              {errors.designation && errors.designation.message}
             </span>
           </label>
           <input
-            {...register('contact_number')}
+            {...register('branch')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Email</span>
+            <span className="uppercase">Division</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.email && errors.email.message}
+              {errors.division && errors.division.message}
             </span>
           </label>
           <input
-            {...register('email')}
+            {...register('division')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Address</span>
+            <span className="uppercase">Gross Salary</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.address && errors.address.message}
+              {errors.gross_salary && errors.gross_salary.message}
             </span>
           </label>
           <input
-            {...register('address')}
+            {...register('gross_salary')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            type="text"
+            type="number"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Country</span>
+            <span className="uppercase">PF (%)</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.country && errors.country.message}
+              {errors.provident_fund && errors.provident_fund.message}
             </span>
           </label>
           <input
-            {...register('country')}
+            {...register('provident_fund')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            type="text"
+            type="number"
+            step="0.1"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Currency</span>
+            <span className="uppercase">PF Start Date</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.currency && errors.currency.message}
+              {errors.pf_start_date && errors.pf_start_date.message}
             </span>
           </label>
           <input
-            {...register('currency')}
+            {...register('pf_start_date')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            type="text"
+            type="date"
+          />
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Status*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.status && errors.status?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={statusOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select status"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                value={
+                  statusOptions.find(option => option.value === field.value) ||
+                  null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
+          />
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Bonus (Eid-ul-Fitr)</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.bonus_eid_ul_fitr && errors.bonus_eid_ul_fitr.message}
+            </span>
+          </label>
+          <input
+            {...register('bonus_eid_ul_fitr')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+            onFocus={() =>
+              watch('gross_salary') !== 0 &&
+              setValue('bonus_eid_ul_fitr', watch('gross_salary') * 0.5)
+            }
+            step={0.1}
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Bonus (Eid-ul-Adha)</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.bonus_eid_ul_adha && errors.bonus_eid_ul_adha.message}
+            </span>
+          </label>
+          <input
+            {...register('bonus_eid_ul_adha')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="number"
+            onFocus={() =>
+              watch('gross_salary') !== 0 &&
+              setValue('bonus_eid_ul_adha', watch('gross_salary') * 0.5)
+            }
+            step={0.1}
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Blood Group</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.blood_group && errors.blood_group?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="blood_group"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={bloodGroupOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select blood group"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                value={
+                  bloodGroupOptions.find(
+                    option => option.value === field.value,
+                  ) || null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Department</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.department && errors.department?.message}
+            </span>
+          </label>
+
+          <Controller
+            name="department"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={departmentOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select department"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                value={
+                  departmentOptions.find(
+                    option => option.value === field.value,
+                  ) || null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
           />
         </div>
       </div>
+
       <div>
         <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-          <span className="uppercase">Prices</span>
+          <span className="uppercase">Note</span>
           <span className="text-red-700 text-wrap block text-xs">
-            {errors.prices && errors.prices?.message}
+            {errors.note && errors.note?.message}
           </span>
         </label>
         <textarea
-          {...register('prices')}
+          {...register('note')}
           rows={5}
           className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-          placeholder="List cost of services pitched to employee"
+          placeholder="Write any note about the employee"
         />
       </div>
 
