@@ -13,6 +13,7 @@ import { SquarePen, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
+import { currencyOptions } from '../create-client/components/Form';
 import { ClientDataType, validationSchema } from '../schema';
 
 const baseZIndex = 50; // 52
@@ -256,13 +257,34 @@ const EditButton: React.FC<PropsType> = props => {
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Currency</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.currency && errors.currency.message}
+                    {errors.currency && errors.currency?.message}
                   </span>
                 </label>
-                <input
-                  {...register('currency')}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="text"
+
+                <Controller
+                  name="currency"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...setClassNameAndIsDisabled(isOpen)}
+                      options={currencyOptions}
+                      closeMenuOnSelect={true}
+                      placeholder="Select currency"
+                      classNamePrefix="react-select"
+                      menuPortalTarget={setMenuPortalTarget}
+                      menuPlacement="auto"
+                      menuPosition="fixed"
+                      styles={setCalculatedZIndex(baseZIndex)}
+                      value={
+                        currencyOptions.find(
+                          option => option.value === field.value,
+                        ) || null
+                      }
+                      onChange={option =>
+                        field.onChange(option ? option.value : '')
+                      }
+                    />
+                  )}
                 />
               </div>
             </div>

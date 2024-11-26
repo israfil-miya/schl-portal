@@ -24,6 +24,17 @@ interface PropsType {
   marketerNames: string[];
 }
 
+export const currencyOptions = [
+  { value: '$', label: 'Dollar ($)' },
+  { value: '€', label: 'Euro (€)' },
+  { value: '£', label: 'Pound (£)' },
+  { value: 'A$', label: 'Australian Dollar (A$)' },
+  { value: 'C$', label: 'Canadian Dollar (C$)' },
+  { value: 'Nkr', label: 'Norwegian krone (Nkr)' },
+  { value: 'Dkr', label: 'Danish Krone (Dkr)' },
+  { value: 'Skr', label: 'Swedish Krona (Skr)' },
+];
+
 const Form: React.FC<PropsType> = props => {
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
@@ -246,13 +257,30 @@ const Form: React.FC<PropsType> = props => {
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
             <span className="uppercase">Currency</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.currency && errors.currency.message}
+              {errors.currency && errors.currency?.message}
             </span>
           </label>
-          <input
-            {...register('currency')}
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            type="text"
+
+          <Controller
+            name="currency"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={currencyOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select currency"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                menuPlacement="auto"
+                menuPosition="fixed"
+                value={
+                  currencyOptions.find(
+                    option => option.value === field.value,
+                  ) || null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
           />
         </div>
       </div>
