@@ -181,7 +181,7 @@ async function handleEditClient(req: Request): Promise<{
   let data = await req.json();
   const headersList = await headers();
 
-  const updated_by = Number(headersList.get('name'));
+  const updated_by = headersList.get('updated_by');
   data = { ...data, updated_by };
 
   console.log('Received edit request with data:', data);

@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { dbConnect, getQuery } from '@/lib/utils';
+import { dbConnect, getQuery, isEmployeePermanent } from '@/lib/utils';
 import Employee, { EmployeeDataType } from '@/models/Employees';
 import { getTodayDate } from '@/utility/date';
 import {
@@ -156,13 +156,7 @@ async function handleGetAllEmployees(req: Request): Promise<{
           { $match: searchQuery },
           {
             $addFields: {
-              permanentInfo: {
-                $cond: {
-                  if: { $lt: ['$joining_date', getTodayDate()] }, // Example condition, replace with actual logic
-                  then: true,
-                  else: false,
-                },
-              },
+              permanentInfo: isEmployeePermanent('$joining_date'),
               priority: {
                 $switch: {
                   branches: [
@@ -185,13 +179,7 @@ async function handleGetAllEmployees(req: Request): Promise<{
           { $match: searchQuery },
           {
             $addFields: {
-              permanentInfo: {
-                $cond: {
-                  if: { $lt: ['$joining_date', getTodayDate()] }, // Example condition, replace with actual logic
-                  then: true,
-                  else: false,
-                },
-              },
+              permanentInfo: isEmployeePermanent('$joining_date'),
               priority: {
                 $switch: {
                   branches: [

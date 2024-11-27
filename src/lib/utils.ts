@@ -1,4 +1,5 @@
 import { ClassValue, clsx } from 'clsx';
+import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { twMerge } from 'tailwind-merge';
 
@@ -7,7 +8,7 @@ export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
 export const fetchApi = async (
   url: string,
   options: {},
-): Promise<{ data: string | Object; ok: boolean }> => {
+): Promise<{ data: any; ok: boolean }> => {
   try {
     const response = await fetch(url, options);
     const data = await response.json();
@@ -104,3 +105,33 @@ export function generatePassword(
 
   return password;
 }
+
+export const isEmployeePermanent = (
+  joiningDate: string,
+): {
+  isPermanent: boolean;
+  remainingTime?: number; // in days
+  serviceTime?: number; // in days
+} => {
+  const joinDate = moment(joiningDate, 'YYYY-MM-DD');
+  const probationEndDate = joinDate.clone().add(6, 'months');
+  const today = moment();
+
+  const isPermanent = today.isSameOrAfter(probationEndDate);
+
+  // Calculate remaining time if not permanent
+  if (!isPermanent) {
+    const remainingDays = probationEndDate.diff(today, 'days');
+    return {
+      isPermanent: false,
+      remainingTime: remainingDays, // Return raw days
+    };
+  }
+
+  // Calculate job age/service time if permanent
+  const serviceTime = today.diff(joinDate, 'days');
+  return {
+    isPermanent: true,
+    serviceTime: serviceTime, // Return raw days
+  };
+};

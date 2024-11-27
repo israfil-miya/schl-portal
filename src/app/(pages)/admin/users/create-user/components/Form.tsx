@@ -291,7 +291,6 @@ const Form: React.FC<PropsType> = props => {
       </div>
 
       <button
-        onClick={() => console.log(watch(), errors)}
         disabled={loading}
         className="rounded-md bg-primary text-white hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-10 py-2 mt-6 uppercase"
         type="submit"

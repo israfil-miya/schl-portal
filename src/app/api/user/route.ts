@@ -260,8 +260,8 @@ async function handleVerifyUser(req: Request): Promise<{
   status: number;
 }> {
   const { name, password } = await req.json();
-  const Headers = await headers();
-  const redirect_path = Headers.get('referer') || '/';
+  const headersList = await headers();
+  const redirect_path = headersList.get('redirect_path') || '/';
 
   try {
     const userData = await User.findOne({
@@ -325,12 +325,20 @@ export async function POST(req: Request) {
       return NextResponse.json(res.data, { status: res.status });
     case 'verify-user':
       res = await handleVerifyUser(req);
-      return NextResponse.json(res.data, {
-        status: res.status,
-        headers: {
-          'Set-Cookie': `verify-token.tmp=${res.data.token}; Path=${res.data.redirect_path}`,
-        },
-      });
+      if (
+        res.status === 200 &&
+        typeof res.data === 'object' &&
+        'token' in res.data
+      ) {
+        return NextResponse.json(res.data, {
+          status: res.status,
+          headers: {
+            'Set-Cookie': `verify-token.tmp=${res.data.token}; Path=/; HttpOnly`,
+          },
+        });
+      }
+
+      return NextResponse.json({ message: res.data }, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
