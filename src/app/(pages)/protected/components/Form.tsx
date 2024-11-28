@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 
-import { generatePassword } from '@/lib/utils';
+import { generatePassword, rethrowIfRedirectError } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { KeySquare } from 'lucide-react';
 import { permanentRedirect } from 'next/navigation';
@@ -74,7 +74,8 @@ const Form: React.FC<PropsType> = props => {
         toast.error(response.data as string);
       }
     } catch (error) {
-      console.error(error);
+      rethrowIfRedirectError(error);
+      console.log(error);
       toast.error('An error occurred while verifying the credentials');
     } finally {
       setLoading(false);
@@ -96,6 +97,7 @@ const Form: React.FC<PropsType> = props => {
             </span>
           </label>
           <input
+            type="text"
             {...register('name')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           />
@@ -108,6 +110,7 @@ const Form: React.FC<PropsType> = props => {
             </span>
           </label>
           <input
+            type="password"
             {...register('password')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           />

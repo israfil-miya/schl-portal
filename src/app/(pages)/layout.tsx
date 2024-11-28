@@ -13,7 +13,6 @@ export default async function PageLayout({
   return (
     <SessionProvider session={session}>
       <Header />
-      <div className="container"></div>
       {children}
     </SessionProvider>
   );

@@ -1,6 +1,7 @@
 import { ClassValue, clsx } from 'clsx';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
+import { isRedirectError } from 'next/dist/client/components/redirect';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
@@ -134,4 +135,33 @@ export const isEmployeePermanent = (
     isPermanent: true,
     serviceTime: serviceTime, // Return raw days
   };
+};
+
+export function rethrowIfRedirectError(error: unknown) {
+  if (isRedirectError(error)) {
+    throw error;
+  }
+}
+
+export async function sha256(message: string): Promise<string> {
+  // Encode the message as UTF-8
+  const msgBuffer = new TextEncoder().encode(message);
+
+  // Hash the message using SHA-256 algorithm
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+  // Convert ArrayBuffer to Array
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  // Convert bytes to a hexadecimal string
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
+export const generateAvatar = async (text: string): Promise<string> => {
+  const value = await sha256(text?.trim().toLowerCase() || 'johndoe@schl.com'); // Default to 'johndoe@schl.com' if value (expected to be a email or username) is missing.
+
+  const avatar = `https://gravatar.com/avatar/${value}/?s=400&d=identicon&r=x`; // Set image size, default avatar, and rating restrictions.
+
+  return avatar;
 };

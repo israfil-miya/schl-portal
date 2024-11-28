@@ -6,7 +6,7 @@ export default async function Protected({
 }: {
   searchParams?: { redirect?: string };
 }) {
-  const { redirect } = (await searchParams) || { redirect: '' };
+  const redirect = (await searchParams?.redirect) || '/';
 
   return (
     <>
@@ -20,7 +20,7 @@ export default async function Protected({
         </div>
 
         <div className="container lg:w-[60em] md:mt-14 mt-20">
-          <InputForm redirect_path={redirect} />
+          <InputForm redirect_path={redirect.trim()} />
         </div>
       </section>
     </>
