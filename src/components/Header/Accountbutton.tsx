@@ -14,11 +14,11 @@ const AccountButton: React.FC<PropsType> = props => {
 
   return (
     <button
-      onClick={() => router.replace('/my-account')}
+      onClick={() => router.replace('/protected?redirect=/my-account')}
       disabled={pathname === '/my-account'}
       type="button"
       className={cn(
-        `flex cursor-pointer items-center gap-2 rounded-md bg-blue-600 hover:opacity-90 hover:ring-4 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
+        `disabled:cursor-not-allowed flex cursor-pointer items-center gap-2 rounded-md bg-blue-600 hover:opacity-90 hover:ring-4 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
         props.className,
       )}
     >

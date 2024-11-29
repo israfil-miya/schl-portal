@@ -1,12 +1,13 @@
 import { auth } from '@/auth';
-import { generateAvatar, rethrowIfRedirectError } from '@/lib/utils';
+import { fetchApi, generateAvatar, rethrowIfRedirectError } from '@/lib/utils';
+import { EmployeeDataType } from '@/models/Employees';
 import { Session } from 'inspector';
 import Cookies from 'js-cookie';
 import jwt from 'jsonwebtoken';
 import { redirect } from 'next/navigation';
 import React from 'react';
 import { toast } from 'sonner';
-import Profile from './components/Profile';
+// import Profile from './components/Profile';
 
 interface DecodedToken {
   userId: string;
@@ -37,35 +38,88 @@ const verifyTokenAndRedirect = (
 };
 
 function verifyUser(session: { user?: { db_id?: string } } | null) {
-  let verify_token = Cookies.get('verify-token.tmp')?.trim();
+  try {
+    console.log('verifyUser');
 
-  // Wait for 5 seconds until verify_token has a value
-  const waitTime = 5000; // 5 seconds in milliseconds
-  const interval = 100; // Check every 100 milliseconds
-  let elapsedTime = 0;
+    let verify_token = Cookies.get('verify-token.tmp')?.trim();
 
-  const intervalId = setInterval(() => {
-    verify_token = Cookies.get('verify-token.tmp')?.trim();
-    if (verify_token || elapsedTime >= waitTime) {
-      clearInterval(intervalId); // Stop the interval once verify_token has a value or timeout occurs
-      if (!verify_token) {
-        console.log('Timeout: verify_token not received within 5 seconds.');
-        return; // Return or handle the timeout scenario
+    // Define a short wait time for cases like accessing "/my-account" directly
+    const shortWaitTime = 100; // 100 milliseconds
+    const maxWaitTime = 5000; // Maximum 5 seconds for longer checks
+    const interval = 100; // Check every 100 milliseconds
+    let elapsedTime = 0;
+
+    const intervalId = setInterval(() => {
+      verify_token = Cookies.get('verify-token.tmp')?.trim();
+
+      if (verify_token) {
+        clearInterval(intervalId); // Stop the interval
+        verifyTokenAndRedirect(verify_token, session!); // Proceed with verifying the token
+        return;
       }
-      verifyTokenAndRedirect(verify_token, session!); // Proceed with verifying the token
-    }
-    elapsedTime += interval;
-  }, interval);
+
+      elapsedTime += interval;
+
+      // If the token is not found within shortWaitTime and "/my-account" is accessed
+      if (
+        elapsedTime >= shortWaitTime &&
+        window.location.pathname === '/my-account'
+      ) {
+        clearInterval(intervalId); // Stop the interval
+        console.log('Short wait time elapsed: verify_token not found.');
+        redirect('/protected?redirect=/my-account'); // Redirect immediately
+      }
+
+      // If the token is not found within maxWaitTime in general
+      if (elapsedTime >= maxWaitTime) {
+        clearInterval(intervalId); // Stop the interval
+        console.log('Max wait time elapsed: verify_token not found.');
+        redirect('/protected?redirect=/my-account'); // Redirect after timeout
+      }
+    }, interval);
+  } catch (error) {
+    console.error('Error in verifyUser:', error);
+    rethrowIfRedirectError(error);
+  }
 }
+
+const getEmployeeInfo = async () => {
+  const session = await auth();
+  try {
+    let url: string =
+      process.env.NEXT_PUBLIC_BASE_URL +
+      '/api/employee?action=get-employee-by-id';
+    let options: {} = {
+      method: 'POST',
+      headers: {
+        paginated: false,
+        filtered: false,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ _id: session?.user.db_id }),
+    };
+
+    const response = await fetchApi(url, options);
+    if (response.ok) {
+      return response.data as EmployeeDataType;
+    } else {
+      toast.error(response.data as string);
+    }
+  } catch (e) {
+    console.error(e);
+    console.log('An error occurred while fetching employee data');
+  }
+};
 
 async function MyAccountPage() {
   const session = await auth();
   const avatarURI = generateAvatar(session?.user.email || '');
-  verifyUser(session);
+  const employeeInfo = await getEmployeeInfo();
+  // verifyUser(session);
 
   return (
     <div className="px-4 mt-8 mb-4 flex flex-col justify-center md:w-[70vw] mx-auto">
-      <Profile avatarURI={avatarURI} />
+      {/* <Profile avatarURI={avatarURI} /> */}
     </div>
   );
 }
