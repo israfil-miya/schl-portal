@@ -1,0 +1,174 @@
+'use client';
+
+import { fetchApi } from '@/lib/utils';
+import {
+  setClassNameAndIsDisabled,
+  setMenuPortalTarget,
+} from '@/utility/selectHelpers';
+import { zodResolver } from '@hookform/resolvers/zod';
+import moment from 'moment-timezone';
+import { useSession } from 'next-auth/react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import Select from 'react-select';
+import { ChangePasswordInputsType, validationSchema } from '../schema';
+
+import { generatePassword } from '@/lib/utils';
+import { EmployeeDataType } from '@/models/Employees';
+import { KeySquare } from 'lucide-react';
+import { toast } from 'sonner';
+
+const Form: React.FC = props => {
+  const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
+  console.log(session);
+
+  const {
+    watch,
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordInputsType>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
+      username: session?.user.cred_name || '',
+      old_password: '',
+      new_password: '',
+      confirm_password: '',
+    },
+  });
+
+  async function changePassword(data: ChangePasswordInputsType) {
+    try {
+      setLoading(true);
+      const parsed = validationSchema.safeParse(data);
+
+      if (!parsed.success) {
+        console.error(parsed.error.issues.map(issue => issue.message));
+        toast.error('Invalid form data');
+        return;
+      }
+
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(parsed.data),
+      };
+
+      const response = await fetchApi(url, options);
+
+      if (response.ok) {
+        toast.success('Created new user successfully');
+        reset();
+        // reset the form after successful submission
+      } else {
+        toast.error(response.data as string);
+      }
+
+      console.log('data', parsed.data, data);
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while creating new user');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const onSubmit = async (data: ChangePasswordInputsType) => {
+    await changePassword(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
+        <div>
+          <label
+            className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
+            htmlFor="grid-password"
+          >
+            Username
+            <span className="cursor-pointer has-tooltip">
+              &#9432;
+              <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
+                Filled automatically by session
+              </span>
+            </span>
+          </label>
+          <input
+            type="text"
+            disabled={true}
+            {...register('username')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          />
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Old Password*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.old_password && errors.old_password.message}
+            </span>
+          </label>
+          <input
+            {...register('old_password')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          />
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
+            <span className="uppercase">New password*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.new_password && errors.new_password.message}
+            </span>
+          </label>
+          <div className="flex items-center">
+            <input
+              {...register('new_password')}
+              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            />
+            <button
+              onClick={() => {
+                setValue('new_password', generatePassword(watch('username')));
+              }}
+              type="button"
+              className="bg-gray-200 hover:bg-gray-300 text-black py-3.5 px-4 rounded-r focus:outline-none transition duration-100 delay-100"
+            >
+              <KeySquare size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Confirm Password</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.confirm_password && errors.confirm_password.message}
+            </span>
+          </label>
+          <input
+            {...register('confirm_password')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          />
+        </div>
+      </div>
+
+      <button
+        disabled={loading}
+        className="rounded-md bg-primary text-white hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-10 py-2 mt-6 uppercase"
+        type="submit"
+      >
+        {loading ? 'Changing...' : 'Change'}
+      </button>
+    </form>
+  );
+};
+
+export default Form;

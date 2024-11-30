@@ -333,7 +333,7 @@ export async function POST(req: Request) {
         return NextResponse.json(res.data, {
           status: res.status,
           headers: {
-            'Set-Cookie': `verify-token.tmp=${res.data.token}; Path=/; HttpOnly`,
+            'Set-Cookie': `verify-token.tmp=${res.data.token}; Path=/; HttpOnly; Max-Age=10`,
           },
         });
       }

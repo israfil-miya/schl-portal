@@ -25,19 +25,19 @@ export interface Query {
   $or?: { [key: string]: RegexQuery }[];
 }
 
-export type BooleanFields = Extract<
-  keyof Query,
-  | 'is_test'
-  | 'is_prospected'
-  | 'is_lead'
-  | 'followup_done'
-  | 'regular_client'
-  | 'permanent_client'
->;
-export type RegexFields = Extract<
-  keyof Query,
-  'country' | 'company_name' | 'category' | 'marketer_name' | 'prospect_status'
->;
+// export type BooleanFields = Extract<
+//   keyof Query,
+//   | 'is_test'
+//   | 'is_prospected'
+//   | 'is_lead'
+//   | 'followup_done'
+//   | 'regular_client'
+//   | 'permanent_client'
+// >;
+// export type RegexFields = Extract<
+//   keyof Query,
+//   'country' | 'company_name' | 'category' | 'marketer_name' | 'prospect_status'
+// >;
 
 async function handleCreateEmployee(req: Request): Promise<{
   data: string | Object;
@@ -219,14 +219,14 @@ async function handleGetAllEmployees(req: Request): Promise<{
   }
 }
 
-async function handleGetEmployeeById(req: Request): Promise<{
+async function handleGetEmployeeByName(req: Request): Promise<{
   data: string | Object;
   status: number;
 }> {
   try {
-    const { _id } = await req.json();
+    const { real_name } = await req.json();
 
-    const resData = await Employee.findById(_id).lean();
+    const resData = await Employee.findOne({ real_name: real_name }).lean();
 
     if (resData) {
       return { data: resData, status: 200 };
@@ -249,6 +249,9 @@ export async function POST(req: Request) {
     case 'create-employee':
       res = await handleCreateEmployee(req);
       return NextResponse.json(res.data, { status: res.status });
+    case 'get-employee-by-name':
+      res = await handleGetEmployeeByName(req);
+      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
@@ -258,9 +261,6 @@ export async function GET(req: Request) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
-    case 'get-employee-by-id':
-      res = await handleGetEmployeeById(req);
-      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }

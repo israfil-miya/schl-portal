@@ -1,7 +1,10 @@
+import { UserSessionType } from '@/auth';
 import { ClassValue, clsx } from 'clsx';
+import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { isRedirectError } from 'next/dist/client/components/redirect';
+import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
@@ -164,4 +167,35 @@ export const generateAvatar = async (text: string): Promise<string> => {
   const avatar = `https://gravatar.com/avatar/${value}/?s=400&d=identicon&r=x`; // Set image size, default avatar, and rating restrictions.
 
   return avatar;
+};
+
+export const verifyCookie = async (
+  cookieStore: ReadonlyRequestCookies,
+  id: string,
+) => {
+  try {
+    const verifyToken = cookieStore.get('verify-token.tmp')?.value;
+
+    if (!verifyToken) {
+      return false;
+    }
+
+    const token = verifyToken;
+
+    const decoded = jwt.verify(token, process.env.AUTH_SECRET as string) as {
+      userId: string;
+      exp: number;
+    };
+
+    const userIdFromToken = decoded.userId;
+    const sessionUserId = id;
+
+    if (userIdFromToken !== sessionUserId || Date.now() >= decoded.exp * 1000) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
 };

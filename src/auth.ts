@@ -1,10 +1,10 @@
 import NextAuth from 'next-auth';
-import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
+import { authConfig } from './auth.config';
 const BASE_URL: string =
   process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-interface User {
+export interface UserSessionType {
   db_id: string;
   real_name: string;
   cred_name: string;
@@ -14,7 +14,7 @@ interface User {
 async function getUser(
   username: string,
   password: string,
-): Promise<User | null> {
+): Promise<UserSessionType | null> {
   try {
     const res = await fetch(BASE_URL + '/api/user?action=handle-login', {
       method: 'GET',
@@ -27,7 +27,7 @@ async function getUser(
 
     const userData = await res.json();
 
-    const user: User = {
+    const user: UserSessionType = {
       db_id: userData._id,
       real_name: userData.real_name,
       cred_name: userData.name,

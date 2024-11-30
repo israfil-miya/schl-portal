@@ -1,12 +1,13 @@
+import { SearchParams } from 'next/dist/server/request/search-params';
 import React from 'react';
 import InputForm from './components/Form';
 
-export default async function Protected({
+export default async function ProtectedPage({
   searchParams,
 }: {
   searchParams?: { redirect?: string };
 }) {
-  const redirect = (await searchParams?.redirect) || '/';
+  const redirect = searchParams?.['redirect'] || '/';
 
   return (
     <>
