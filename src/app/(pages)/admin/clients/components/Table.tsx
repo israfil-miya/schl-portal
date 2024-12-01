@@ -1,27 +1,10 @@
 'use client';
 
-import Badge from '@/components/Badge';
-import ClickToCopy from '@/components/CopyText';
-import {
-  default as CallingStatusTd,
-  default as ExtendableTd,
-} from '@/components/ExtendableTd';
-import Linkify from '@/components/Linkify';
+import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
-import {
-  getDaysSince as countDaysSinceLastCall,
-  formatDate,
-  formatTime,
-} from '@/utility/date';
-import {
-  BookCheck,
-  ChevronLeft,
-  ChevronRight,
-  CirclePlus,
-  Redo2,
-} from 'lucide-react';
-import moment from 'moment-timezone';
+
+import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';

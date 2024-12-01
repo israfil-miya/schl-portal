@@ -3,12 +3,8 @@
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import { fetchApi } from '@/lib/utils';
-import {
-  getDaysSince as countDaysSinceLastCall,
-  formatDate,
-} from '@/utility/date';
+import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';

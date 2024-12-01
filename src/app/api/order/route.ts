@@ -98,7 +98,7 @@ interface PaginatedData<ItemsType> {
   items: ItemsType;
 }
 
-async function handleGetUnfinishedOrders(req: Request): Promise<{
+async function handleGetUnfinishedOrders(req: NextRequest): Promise<{
   data: string | OrderDataType[];
   status: number;
 }> {
@@ -129,7 +129,7 @@ async function handleGetUnfinishedOrders(req: Request): Promise<{
   }
 }
 
-async function handleGetRedoOrders(req: Request): Promise<{
+async function handleGetRedoOrders(req: NextRequest): Promise<{
   data: string | (OrderDataType & { timeDifference: number })[];
   status: number;
 }> {
@@ -159,7 +159,7 @@ async function handleGetRedoOrders(req: Request): Promise<{
   }
 }
 
-async function handleGetAllOrders(req: Request): Promise<{
+async function handleGetAllOrders(req: NextRequest): Promise<{
   data: string | PaginatedData<OrderDataType[]>;
   status: number;
 }> {
@@ -311,7 +311,7 @@ async function handleGetAllOrders(req: Request): Promise<{
   }
 }
 
-async function handleGetOrdersById(req: Request): Promise<{
+async function handleGetOrdersById(req: NextRequest): Promise<{
   data: string | OrderDataType;
   status: number;
 }> {
@@ -330,7 +330,7 @@ async function handleGetOrdersById(req: Request): Promise<{
   }
 }
 
-async function handleEditOrder(req: Request): Promise<{
+async function handleEditOrder(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -364,7 +364,7 @@ async function handleEditOrder(req: Request): Promise<{
   }
 }
 
-async function handleCreateOrder(req: Request): Promise<{
+async function handleCreateOrder(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -383,7 +383,7 @@ async function handleCreateOrder(req: Request): Promise<{
   }
 }
 
-async function handleDeleteOrder(req: Request): Promise<{
+async function handleDeleteOrder(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -401,7 +401,7 @@ async function handleDeleteOrder(req: Request): Promise<{
   }
 }
 
-async function handleFinishOrder(req: Request): Promise<{
+async function handleFinishOrder(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -428,7 +428,7 @@ async function handleFinishOrder(req: Request): Promise<{
   }
 }
 
-async function handleRedoOrder(req: Request): Promise<{
+async function handleRedoOrder(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -457,7 +457,7 @@ async function handleRedoOrder(req: Request): Promise<{
   }
 }
 
-async function handleGetAllOrdersOfClient(req: Request): Promise<{
+async function handleGetAllOrdersOfClient(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -478,7 +478,7 @@ async function handleGetAllOrdersOfClient(req: Request): Promise<{
 }
 
 // QP = Quantity and Pending
-async function handleGetOrdersQP(req: Request): Promise<{
+async function handleGetOrdersQP(req: NextRequest): Promise<{
   data: string | OrderData[];
   status: number;
 }> {
@@ -539,7 +539,7 @@ async function handleGetOrdersQP(req: Request): Promise<{
 }
 
 // CD = Country Data
-async function handleGetOrdersCD(req: Request): Promise<{
+async function handleGetOrdersCD(req: NextRequest): Promise<{
   data: string | Record<string, CountryOrderData[]>;
   status: number;
 }> {
@@ -625,7 +625,7 @@ async function handleGetOrdersCD(req: Request): Promise<{
   }
 }
 
-async function handleGetOrdersStatus(req: Request): Promise<{
+async function handleGetOrdersStatus(req: NextRequest): Promise<{
   data: string | StatusOrderData[];
   status: number;
 }> {
@@ -678,7 +678,7 @@ async function handleGetOrdersStatus(req: Request): Promise<{
   }
 }
 
-async function handleGetOrdersByCountry(req: Request): Promise<{
+async function handleGetOrdersByCountry(req: NextRequest): Promise<{
   data: string | OrderDetails;
   status: number;
 }> {
@@ -733,7 +733,7 @@ async function handleGetOrdersByCountry(req: Request): Promise<{
 }
 
 // Function: handleGetOrdersByMonth
-async function handleGetOrdersByMonth(req: Request): Promise<{
+async function handleGetOrdersByMonth(req: NextRequest): Promise<{
   data: string | PaginatedData<ClientOrdersByMonth[]>;
   status: number;
 }> {
@@ -837,7 +837,7 @@ async function handleGetOrdersByMonth(req: Request): Promise<{
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
@@ -867,7 +867,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {

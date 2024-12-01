@@ -1,7 +1,5 @@
 'use client';
 
-import CallingStatusTd from '@/components/ExtendableTd';
-import Linkify from '@/components/Linkify';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
 import { formatDate } from '@/utility/date';

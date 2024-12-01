@@ -12,7 +12,7 @@ import {
 } from '@/utility/filterHelpers';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 dbConnect();
 
@@ -64,7 +64,7 @@ export type RegexFields = Extract<
   'country' | 'company_name' | 'category' | 'marketer_name' | 'prospect_status'
 >;
 
-async function handleGetTestOrdersTrend(req: Request): Promise<{
+async function handleGetTestOrdersTrend(req: NextRequest): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
@@ -132,7 +132,7 @@ async function handleGetTestOrdersTrend(req: Request): Promise<{
   }
 }
 
-async function handleGetReportsCount(req: Request): Promise<{
+async function handleGetReportsCount(req: NextRequest): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
@@ -210,7 +210,7 @@ async function handleGetReportsCount(req: Request): Promise<{
   }
 }
 
-async function handleGetClientsOnboard(req: Request): Promise<{
+async function handleGetClientsOnboard(req: NextRequest): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
@@ -273,7 +273,7 @@ async function handleGetClientsOnboard(req: Request): Promise<{
   }
 }
 
-async function handleGetReportsStatus(req: Request): Promise<{
+async function handleGetReportsStatus(req: NextRequest): Promise<{
   data: string | ReportCount;
   status: number;
 }> {
@@ -378,7 +378,7 @@ async function handleGetReportsStatus(req: Request): Promise<{
   }
 }
 
-async function handleGetAllMarketers(req: Request): Promise<{
+async function handleGetAllMarketers(req: NextRequest): Promise<{
   data: EmployeeDataType[] | string;
   status: number;
 }> {
@@ -395,7 +395,7 @@ async function handleGetAllMarketers(req: Request): Promise<{
   }
 }
 
-async function handleGetAllReports(req: Request): Promise<{
+async function handleGetAllReports(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -566,7 +566,7 @@ async function handleGetAllReports(req: Request): Promise<{
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
@@ -581,7 +581,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {

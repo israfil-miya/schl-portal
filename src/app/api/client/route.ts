@@ -9,7 +9,7 @@ import {
 } from '@/utility/filterHelpers';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 dbConnect();
 
 export interface RegexQuery {
@@ -29,7 +29,7 @@ export type RegexFields = Extract<
   'country' | 'client_code' | 'contact_person' | 'marketer'
 >;
 
-async function handleCreateClient(req: Request): Promise<{
+async function handleCreateClient(req: NextRequest): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
@@ -59,7 +59,7 @@ async function handleCreateClient(req: Request): Promise<{
   }
 }
 
-async function handleConvertToPermanent(req: Request): Promise<{
+async function handleConvertToPermanent(req: NextRequest): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
@@ -101,7 +101,7 @@ async function handleConvertToPermanent(req: Request): Promise<{
   }
 }
 
-async function handleGetAllClients(req: Request): Promise<{
+async function handleGetAllClients(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -174,7 +174,7 @@ async function handleGetAllClients(req: Request): Promise<{
   }
 }
 
-async function handleEditClient(req: Request): Promise<{
+async function handleEditClient(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -202,7 +202,7 @@ async function handleEditClient(req: Request): Promise<{
   }
 }
 
-async function handleGetClientByCode(req: Request): Promise<{
+async function handleGetClientByCode(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -225,7 +225,7 @@ async function handleGetClientByCode(req: Request): Promise<{
   }
 }
 
-async function handleGetClientById(req: Request): Promise<{
+async function handleGetClientById(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -246,7 +246,7 @@ async function handleGetClientById(req: Request): Promise<{
   }
 }
 
-async function handleDeleteClient(req: Request): Promise<{
+async function handleDeleteClient(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -275,7 +275,7 @@ async function handleDeleteClient(req: Request): Promise<{
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
@@ -299,7 +299,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {

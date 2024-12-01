@@ -1,9 +1,7 @@
 'use client';
 
 import Badge from '@/components/Badge';
-import ClickToCopy from '@/components/CopyText';
-import CallingStatusTd from '@/components/ExtendableTd';
-import Linkify from '@/components/Linkify';
+import ClickToCopy from '@/components/copyText';
 import { cn, fetchApi } from '@/lib/utils';
 import { formatDate, formatTime } from '@/utility/date';
 import {

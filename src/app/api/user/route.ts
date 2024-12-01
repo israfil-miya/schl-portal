@@ -3,7 +3,7 @@ import User, { UserDataType } from '@/models/Users';
 import { addIfDefined } from '@/utility/filterHelpers';
 import jwt from 'jsonwebtoken';
 import { headers } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 dbConnect();
 
 export interface RegexQuery {
@@ -16,7 +16,7 @@ export interface Query {
   $or?: { [key: string]: RegexQuery }[];
 }
 
-async function handleLogin(req: Request): Promise<{
+async function handleLogin(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -44,7 +44,7 @@ async function handleLogin(req: Request): Promise<{
   }
 }
 
-async function handleCreateUser(req: Request): Promise<{
+async function handleCreateUser(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -69,7 +69,7 @@ async function handleCreateUser(req: Request): Promise<{
   }
 }
 
-async function handleGetUserById(req: Request): Promise<{
+async function handleGetUserById(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -89,7 +89,7 @@ async function handleGetUserById(req: Request): Promise<{
   }
 }
 
-async function handleGetAllMarketers(req: Request): Promise<{
+async function handleGetAllMarketers(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -109,7 +109,7 @@ async function handleGetAllMarketers(req: Request): Promise<{
   }
 }
 
-async function handleGetAllUsers(req: Request): Promise<{
+async function handleGetAllUsers(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -188,7 +188,7 @@ async function handleGetAllUsers(req: Request): Promise<{
   }
 }
 
-async function handleChangePassword(req: Request): Promise<{
+async function handleChangePassword(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -213,7 +213,7 @@ async function handleChangePassword(req: Request): Promise<{
   }
 }
 
-async function handleDeleteUser(req: Request): Promise<{
+async function handleDeleteUser(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -232,7 +232,7 @@ async function handleDeleteUser(req: Request): Promise<{
   }
 }
 
-async function handleEditUser(req: Request): Promise<{
+async function handleEditUser(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
@@ -255,7 +255,7 @@ async function handleEditUser(req: Request): Promise<{
   }
 }
 
-async function handleVerifyUser(req: Request): Promise<{
+async function handleVerifyUser(req: NextRequest): Promise<{
   data: string | { token: string; redirect_path: string };
   status: number;
 }> {
@@ -285,7 +285,7 @@ async function handleVerifyUser(req: Request): Promise<{
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   let res: { data: string | Object; status: number };
   switch (getQuery(req).action) {
     case 'handle-login':
@@ -299,7 +299,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   let res: {
     data: any;
     status: number;

@@ -60,7 +60,7 @@ const TimeRemainingRenderer = (props: any) => {
   } else
     return (
       <Badge
-        className="bg-green-600 text-white hover:bg-green-600"
+        className="bg-green-600 text-white border-green-600"
         value={timeRemaining}
       />
     );

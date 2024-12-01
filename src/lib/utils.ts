@@ -1,10 +1,11 @@
-import { UserSessionType } from '@/auth';
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { isRedirectError } from 'next/dist/client/components/redirect';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import { NextRequest } from 'next/server';
+import { Readable } from 'stream';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
@@ -23,7 +24,7 @@ export const fetchApi = async (
   }
 };
 
-export const getQuery = (req: Request): { [key: string]: string } => {
+export const getQuery = (req: NextRequest): { [key: string]: string } => {
   const url = new URL(req.url);
   const query = Object.fromEntries(url.searchParams.entries());
   return query;
@@ -199,3 +200,29 @@ export const verifyCookie = async (
     return false;
   }
 };
+
+export function nodeStreamToWebStream(
+  stream: NodeJS.ReadableStream,
+): ReadableStream<any> {
+  return new ReadableStream({
+    start(controller) {
+      stream.on('data', chunk => {
+        controller.enqueue(chunk);
+      });
+      stream.on('end', () => {
+        controller.close();
+      });
+      stream.on('error', err => {
+        controller.error(err);
+      });
+    },
+    cancel() {
+      if (typeof (stream as Readable).destroy === 'function') {
+        (stream as Readable).destroy();
+      } else {
+        stream.unpipe();
+        stream.pause();
+      }
+    },
+  });
+}
