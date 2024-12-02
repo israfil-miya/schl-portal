@@ -1,47 +1,116 @@
-import ExcelJS from 'exceljs';
+import ExcelJS, {
+  Alignment,
+  Borders,
+  CellFormulaValue,
+  CellRichTextValue,
+  Fill,
+  Font,
+  Worksheet,
+} from 'exceljs';
+import moment from 'moment-timezone';
 
-async function getFileFromUrl(url, name, defaultType = 'image/png') {
+export interface CustomerDataType {
+  client_name: string;
+  client_code: string;
+  contact_person: string;
+  address: string;
+  contact_number: string;
+  email: string;
+  prices: string;
+  invoice_number: string;
+  currency: string;
+}
+export interface VendorDataType {
+  company_name: string;
+  contact_person: string;
+  street_address: string;
+  city: string;
+  contact_number: string;
+  email: string;
+}
+
+export interface BillDataType {
+  date: string;
+  job_name: string;
+  quantity: number;
+  total: () => number;
+  unit_price: number;
+}
+
+export interface InvoiceDataType {
+  vendor: VendorDataType;
+  customer: CustomerDataType;
+}
+
+async function getFileFromUrl(
+  url: string,
+  name: string,
+  defaultType: string = 'image/png',
+): Promise<File> {
   const response = await fetch(url);
   const data = await response.blob();
   return new File([data], name, {
     type: data.type || defaultType,
   });
 }
-const getTextWidth = (text, font) => {
+
+const getTextWidth = (text: string, font?: string): number => {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Failed to get canvas context');
+  }
 
   context.font = font || getComputedStyle(document.body).font;
-
   return context.measureText(text).width;
 };
 
 async function addHeader(
-  sheet,
-  cell,
-  value,
-  font,
-  alignment,
-  borderStyle,
-  fillType,
-  fillOptions,
-) {
+  sheet: Worksheet,
+  cell: string,
+  value?: string | number | CellRichTextValue | CellFormulaValue,
+  font?: Partial<Font>,
+  alignment?: Partial<Alignment>,
+  borderStyle?: Partial<Borders>,
+  fillType?: 'pattern' | 'gradient',
+  fillOptions?:
+    | {
+        pattern?:
+          | 'solid'
+          | 'darkVertical'
+          | 'darkGray'
+          | 'lightGray'
+          | 'lightVertical';
+        fgColor?: { argb: string };
+        bgColor?: { argb: string };
+      }
+    | {
+        gradient: 'angle' | 'path';
+        degree?: number;
+        stops: { position: number; color: { argb: string } }[];
+      },
+): Promise<void> {
   sheet.mergeCells(cell);
 
-  if (font) sheet.getCell(cell).font = font;
-  if (alignment) sheet.getCell(cell).alignment = alignment;
-  if (value) sheet.getCell(cell).value = value;
-  if (borderStyle) sheet.getCell(cell).border = borderStyle;
+  const targetCell = sheet.getCell(cell);
+
+  if (font) targetCell.font = font;
+  if (alignment) targetCell.alignment = alignment;
+  if (value) targetCell.value = value;
+  if (borderStyle) targetCell.border = borderStyle;
 
   if (fillType && fillOptions) {
-    sheet.getCell(cell).fill = {
+    targetCell.fill = {
       type: fillType,
       ...fillOptions,
-    };
+    } as Fill; // Explicitly cast to the `Fill` type to satisfy TypeScript.
   }
 }
 
-export default async function createInvoice(invoiceData, billData) {
+export default async function createInvoice(
+  invoiceData: InvoiceDataType,
+  billData: BillDataType[],
+): Promise<File | Boolean> {
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('INVOICE', {
@@ -61,7 +130,7 @@ export default async function createInvoice(invoiceData, billData) {
     // VALUES
     const contactDetails = {
       vendor: [
-        invoiceData.vendor.comapny_name,
+        invoiceData.vendor.company_name,
         invoiceData.vendor.contact_person,
         invoiceData.vendor.street_address,
         invoiceData.vendor.city,
@@ -100,19 +169,15 @@ export default async function createInvoice(invoiceData, billData) {
     const currencySymbol = invoiceData.customer.currency;
     const salesTax = 0;
     const discount = 0;
-    const datetoday = new Date().toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    const todayDate = moment().format('MMMM D, YYYY');
     const invoiceNo = invoiceData.customer.invoice_number;
 
-    // ensure atleast 10 rows in bill
+    // ensure at least 10 rows in bill
     if (billData.length <= 10) {
       for (let i = billData.length; i < 10; i++)
         billData.push({
-          date: undefined,
-          job_name: undefined,
+          date: '',
+          job_name: '',
           quantity: 0,
           total: () => 0,
           unit_price: 0,
@@ -130,17 +195,26 @@ export default async function createInvoice(invoiceData, billData) {
       '/images/NEW-SCH-logo-text-grey.png',
       'logo.png',
     );
-    const logoDataUrl = await new Promise((resolve, reject) => {
+
+    const logoDataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = e => resolve(e.target.result);
+      reader.onload = e => {
+        if (typeof e.target?.result === 'string') {
+          resolve(e.target.result); // Ensure it's a string (data URL).
+        } else {
+          reject(new Error('Unexpected result type from FileReader (logo).'));
+        }
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-    const imageId2 = workbook.addImage({
-      base64: logoDataUrl,
+
+    const logoImage = workbook.addImage({
+      base64: logoDataUrl || '',
       extension: 'png',
     });
-    sheet.addImage(imageId2, logoCell);
+
+    sheet.addImage(logoImage, logoCell);
 
     // HEADING
     addHeader(
@@ -161,7 +235,7 @@ export default async function createInvoice(invoiceData, billData) {
     addHeader(
       sheet,
       'E6:H6',
-      'DATE: ' + datetoday,
+      'DATE: ' + todayDate,
       {
         name: 'Arial',
         size: 10,
@@ -253,6 +327,7 @@ export default async function createInvoice(invoiceData, billData) {
       ref: `A${contactTableHeadingRow}:H${contactTableHeadingRow}`,
       rules: [
         {
+          priority: 1,
           type: 'expression',
           formulae: ['true'],
           style: {
@@ -268,9 +343,7 @@ export default async function createInvoice(invoiceData, billData) {
     });
 
     let contactTableLoopEndIndex = 0;
-
     let customerContactRowNeeded = [];
-
     let lastEnd = contactTableHeadingRow + 1;
 
     for (
@@ -427,6 +500,7 @@ export default async function createInvoice(invoiceData, billData) {
       ref: `A${contactTableHeadingRow}:H${afterContactTableRowNumber}`,
       rules: [
         {
+          priority: 1,
           type: 'expression',
           formulae: ['true'],
           style: {
@@ -1137,10 +1211,8 @@ export default async function createInvoice(invoiceData, billData) {
     window.URL.revokeObjectURL(url);
 
     return new File([blob], fileName, { type: blob.type });
-  } catch {
-    error => {
-      console.error('Error generating invoice: ', error);
-      return false;
-    };
+  } catch (e) {
+    console.error('Error generating invoice: ', e);
+    return false;
   }
 }
