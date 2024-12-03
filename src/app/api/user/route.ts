@@ -48,9 +48,8 @@ async function handleCreateUser(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
-  const data = await req.json();
-
   try {
+    const data = await req.json();
     const docCount = await User.countDocuments({ name: data.name });
 
     if (docCount > 0) {

@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
-// Interface for Approval document
-export interface Approval extends mongoose.Document {
+interface ApprovalType {
   req_type: string;
   req_by: string;
   checked_by: string;
@@ -30,12 +29,28 @@ export interface Approval extends mongoose.Document {
   is_lead?: boolean;
   lead_withdrawn?: boolean;
 
+  // Users Database Entry
+  real_name: string;
+  provided_name?: string;
+  name: string;
+  password: string;
+  role: string;
+  comment: string;
+
   // id for deletion
-  id: string;
+  id: string | null;
 }
 
-// Create Approval schema with type annotations for properties
-const ApprovalSchema = new mongoose.Schema<Approval>(
+export type ApprovalDataType = ApprovalType & {
+  readonly _id?: mongoose.Types.ObjectId | string;
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
+  readonly __v?: number;
+};
+
+type ApprovalDocType = mongoose.Document & ApprovalType;
+
+const ApprovalSchema = new mongoose.Schema<ApprovalDocType>(
   {
     req_type: { type: String, required: [true, 'Request type is not given'] },
     req_by: { type: String, required: [true, 'Request by is not given'] },
@@ -43,39 +58,46 @@ const ApprovalSchema = new mongoose.Schema<Approval>(
     is_rejected: { type: Boolean, default: false },
 
     // Reports Database Entry
-    marketer_id: { type: String, default: '' },
-    marketer_name: { type: String, default: '' },
-    calling_date: { type: String, default: '' },
-    followup_date: { type: String, default: '' },
-    country: { type: String, default: '' },
-    website: { type: String, default: '' },
-    category: { type: String, default: '' },
-    company_name: { type: String, default: '' },
-    contact_person: { type: String, default: '' },
-    contact_number: { type: String, default: '' },
-    email_address: { type: String, default: '' },
-    calling_status: { type: String, default: '' },
-    linkedin: { type: String, default: '' },
+    marketer_id: { type: String },
+    marketer_name: { type: String },
+    calling_date: { type: String },
+    followup_date: { type: String },
+    country: { type: String },
+    website: { type: String },
+    category: { type: String },
+    company_name: { type: String },
+    contact_person: { type: String },
+    contact_number: { type: String },
+    email_address: { type: String },
+    calling_status: { type: String },
+    linkedin: { type: String },
     calling_date_history: { type: [String] },
-    updated_by: { type: String, default: null },
-    followup_done: { type: Boolean, default: false },
-    is_test: { type: Boolean, default: false },
-    is_prospected: { type: Boolean, default: false },
-    prospect_status: { type: String, default: '' },
-    is_lead: { type: Boolean, default: false },
-    lead_withdrawn: { type: Boolean, default: false },
+    updated_by: { type: String },
+    followup_done: { type: Boolean },
+    is_test: { type: Boolean },
+    is_prospected: { type: Boolean },
+    prospect_status: { type: String },
+    is_lead: { type: Boolean },
+    lead_withdrawn: { type: Boolean },
 
-    id: { type: String, required: [true, 'id is not given'] }, // Ensure a unique identifier
+    // Users Database Entry
+    name: { type: String },
+    real_name: { type: String },
+    provided_name: { type: String },
+    password: { type: String },
+    role: { type: String },
+    comment: { type: String },
+
+    // id for deletion
+    id: { type: String, default: null }, // Ensure a unique identifier
   },
   {
-    timestamps: true, // Add timestamps for created and updated at fields
+    timestamps: true,
   },
 );
 
-// Define Approval model based on schema, using generics for type safety
 const Approval =
-  (mongoose.models.Approval as mongoose.Model<Approval>) ||
-  mongoose.model<Approval>('Approval', ApprovalSchema);
+  (mongoose.models.Approval as mongoose.Model<ApprovalDocType>) ||
+  mongoose.model<ApprovalDocType>('Approval', ApprovalSchema);
 
-// Export the Approval model
 export default Approval;

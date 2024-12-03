@@ -4,6 +4,11 @@ import {
   RegexQuery as client_RegexQuery,
 } from '@/app/api/client/route';
 import {
+  Query as invoice_Query,
+  RegexFields as invoice_RegexFields,
+  RegexQuery as invoice_RegexQuery,
+} from '@/app/api/invoice/route';
+import {
   Query as order_Query,
   RegexFields as order_RegexFields,
   RegexQuery as order_RegexQuery,
@@ -15,11 +20,41 @@ import {
   RegexQuery as report_RegexQuery,
 } from '@/app/api/report/route';
 
+import {
+  Query as approval_Query,
+  RegexFields as approval_RegexFields,
+  RegexQuery as approval_RegexQuery,
+} from '@/app/api/approval/route';
+
+import {
+  Query as notice_Query,
+  RegexFields as notice_RegexFields,
+  RegexQuery as notice_RegexQuery,
+} from '@/app/api/notice/route';
+
 import { escapeRegex } from '@/lib/utils';
 
-type RegexQuery = report_RegexQuery | client_RegexQuery | order_RegexQuery;
-type Query = report_Query | client_Query | order_Query;
-type RegexFields = report_RegexFields | client_RegexFields | order_RegexFields;
+type RegexQuery =
+  | report_RegexQuery
+  | client_RegexQuery
+  | order_RegexQuery
+  | invoice_RegexQuery
+  | approval_RegexQuery
+  | notice_RegexQuery;
+type Query =
+  | report_Query
+  | client_Query
+  | order_Query
+  | invoice_Query
+  | approval_Query
+  | notice_Query;
+type RegexFields =
+  | report_RegexFields
+  | client_RegexFields
+  | order_RegexFields
+  | invoice_RegexFields
+  | approval_RegexFields
+  | notice_RegexFields;
 type BooleanFields = report_BooleanFields;
 
 // Helper function to create a regex query

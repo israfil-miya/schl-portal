@@ -263,6 +263,7 @@ export default async function createInvoice(
     );
 
     let contactTableHeadingRow = 10;
+
     // CONTACT TABLE HEADING
     addHeader(
       sheet,
@@ -377,7 +378,7 @@ export default async function createInvoice(
     console.log('customerContactRowNeeded', customerContactRowNeeded);
     console.log('contactTableLoopEndIndex', contactTableLoopEndIndex);
 
-    //  // CONTACT TABLE
+    // CONTACT TABLE
     for (
       let i = 0;
       i <=
