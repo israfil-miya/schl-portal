@@ -314,9 +314,9 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
 
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
-      {!loading &&
-        (users?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap text-base">
+      <div className="table-responsive text-nowrap text-base">
+        {!loading &&
+          (users?.items?.length !== 0 ? (
             <table className="table border table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
@@ -335,7 +335,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                     <td className="text-wrap">{user.real_name}</td>
                     <td className="text-wrap">{user.name}</td>
                     <td
-                      className="text-center"
+                      // className="text-center"
                       style={{ verticalAlign: 'middle' }}
                     >
                       <Badge value={user.role} className="text-sm uppercase" />
@@ -380,14 +380,18 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                 ))}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <tr key={0}>
-            <td colSpan={16} className=" align-center text-center">
-              No Users To Show.
-            </td>
-          </tr>
-        ))}
+          ) : (
+            <table className="table border table-bordered table-striped">
+              <tbody>
+                <tr key={0}>
+                  <td className="align-center text-center text-wrap">
+                    No Users To Show.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          ))}
+      </div>
       <style jsx>
         {`
           th,

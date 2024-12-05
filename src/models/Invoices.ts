@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 export interface InvoiceType {
-  client_id: string;
   client_code: string;
   created_by: string;
   time_period: { fromDate: string; toDate: string };
@@ -20,9 +19,6 @@ type InvoiceDocType = mongoose.Document & InvoiceType;
 
 const InvoiceSchema = new mongoose.Schema<InvoiceDocType>(
   {
-    client_id: {
-      type: String,
-    },
     client_code: {
       type: String,
     },

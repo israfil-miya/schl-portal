@@ -1,6 +1,7 @@
 import { dbConnect, getQuery } from '@/lib/utils';
 import Client from '@/models/Clients';
 import Invoice, { InvoiceDataType } from '@/models/Invoices';
+import { toISODate } from '@/utility/date';
 import { addRegexField } from '@/utility/filterHelpers';
 import { startSession } from 'mongoose';
 import { headers } from 'next/headers';
@@ -50,8 +51,10 @@ async function handleGetAllInvoices(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && {
+          $lte: toISODate(toDate, 23, 59, 59, 999),
+        }),
       };
     }
 
@@ -59,8 +62,8 @@ async function handleGetAllInvoices(req: NextRequest): Promise<{
       delete query.createdAt;
     }
 
-    addRegexField(query, 'invoice_number', invoiceNumber, true);
-    addRegexField(query, 'client_code', clientCode, true);
+    addRegexField(query, 'invoice_number', invoiceNumber);
+    addRegexField(query, 'client_code', clientCode);
 
     console.log(query);
 
@@ -162,22 +165,23 @@ async function handleDeleteInvoice(req: NextRequest): Promise<{
 }> {
   try {
     const headersList = await headers();
-    const file_name = headersList.get('file_name');
+    const invoice_number = headersList.get('invoice_number');
 
-    if (!file_name) {
-      return { data: 'File name is required', status: 400 };
+    if (!invoice_number) {
+      return { data: 'Invoice number is required', status: 400 };
     }
 
     let resData = await Invoice.findOneAndDelete({
-      invoice_number: file_name
-        .split('invoice_studioclickhouse_')[1]
-        .replace('.xlsx', ''),
+      invoice_number: invoice_number,
     });
 
     if (resData) {
       return { data: 'Deleted the invoice successfully', status: 200 };
     } else {
-      return { data: 'Unable to delete the invoice', status: 400 };
+      return {
+        data: 'Unable to delete the invoice',
+        status: 400,
+      };
     }
   } catch (e) {
     console.error(e);

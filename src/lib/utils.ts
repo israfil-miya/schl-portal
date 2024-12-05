@@ -5,7 +5,6 @@ import mongoose from 'mongoose';
 import { isRedirectError } from 'next/dist/client/components/redirect';
 import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import { NextRequest } from 'next/server';
-import { Readable } from 'stream';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
@@ -200,29 +199,3 @@ export const verifyCookie = async (
     return false;
   }
 };
-
-export function nodeStreamToWebStream(
-  stream: NodeJS.ReadableStream,
-): ReadableStream<any> {
-  return new ReadableStream({
-    start(controller) {
-      stream.on('data', chunk => {
-        controller.enqueue(chunk);
-      });
-      stream.on('end', () => {
-        controller.close();
-      });
-      stream.on('error', err => {
-        controller.error(err);
-      });
-    },
-    cancel() {
-      if (typeof (stream as Readable).destroy === 'function') {
-        (stream as Readable).destroy();
-      } else {
-        stream.unpipe();
-        stream.pause();
-      }
-    },
-  });
-}

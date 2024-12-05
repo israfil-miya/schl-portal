@@ -6,6 +6,7 @@ import Employee from '@/models/Employees';
 import Order from '@/models/Orders';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
+import { toISODate } from '@/utility/date';
 import { addRegexField } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
@@ -119,8 +120,8 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 

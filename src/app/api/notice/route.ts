@@ -1,5 +1,6 @@
 import { dbConnect, getQuery } from '@/lib/utils';
 import Notice, { NoticeDataType } from '@/models/Notices';
+import { toISODate } from '@/utility/date';
 import { addRegexField } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
@@ -48,8 +49,8 @@ async function handleGetAllNotices(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 

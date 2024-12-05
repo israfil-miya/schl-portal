@@ -16,13 +16,27 @@ export const formatDate = (dateString: string | Date) => {
   return moment(dateString).format("Do MMM. 'YY");
 };
 
-export const getTimeFromISODate = (isoDate: string): string => {
-  if (!isoDate) return '';
-  if (moment(isoDate, moment.ISO_8601, true).isValid()) {
-    return moment(isoDate).format('hh:mm A');
-  } else {
-    return '';
+export const toISODate = (
+  dateStr: string,
+  hours = 0,
+  minutes = 0,
+  seconds = 0,
+  milliseconds = 0,
+): Date => {
+  if (!dateStr) {
+    return moment().startOf('day').toDate(); // Default to the start of today if `dateStr` is empty
   }
+
+  const isoDate = moment
+    .utc(dateStr) // Parse dateStr in UTC
+    .set({
+      hour: hours,
+      minute: minutes,
+      second: seconds,
+      millisecond: milliseconds,
+    }); // Set time
+
+  return isoDate.toDate(); // Convert to JavaScript Date object
 };
 
 export const calculateTimeDifference = (

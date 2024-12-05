@@ -8,6 +8,7 @@ import {
   getDatesInRange,
   getLast12Months,
   getMonthRange,
+  toISODate,
 } from '@/utility/date';
 import {
   addIfDefined,
@@ -188,8 +189,8 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 
@@ -492,8 +493,8 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 
@@ -552,8 +553,8 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 
@@ -695,8 +696,8 @@ async function handleGetOrdersByCountry(req: NextRequest): Promise<{
     if (fromDate || toDate) {
       query.createdAt = {};
       query.createdAt = {
-        ...(fromDate && { $gte: fromDate }),
-        ...(toDate && { $lte: toDate }),
+        ...(fromDate && { $gte: toISODate(fromDate) }),
+        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 

@@ -1,10 +1,8 @@
 import { FtpConnection, getConnection, releaseConnection } from '@/lib/ftp';
 import { getQuery } from '@/lib/utils';
 // import { Mime } from 'mime';
-import { nodeStreamToWebStream } from '@/lib/utils';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { Readable } from 'stream';
 
 async function handleInsertFile(req: NextRequest): Promise<{
   data: string;
@@ -149,21 +147,17 @@ export async function GET(req: NextRequest) {
     case 'download-file':
       res = await handleDownloadFile(req);
 
-      if (res.status === 200 && res.data instanceof Readable) {
+      if (res.status === 200) {
         const headersList = await headers();
         const file_name = headersList.get('file_name');
-        const stream = res.data as NodeJS.ReadableStream;
+        const stream = res.data as BodyInit;
 
-        const webReadableStream = nodeStreamToWebStream(stream);
-
-        const response = new NextResponse(webReadableStream);
-
-        response.headers.set(
-          'Content-Disposition',
-          `attachment; filename="${file_name}"`,
-        );
-        response.headers.set('Content-Type', 'application/octet-stream');
-        return response;
+        return new Response(stream, {
+          headers: {
+            'Content-Disposition': `attachment; filename="${file_name}"`,
+            'Content-Type': 'application/octet-stream',
+          },
+        });
       } else {
         return NextResponse.json(res.data, { status: res.status });
       }

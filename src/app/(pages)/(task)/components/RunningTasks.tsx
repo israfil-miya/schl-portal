@@ -57,92 +57,92 @@ function RunningTasks() {
   return (
     <>
       <div className="table-responsive text-lg">
-        <table className="table table-hover border table-bordered">
-          <thead>
-            <tr className="bg-gray-50">
-              <th>S/N</th>
-              <th>Client Code</th>
-              <th>Folder</th>
-              <th>NOF</th>
-              <th>Download</th>
-              <th>Delivery</th>
-              <th>Remaining</th>
-              <th>Task</th>
-              <th>E.T</th>
-              <th>Production</th>
-              <th>QC1</th>
-              <th>Folder Location</th>
-              <th>Type</th>
-              <th>Comments</th>
-            </tr>
-          </thead>
-          <tbody className="text-base">
-            {!loading ? (
-              <>
-                {orders?.map((order, index) => {
-                  return (
-                    <tr key={String(order._id)}>
-                      <td>{index + 1}</td>
-                      <td>{order.client_code}</td>
+        {orders?.length !== 0 ? (
+          <table className="table table-hover border table-bordered">
+            <thead>
+              <tr className="bg-gray-50">
+                <th>S/N</th>
+                <th>Client Code</th>
+                <th>Folder</th>
+                <th>NOF</th>
+                <th>Download</th>
+                <th>Delivery</th>
+                <th>Remaining</th>
+                <th>Task</th>
+                <th>E.T</th>
+                <th>Production</th>
+                <th>QC1</th>
+                <th>Folder Location</th>
+                <th>Type</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody className="text-base">
+              {orders?.map((order, index) => (
+                <tr key={String(order._id)}>
+                  <td>{index + 1}</td>
+                  <td>{order.client_code}</td>
 
-                      <td className="text-pretty">{order.folder}</td>
-                      <td>{order.quantity}</td>
-                      <td>
-                        {order.download_date
-                          ? formatDate(order.download_date)
-                          : null}
-                      </td>
-                      <td>
-                        {order.download_date
-                          ? formatDate(order.download_date)
-                          : null}
-                        {' | '}
-                        {order.delivery_bd_time
-                          ? formatTime(order.delivery_bd_time)
-                          : null}
-                      </td>
+                  <td className="text-pretty">{order.folder}</td>
+                  <td>{order.quantity}</td>
+                  <td>
+                    {order.download_date
+                      ? formatDate(order.download_date)
+                      : null}
+                  </td>
+                  <td>
+                    {order.download_date
+                      ? formatDate(order.download_date)
+                      : null}
+                    {' | '}
+                    {order.delivery_bd_time
+                      ? formatTime(order.delivery_bd_time)
+                      : null}
+                  </td>
 
-                      <td
-                        className="uppercase text-nowrap"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <TimeRemainingRenderer data={order} />
-                      </td>
+                  <td
+                    className="uppercase text-nowrap"
+                    style={{ verticalAlign: 'middle' }}
+                  >
+                    <TimeRemainingRenderer data={order} />
+                  </td>
 
-                      <td
-                        className="uppercase text-wrap"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        {order.task?.split('+').map((task, index) => {
-                          return <Badge key={index} value={task} />;
-                        })}
-                      </td>
-                      <td>{order.et}</td>
-                      <td>{order.production}</td>
-                      <td>{order.qc1}</td>
-                      <td>
-                        <ClickToCopy text={order.folder_path} />
-                      </td>
-                      <td
-                        className="uppercase text-wrap"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <Badge value={order.type} />
-                      </td>
-                      <ExtendableTd data={order.comment} />
-                    </tr>
-                  );
-                })}
-              </>
-            ) : (
+                  <td
+                    className="uppercase text-wrap"
+                    style={{ verticalAlign: 'middle' }}
+                  >
+                    {order.task?.split('+').map((task, index) => {
+                      return <Badge key={index} value={task} />;
+                    })}
+                  </td>
+                  <td>{order.et}</td>
+                  <td>{order.production}</td>
+                  <td>{order.qc1}</td>
+                  <td>
+                    <ClickToCopy text={order.folder_path} />
+                  </td>
+                  <td
+                    className="uppercase text-wrap"
+                    style={{ verticalAlign: 'middle' }}
+                  >
+                    <Badge value={order.type} />
+                  </td>
+                  <ExtendableTd data={order.comment} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <table className="table border table-bordered table-striped">
+            <tbody>
               <tr key={0}>
-                <td colSpan={5} className="align-center text-center">
-                  Loading...
+                <td className="align-center text-center text-wrap">
+                  No Running Tasks To Show.
                 </td>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        )}
       </div>
 
       <style jsx>

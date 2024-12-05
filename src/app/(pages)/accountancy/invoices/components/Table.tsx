@@ -1,29 +1,36 @@
 'use client';
 
+import Badge from '@/components/Badge';
 import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
-import { UserDataType } from '@/models/Users';
+import { EmployeeDataType } from '@/models/Employees';
 
-import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
+import { formatDate } from '@/utility/date';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CirclePlus,
+  CloudDownload,
+} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ClientDataType, validationSchema } from '../schema';
+import { InvoiceDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
 
-type ClientsState = {
+type InvoicesState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: ClientDataType[];
+  items: InvoiceDataType[];
 };
 
-const Table = () => {
-  const [clients, setClients] = useState<ClientsState>({
+const Table: React.FC = props => {
+  const [invoices, setInvoices] = useState<InvoicesState>({
     pagination: {
       count: 0,
       pageCount: 0,
@@ -45,20 +52,19 @@ const Table = () => {
   const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
-    marketerName: '',
     clientCode: '',
-    contactPerson: '',
-    countryName: '',
+    invoiceNumber: '',
+    fromDate: '',
+    toDate: '',
   });
 
-  const [marketerNames, setMarketerNames] = useState<string[]>([]);
-
-  async function getAllClients() {
+  async function getAllInvoices() {
     try {
       // setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
+        process.env.NEXT_PUBLIC_BASE_URL +
+        '/api/invoice?action=get-all-invoices';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -69,8 +75,8 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          staleClient: true,
-          regularClient: false,
+          staleInvoice: true,
+          regularInvoice: false,
           test: false,
         }),
       };
@@ -78,24 +84,25 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setClients(response.data as ClientsState);
+        setInvoices(response.data as InvoicesState);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving clients data');
+      toast.error('An error occurred while retrieving invoices data');
     } finally {
       setLoading(false);
     }
   }
 
-  async function getAllClientsFiltered() {
+  async function getAllInvoicesFiltered() {
     try {
       // setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
+        process.env.NEXT_PUBLIC_BASE_URL +
+        '/api/invoice?action=get-all-invoices';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -113,118 +120,116 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setClients(response.data as ClientsState);
+        setInvoices(response.data as InvoicesState);
         setIsFiltered(true);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving clients data');
+      toast.error('An error occurred while retrieving invoices data');
     } finally {
       setLoading(false);
     }
     return;
   }
 
-  async function deleteClient(clientId: string, reqBy: string) {
+  async function deleteInvoice(invoiceNumber: string) {
     try {
-      let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/invoice?action=delete-invoice';
       let options: {} = {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          invoice_number: invoiceNumber,
         },
-        body: JSON.stringify({
-          req_type: 'Client Delete',
-          req_by: reqBy,
-          id: clientId,
-        }),
       };
 
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        toast.success('Request sent for approval');
+        const ftpDeleteConfirmation = confirm(
+          'Delete from the FTP server too?',
+        );
+        if (ftpDeleteConfirmation) {
+          let ftp_url: string =
+            process.env.NEXT_PUBLIC_BASE_URL + '/api/ftp?action=delete-file';
+          let ftp_options: {} = {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              folder_name: 'invoice',
+              file_name: 'invoice_studioclickhouse_' + invoiceNumber + '.xlsx',
+            },
+          };
+
+          let ftp_response = await fetchApi(ftp_url, ftp_options);
+          if (ftp_response.ok) {
+            toast.success('Deleted the invoice from FTP server');
+          } else {
+            toast.error(ftp_response.data as string);
+          }
+        } else {
+          toast.success(response.data as string);
+        }
+        if (!isFiltered) await getAllInvoices();
+        else await getAllInvoicesFiltered();
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while sending request for approval');
+      toast.error('An error occurred while deleting the invoice');
     }
     return;
   }
 
-  async function getAllMarketers() {
+  async function downloadFile(invoiceNumber: string) {
+    const toastId = toast.info('Triggering the download...');
     try {
+      const fileName = 'invoice_studioclickhouse_' + invoiceNumber + '.xlsx';
+
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/ftp?action=download-file';
       let options: {} = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          folder_name: 'invoice',
+          file_name: fileName,
         },
       };
 
-      let response = await fetchApi(url, options);
+      let response = await fetch(url, options);
 
       if (response.ok) {
-        let marketers = response.data as UserDataType[];
-        let marketerNames = marketers.map(marketer => marketer.provided_name!);
-        setMarketerNames(marketerNames);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        toast.success('Download triggered successfully', {
+          id: toastId,
+        });
       } else {
-        toast.error(response.data as string);
+        toast.error('Error downloading the invoice');
+        toast.error('Unable to trigger the download', {
+          id: toastId,
+        });
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving marketers data');
-    }
-  }
-
-  async function editClient(editedClientData: ClientDataType) {
-    try {
-      setLoading(true);
-      const parsed = validationSchema.safeParse(editedClientData);
-
-      if (!parsed.success) {
-        console.error(parsed.error.issues.map(issue => issue.message));
-        toast.error('Invalid form data');
-        return;
-      }
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=edit-client';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          updated_by: session?.user.real_name,
-        },
-        body: JSON.stringify(parsed.data),
-      };
-
-      const response = await fetchApi(url, options);
-
-      if (response.ok) {
-        toast.success('Updated the client data');
-
-        if (!isFiltered) await getAllClients();
-        else await getAllClientsFiltered();
-      } else {
-        toast.error(response.data as string);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while updating the client');
-    } finally {
-      setLoading(false);
+      toast.dismiss(toastId);
+      toast.error('An error occurred while initializing the download');
     }
   }
 
   useEffect(() => {
-    getAllClients();
-    getAllMarketers();
+    getAllInvoices();
   }, []);
 
   function handlePrevious() {
@@ -243,24 +248,24 @@ const Table = () => {
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
-      if (clients?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllClients();
-      else getAllClientsFiltered();
+      if (invoices?.pagination?.pageCount == 1) return;
+      if (!isFiltered) getAllInvoices();
+      else getAllInvoicesFiltered();
     }
     prevPage.current = page;
   }, [page]);
 
   useEffect(() => {
-    if (clients?.pagination?.pageCount !== undefined) {
+    if (invoices?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllClientsFiltered();
+        if (!isFiltered) getAllInvoicesFiltered();
       }
-      if (clients) setPageCount(clients?.pagination?.pageCount);
-      prevPageCount.current = clients?.pagination?.pageCount;
+      if (invoices) setPageCount(invoices?.pagination?.pageCount);
+      prevPageCount.current = invoices?.pagination?.pageCount;
       prevPage.current = 1;
     }
-  }, [clients?.pagination?.pageCount]);
+  }, [invoices?.pagination?.pageCount]);
 
   useEffect(() => {
     // Reset to first page when itemPerPage changes
@@ -268,8 +273,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllClients();
-    else getAllClientsFiltered();
+    if (!isFiltered) getAllInvoices();
+    else getAllInvoicesFiltered();
   }, [itemPerPage]);
 
   return (
@@ -278,12 +283,13 @@ const Table = () => {
         <button
           onClick={() =>
             router.push(
-              process.env.NEXT_PUBLIC_BASE_URL + '/admin/clients/create-client',
+              process.env.NEXT_PUBLIC_BASE_URL +
+                '/admin/invoices/create-invoice',
             )
           }
           className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
         >
-          Add new client
+          Add new invoice
           <CirclePlus size={18} />
         </button>
         <div className="items-center flex gap-2">
@@ -302,7 +308,7 @@ const Table = () => {
               className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
             >
               <label>
-                Page <b>{clients?.items?.length !== 0 ? page : 0}</b> of{' '}
+                Page <b>{invoices?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
@@ -330,10 +336,9 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllClientsFiltered}
+            submitHandler={getAllInvoicesFiltered}
             setFilters={setFilters}
             filters={filters}
-            marketerNames={marketerNames}
             className="w-full justify-between sm:w-auto"
           />
         </div>
@@ -343,33 +348,58 @@ const Table = () => {
 
       <div className="table-responsive text-nowrap text-base">
         {!loading &&
-          (clients?.items?.length !== 0 ? (
+          (invoices?.items?.length !== 0 ? (
             <table className="table border table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
-                  <th>S/N</th>
+                  <th>Date</th>
+                  <th>Invoice No.</th>
                   <th>Client Code</th>
-                  <th>Client Name</th>
-                  <th>Marketer</th>
-                  <th>Contact Person</th>
-                  <th>Email</th>
-                  <th>Country</th>
-                  <th>Prices</th>
+                  <th>Creator</th>
+                  <th>Time Period</th>
+                  <th>Orders</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {clients?.items?.map((client, index) => (
-                  <tr key={String(client._id)}>
-                    <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                    <td className="text-wrap">{client.client_code}</td>
-
-                    <td className="text-wrap">{client.client_name}</td>
-                    <td className="text-wrap">{client.marketer}</td>
-                    <td className="text-wrap">{client.contact_person}</td>
-                    <td className="text-wrap">{client.email}</td>
-                    <td className="text-wrap">{client.country}</td>
-                    <ExtendableTd data={client.prices || ''} />
+                {invoices?.items?.map((invoice, index) => (
+                  <tr key={String(invoice._id)}>
+                    <td className="text-wrap">
+                      {formatDate(invoice.createdAt!)}
+                    </td>
+                    <td
+                      // className="text-center"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <Badge
+                        value={invoice.invoice_number}
+                        className="text-sm uppercase"
+                      />
+                    </td>
+                    <td
+                      // className="text-center"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <Badge
+                        value={invoice.client_code}
+                        className="text-sm uppercase"
+                      />
+                    </td>
+                    <td className="text-wrap">{invoice.created_by}</td>
+                    <td className="text-wrap flex gap-2">
+                      <span>
+                        {invoice.time_period?.fromDate
+                          ? formatDate(invoice.time_period.fromDate)
+                          : 'X'}
+                      </span>
+                      <span className="font-bold">—</span>{' '}
+                      <span>
+                        {invoice.time_period?.toDate
+                          ? formatDate(invoice.time_period.toDate)
+                          : 'X'}
+                      </span>
+                    </td>
+                    <td className="text-wrap">{invoice.total_orders}</td>
 
                     <td
                       className="text-center"
@@ -378,16 +408,15 @@ const Table = () => {
                       <div className="inline-block">
                         <div className="flex gap-2">
                           <DeleteButton
-                            clientData={client}
-                            submitHandler={deleteClient}
+                            invoiceData={invoice}
+                            submitHandler={deleteInvoice}
                           />
-
-                          <EditButton
-                            clientData={client}
-                            marketerNames={marketerNames}
-                            submitHandler={editClient}
-                            loading={loading}
-                          />
+                          <button
+                            onClick={() => downloadFile(invoice.invoice_number)}
+                            className="rounded-md bg-sky-600 hover:opacity-90 hover:ring-2 hover:ring-sky-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                          >
+                            <CloudDownload size={18} />
+                          </button>
                         </div>
                       </div>
                     </td>
@@ -400,7 +429,7 @@ const Table = () => {
               <tbody>
                 <tr key={0}>
                   <td className="align-center text-center text-wrap">
-                    No Clients To Show.
+                    No Invoices To Show.
                   </td>
                 </tr>
               </tbody>

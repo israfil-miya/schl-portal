@@ -402,9 +402,9 @@ const Table = () => {
 
       {loading ? <p className="text-center">Loading...</p> : <></>}
 
-      {!loading &&
-        (orders?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap text-base">
+      <div className="table-responsive text-nowrap text-base">
+        {!loading &&
+          (orders?.items?.length !== 0 ? (
             <table className="table border table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
@@ -539,14 +539,18 @@ const Table = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <tr key={0}>
-            <td colSpan={16} className=" align-center text-center">
-              No Orders To Show.
-            </td>
-          </tr>
-        ))}
+          ) : (
+            <table className="table border table-bordered table-striped">
+              <tbody>
+                <tr key={0}>
+                  <td className="align-center text-center text-wrap">
+                    No Orders To Show.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          ))}
+      </div>
       <style jsx>
         {`
           th,
