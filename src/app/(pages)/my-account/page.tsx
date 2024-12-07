@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
-import { fetchApi, generateAvatar, verifyCookie } from '@/lib/utils';
+import { delay, fetchApi, generateAvatar, verifyCookie } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
+
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import React from 'react';
@@ -35,6 +36,7 @@ const getEmployeeInfo = async () => {
 };
 
 async function MyAccountPage() {
+  console.log('My Account Page');
   const session = await auth();
   const avatarURI = await generateAvatar(session?.user.db_id || '');
   const employeeInfo = await getEmployeeInfo();
@@ -44,15 +46,16 @@ async function MyAccountPage() {
     redirect('/');
   }
 
-  const cookieStore = await cookies();
-  const verified = await verifyCookie(cookieStore, session?.user.db_id || '');
+  const cookieStore = cookies();
+  const token = cookieStore.get('verify-token.tmp')?.value;
+  const verified = verifyCookie(token, session?.user.db_id || '');
 
   if (!verified) {
     redirect('/protected?redirect=' + '/my-account');
   }
 
   return (
-    <div className="px-4 mt-8 mb-4 flex flex-col justify-center md:w-[70vw] mx-auto">
+    <div className="max-w-5xl mx-auto p-10 space-y-6">
       <Profile avatarURI={avatarURI} employeeInfo={employeeInfo} />
     </div>
   );

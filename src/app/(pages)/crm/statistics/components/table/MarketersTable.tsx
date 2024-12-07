@@ -19,7 +19,7 @@ const DailyStatusTable = () => {
 
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/report?action=get-all-marketers';
+        '/api/employee?action=get-all-marketers';
       let options: {} = {
         method: 'GET',
         headers: {
@@ -53,7 +53,7 @@ const DailyStatusTable = () => {
   return (
     <>
       <div className="table-responsive text-lg px-2">
-        {marketers.length === 0 ? (
+        {marketers.length !== 0 ? (
           <table className="table table-hover border table-bordered">
             <thead>
               <tr className="bg-gray-50">

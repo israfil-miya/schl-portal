@@ -1,10 +1,6 @@
 import { dbConnect, getQuery } from '@/lib/utils';
-import Employee, { EmployeeDataType } from '@/models/Employees';
-import Report from '@/models/Reports';
+import Report, { ReportDataType } from '@/models/Reports';
 import User from '@/models/Users';
-
-import { auth } from '@/auth';
-import { ReportDataType } from '@/models/Reports';
 import {
   addBooleanField,
   addIfDefined,
@@ -378,23 +374,6 @@ async function handleGetReportsStatus(req: NextRequest): Promise<{
   }
 }
 
-async function handleGetAllMarketers(req: NextRequest): Promise<{
-  data: EmployeeDataType[] | string;
-  status: number;
-}> {
-  try {
-    const marketers = (await Employee.find({
-      department: 'Marketing',
-      status: 'Active',
-    }).lean()) as EmployeeDataType[];
-
-    return { data: marketers, status: 200 };
-  } catch (e) {
-    console.error(e);
-    return { data: 'An error occurred', status: 500 };
-  }
-}
-
 async function handleGetAllReports(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
@@ -593,9 +572,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(res.data, { status: res.status });
     case 'get-test-orders-trend':
       res = await handleGetTestOrdersTrend(req);
-      return NextResponse.json(res.data, { status: res.status });
-    case 'get-all-marketers':
-      res = await handleGetAllMarketers(req);
       return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });

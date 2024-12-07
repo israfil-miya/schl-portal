@@ -18,7 +18,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { InvoiceDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
-import EditButton from './Edit';
 import FilterButton from './Filter';
 
 type InvoicesState = {

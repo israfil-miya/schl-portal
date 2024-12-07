@@ -169,18 +169,20 @@ export const generateAvatar = async (text: string): Promise<string> => {
   return avatar;
 };
 
-export const verifyCookie = async (
-  cookieStore: ReadonlyRequestCookies,
-  id: string,
-) => {
-  try {
-    const verifyToken = cookieStore.get('verify-token.tmp')?.value;
+/**
+ * Creates a delay for a specified number of milliseconds.
+ * @param ms - The number of milliseconds to delay.
+ * @returns A Promise that resolves after the specified delay.
+ */
+export const delay = (ms: number): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
-    if (!verifyToken) {
+export const verifyCookie = (token?: string, id?: string) => {
+  try {
+    if (!token) {
       return false;
     }
-
-    const token = verifyToken;
 
     const decoded = jwt.verify(token, process.env.AUTH_SECRET as string) as {
       userId: string;
@@ -189,6 +191,7 @@ export const verifyCookie = async (
 
     const userIdFromToken = decoded.userId;
     const sessionUserId = id;
+    console.log(userIdFromToken, sessionUserId);
 
     if (userIdFromToken !== sessionUserId || Date.now() >= decoded.exp * 1000) {
       return false;

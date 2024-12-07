@@ -239,6 +239,23 @@ async function handleGetEmployeeByName(req: NextRequest): Promise<{
   }
 }
 
+async function handleGetAllMarketers(req: NextRequest): Promise<{
+  data: EmployeeDataType[] | string;
+  status: number;
+}> {
+  try {
+    const marketers = (await Employee.find({
+      department: 'Marketing',
+      status: 'Active',
+    }).lean()) as EmployeeDataType[];
+
+    return { data: marketers, status: 200 };
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
 export async function POST(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
@@ -261,6 +278,9 @@ export async function GET(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
   switch (getQuery(req).action) {
+    case 'get-all-marketers':
+      res = await handleGetAllMarketers(req);
+      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }

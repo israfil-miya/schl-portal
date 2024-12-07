@@ -2,21 +2,11 @@
 
 import { LoginDataType, validationSchema } from '@/app/login/schema';
 import { fetchApi } from '@/lib/utils';
-import {
-  setClassNameAndIsDisabled,
-  setMenuPortalTarget,
-} from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import moment from 'moment-timezone';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import Select from 'react-select';
+import { useForm } from 'react-hook-form';
 
-import { generatePassword, rethrowIfRedirectError } from '@/lib/utils';
-import { EmployeeDataType } from '@/models/Employees';
-import { KeySquare } from 'lucide-react';
-import { permanentRedirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface PropsType {
@@ -25,7 +15,8 @@ interface PropsType {
 
 const Form: React.FC<PropsType> = props => {
   const [loading, setLoading] = useState(false);
-  const { data: session } = useSession();
+
+  const router = useRouter();
 
   const {
     watch,
@@ -69,12 +60,13 @@ const Form: React.FC<PropsType> = props => {
 
       if (response.ok) {
         let redirect_path = response.data?.redirect_path as string;
-        permanentRedirect(redirect_path);
+        console.log('redirecting to:', redirect_path);
+        router.replace(redirect_path);
       } else {
+        console.error('verification failed:', response.data);
         toast.error(response.data as string);
       }
     } catch (error) {
-      rethrowIfRedirectError(error);
       console.log(error);
       toast.error('An error occurred while verifying the credentials');
     } finally {

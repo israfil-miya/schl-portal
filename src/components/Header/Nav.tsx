@@ -18,14 +18,20 @@ interface PropsType {
 const Nav: React.FC<PropsType> = props => {
   const { data: session } = useSession();
 
-  let { msg = 'Welcome, ' + session?.user.real_name + '!' } = props;
   let pathname = usePathname();
 
   const userRole = session?.user.role;
 
+  // Use useEffect to safely initialize flowbite on the client
   useEffect(() => {
-    initFlowbite();
+    if (typeof window !== 'undefined') {
+      import('flowbite').then(module => {
+        module.initFlowbite();
+      });
+    }
   }, []);
+
+  let { msg = 'Welcome, ' + session?.user.real_name + '!' } = props;
 
   return (
     <div

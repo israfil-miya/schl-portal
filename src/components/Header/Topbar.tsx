@@ -1,10 +1,10 @@
-import React from 'react';
 import Image from 'next/image';
-import Timecards from './Timecards';
-import LogOut from './Logout';
-import SideNavBar from './Sidebar';
-import LogoutAction from './Logout/LogoutAction';
+import React from 'react';
 import AccountButton from './Accountbutton';
+import LogOut from './Logout';
+import LogoutAction from './Logout/LogoutAction';
+import SideNavBar from './Sidebar';
+import Timecards from './Timecards';
 
 const timezones: string[] = [
   'Europe/Paris',
