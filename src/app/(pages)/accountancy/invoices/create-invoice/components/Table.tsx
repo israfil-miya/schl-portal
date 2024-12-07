@@ -1,24 +1,22 @@
 'use client';
 
 import Badge from '@/components/Badge';
-import ClickToCopy from '@/components/CopyText';
-import { cn, fetchApi } from '@/lib/utils';
+import ExtendableTd from '@/components/ExtendableTd';
+import { fetchApi } from '@/lib/utils';
+import { ClientDataType } from '@/models/Clients';
+
+import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
 import { formatDate, formatTime } from '@/utility/date';
 import {
-  BookCheck,
   ChevronLeft,
   ChevronRight,
   CirclePlus,
-  Redo2,
+  ClipboardCopy,
 } from 'lucide-react';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { OrderDataType, validationSchema } from '../schema';
-import DeleteButton from './Delete';
-import EditButton from './Edit';
 import FilterButton from './Filter';
 
 type OrdersState = {
@@ -29,7 +27,7 @@ type OrdersState = {
   items: OrderDataType[];
 };
 
-const Table = () => {
+const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [orders, setOrders] = useState<OrdersState>({
     pagination: {
       count: 0,
@@ -40,64 +38,25 @@ const Table = () => {
 
   const router = useRouter();
 
-  const [isFiltered, setIsFiltered] = useState<boolean>(false);
+  const [isFiltered, setIsFiltered] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const [pageCount, setPageCount] = useState<number>(0);
-  const [itemPerPage, setItemPerPage] = useState<number>(30);
+  const [itemPerPage, setItemPerPage] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
 
   const prevPageCount = useRef<number>(0);
   const prevPage = useRef<number>(1);
 
   const { data: session } = useSession();
-  const userRole = session?.user.role;
 
   const [filters, setFilters] = useState({
+    folder: '',
+    clientCode: props.clientsData?.[0].client_code || '',
+    task: '',
+    status: '',
     fromDate: '',
     toDate: '',
-    folder: '',
-    clientCode: '',
-    task: '',
-    type: '',
-    generalSearchString: '',
   });
-
-  async function getAllOrders() {
-    try {
-      // setLoading(true);
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: false,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          staleClient: true,
-          regularClient: false,
-          test: false,
-        }),
-      };
-
-      let response = await fetchApi(url, options);
-
-      if (response.ok) {
-        setOrders(response.data as OrdersState);
-      } else {
-        toast.error(response.data as string);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving orders data');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function getAllOrdersFiltered() {
     try {
@@ -136,152 +95,6 @@ const Table = () => {
     return;
   }
 
-  async function deleteOrder(orderId: string, reqBy: string) {
-    try {
-      let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          req_type: 'Task Delete',
-          req_by: reqBy,
-          id: orderId,
-        }),
-      };
-
-      let response = await fetchApi(url, options);
-
-      if (response.ok) {
-        toast.success('Request sent for approval');
-      } else {
-        toast.error(response.data.message);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while sending request for approval');
-    }
-    return;
-  }
-
-  const finishOrder = async (orderData: OrderDataType) => {
-    try {
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=finish-order';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          order_id: orderData._id,
-        }),
-      };
-
-      if (
-        orderData.production >= orderData.quantity &&
-        orderData.qc1 >= orderData.quantity
-      ) {
-        const response = await fetchApi(url, options);
-
-        if (response.ok) {
-          toast.success('Changed the status to FINISHED');
-          if (!isFiltered) await getAllOrders();
-          else await getAllOrdersFiltered();
-        } else {
-          toast.error('Unable to change status');
-        }
-      } else {
-        if (orderData.production < orderData.quantity) {
-          toast.error('Production is not completed');
-        } else if (orderData.qc1 < orderData.quantity) {
-          toast.error('QC1 is not completed');
-        } else {
-          toast.error('Unable to change status');
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while changing the status');
-    }
-    return;
-  };
-
-  const redoOrder = async (orderData: OrderDataType) => {
-    try {
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=redo-order';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          order_id: orderData._id,
-        }),
-      };
-
-      const response = await fetchApi(url, options);
-
-      if (response.ok) {
-        toast.success('Changed the status to CORRECTION');
-        if (!isFiltered) await getAllOrders();
-        else await getAllOrdersFiltered();
-      } else {
-        toast.error('Unable to change status');
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while changing the status');
-    }
-    return;
-  };
-
-  async function editOrder(editedOrderData: OrderDataType) {
-    try {
-      setLoading(true);
-      const parsed = validationSchema.safeParse(editedOrderData);
-
-      if (!parsed.success) {
-        console.error(parsed.error.issues.map(issue => issue.message));
-        toast.error('Invalid form data');
-        return;
-      }
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=edit-order';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          updated_by: session?.user.real_name,
-        },
-        body: JSON.stringify(parsed.data),
-      };
-
-      const response = await fetchApi(url, options);
-
-      if (response.ok) {
-        toast.success('Updated the order data');
-
-        if (!isFiltered) await getAllOrders();
-        else await getAllOrdersFiltered();
-      } else {
-        toast.error(response.data as string);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while updating the order');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    getAllOrders();
-  }, []);
-
   function handlePrevious() {
     setPage(p => {
       if (p === 1) return p;
@@ -299,8 +112,7 @@ const Table = () => {
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
       if (orders?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllOrders();
-      else getAllOrdersFiltered();
+      if (isFiltered) getAllOrdersFiltered();
     }
     prevPage.current = page;
   }, [page]);
@@ -323,31 +135,16 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllOrders();
-    else getAllOrdersFiltered();
+    if (isFiltered) getAllOrdersFiltered();
   }, [itemPerPage]);
 
   return (
     <>
-      <div
-        className={cn(
-          'flex flex-col sm:flex-row justify-between mb-4 gap-2',
-          userRole !== 'super' &&
-            userRole !== 'admin' &&
-            'justify-center sm:flex-row sm:justify-end',
-        )}
-      >
-        {(userRole == 'super' || userRole == 'admin') && (
-          <button
-            onClick={() =>
-              router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/tasks')
-            }
-            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-          >
-            Add new task
-            <CirclePlus size={18} />
-          </button>
-        )}
+      <div className="flex flex-col sm:items-center sm:flex-row justify-between mb-4 gap-2">
+        <p className="text-lg text-center bg-gray-100 w-full sm:w-fit border-2 px-3.5 py-2 rounded-md">
+          Client selected:
+          <span className="px-1.5 font-semibold">{filters.clientCode}</span>
+        </p>
         <div className="items-center flex gap-2">
           <div className="inline-flex rounded-md" role="group">
             <button
@@ -386,15 +183,17 @@ const Table = () => {
             required
             className="appearance-none cursor-pointer px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
             <option value={30}>30</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
           </select>
           <FilterButton
             loading={loading}
             submitHandler={getAllOrdersFiltered}
             setFilters={setFilters}
             filters={filters}
+            clientsData={props.clientsData}
             className="w-full justify-between sm:w-auto"
           />
         </div>
@@ -409,36 +208,27 @@ const Table = () => {
               <thead className="table-dark">
                 <tr>
                   <th>S/N</th>
-                  <th>Client Code</th>
-                  {(userRole == 'super' || userRole == 'admin') && (
-                    <th>Client Name</th>
-                  )}
                   <th>Folder</th>
                   <th>NOF</th>
-                  <th>Download Date</th>
-                  <th>Delivery Time</th>
+                  <th>Rate</th>
+                  <th>Download</th>
+                  <th>Delivery</th>
                   <th>Task(s)</th>
                   <th>E.T.</th>
                   <th>Production</th>
                   <th>QC1</th>
-                  <th>Folder Location</th>
-                  <th>Type</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th>Comment</th>
+                  {/* <th>Action</th> */}
                 </tr>
               </thead>
               <tbody>
                 {orders?.items?.map((order, index) => (
                   <tr key={String(order._id)}>
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                    <td className="text-wrap">{order.client_code}</td>
-
-                    {(userRole == 'admin' || userRole == 'super') && (
-                      <td className="text-wrap">{order.client_name}</td>
-                    )}
-
                     <td className="text-wrap">{order.folder}</td>
                     <td className="text-wrap">{order.quantity}</td>
+                    <td className="text-wrap">{order.rate}</td>
                     <td className="text-wrap">
                       {formatDate(order.download_date)}
                     </td>
@@ -458,15 +248,6 @@ const Table = () => {
                     <td className="text-wrap">{order.et}</td>
                     <td className="text-wrap">{order.production}</td>
                     <td className="text-wrap">{order.qc1}</td>
-                    <td className="text-wrap">
-                      <ClickToCopy text={order.folder_path} />
-                    </td>
-                    <td
-                      className="uppercase text-wrap"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <Badge value={order.type} />
-                    </td>
                     <td
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}
@@ -490,45 +271,42 @@ const Table = () => {
                         />
                       )}
                     </td>
-                    <td
+                    <ExtendableTd data={order.comment || ''} />
+
+                    {/* <td
                       className="text-center"
                       style={{ verticalAlign: 'middle' }}
                     >
                       <div className="inline-block">
                         <div className="flex gap-2">
-                          {(userRole == 'super' || userRole == 'admin') && (
-                            <>
-                              <DeleteButton
-                                orderData={order}
-                                submitHandler={deleteOrder}
-                              />
-                              {order.status?.trim().toLocaleLowerCase() ==
-                              'finished' ? (
-                                <button
-                                  onClick={() => redoOrder(order)}
-                                  className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                                >
-                                  <Redo2 size={18} />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => finishOrder(order)}
-                                  className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                                >
-                                  <BookCheck size={18} />
-                                </button>
-                              )}
-                            </>
-                          )}
+                          <DeleteButton
+                            orderData={order}
+                            submitHandler={deleteUser}
+                          />
 
                           <EditButton
                             orderData={order}
-                            submitHandler={editOrder}
+                            employeesData={props.employeesData}
+                            submitHandler={editUser}
                             loading={loading}
                           />
+
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(
+                                `${order.name} ${order.password}`,
+                              );
+                              toast.info('Copied to clipboard', {
+                                position: 'bottom-right',
+                              });
+                            }}
+                            className="rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                          >
+                            <ClipboardCopy size={18} />
+                          </button>
                         </div>
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -538,7 +316,7 @@ const Table = () => {
               <tbody>
                 <tr key={0}>
                   <td className="align-center text-center text-wrap">
-                    No Orders To Show.
+                    No orders found!
                   </td>
                 </tr>
               </tbody>

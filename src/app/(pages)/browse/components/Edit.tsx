@@ -28,6 +28,7 @@ export const statusOptions = [
   { value: 'Uploaded', label: 'Uploaded' },
   { value: 'Paused', label: 'Paused' },
   { value: 'Client hold', label: 'Client hold' },
+  { value: 'Finished', label: 'Finished' },
 ];
 export const taskOptions = [
   { value: 'Ghost Mannequine', label: 'Ghost Mannequine' },

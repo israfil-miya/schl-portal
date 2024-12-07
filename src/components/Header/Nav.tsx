@@ -249,7 +249,7 @@ const Nav: React.FC<PropsType> = props => {
                   <li>
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/accountancy/invoices/new'}
+                      href={'/accountancy/invoices/create-invoice'}
                     >
                       Create New
                     </Link>

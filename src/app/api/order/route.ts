@@ -28,6 +28,7 @@ export interface RegexQuery {
 export interface Query {
   type?: RegexQuery;
   task?: RegexQuery;
+  status?: RegexQuery;
   folder?: RegexQuery;
   client_code?: RegexQuery;
   createdAt?: { $gte?: string; $lte?: string };
@@ -36,7 +37,7 @@ export interface Query {
 
 export type RegexFields = Extract<
   keyof Query,
-  'type' | 'task' | 'folder' | 'client_code'
+  'type' | 'task' | 'folder' | 'client_code' | 'status'
 >;
 
 const monthNames = [
@@ -179,6 +180,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
       clientCode,
       task,
       type,
+      status,
       fromDate,
       toDate,
       generalSearchString,
@@ -202,6 +204,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     addRegexField(query, 'client_code', clientCode);
     addRegexField(query, 'task', task);
     addRegexField(query, 'type', type, true);
+    addRegexField(query, 'status', status, true);
 
     console.log(query);
 

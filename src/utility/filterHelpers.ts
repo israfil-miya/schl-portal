@@ -64,7 +64,9 @@ export const createRegexQuery = (
 ): RegexQuery | undefined =>
   value
     ? {
-        $regex: exactMatch ? `^${escapeRegex(value.trim() || '')}$` : value,
+        $regex: exactMatch
+          ? `^${escapeRegex(value.trim() || '')}$`
+          : escapeRegex(value) || '',
         $options: 'i',
       }
     : undefined;

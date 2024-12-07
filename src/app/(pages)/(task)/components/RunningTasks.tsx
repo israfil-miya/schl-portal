@@ -1,5 +1,5 @@
 import Badge from '@/components/Badge';
-import ClickToCopy from '@/components/copyText';
+import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
