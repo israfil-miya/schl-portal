@@ -17,6 +17,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import Details from './Details';
 import FilterButton from './Filter';
 
 type OrdersState = {
@@ -323,6 +324,9 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
             </table>
           ))}
       </div>
+
+      <Details clientCode={filters.clientCode} />
+
       <style jsx>
         {`
           th,

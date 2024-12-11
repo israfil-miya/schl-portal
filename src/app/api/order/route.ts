@@ -471,7 +471,7 @@ async function handleGetAllOrdersOfClient(req: NextRequest): Promise<{
     const resData = await Order.find({ client_code });
 
     if (resData) {
-      return { data: resData, status: 400 };
+      return { data: resData, status: 200 };
     } else {
       return { data: 'No orders found', status: 400 };
     }
@@ -848,6 +848,9 @@ export async function POST(req: NextRequest) {
     case 'get-all-orders':
       res = await handleGetAllOrders(req);
       return NextResponse.json(res.data, { status: res.status });
+    case 'get-client-orders':
+      res = await handleGetAllOrdersOfClient(req);
+      return NextResponse.json(res.data, { status: res.status });
     case 'create-order':
       res = await handleCreateOrder(req);
       return NextResponse.json(res.data, { status: res.status });
@@ -883,9 +886,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(res.data, { status: res.status });
     case 'get-order-by-id':
       res = await handleGetOrdersById(req);
-      return NextResponse.json(res.data, { status: res.status });
-    case 'get-client-orders':
-      res = await handleGetAllOrdersOfClient(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-orders-status':
       res = await handleGetOrdersStatus(req);
