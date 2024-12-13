@@ -6,6 +6,7 @@ import { fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 
 import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
+import NoData, { Type } from '@/components/NoData';
 import { formatDate, formatTime } from '@/utility/date';
 import {
   ChevronLeft,
@@ -42,13 +43,17 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [isFiltered, setIsFiltered] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const [pageCount, setPageCount] = useState<number>(0);
-  const [itemPerPage, setItemPerPage] = useState<number>(10);
+  const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
 
   const prevPageCount = useRef<number>(0);
   const prevPage = useRef<number>(1);
 
   const { data: session } = useSession();
+
+  const [selectedClient, setSelectedClient] = useState<string>(
+    props.clientsData?.[0].client_code || '',
+  );
 
   const [filters, setFilters] = useState({
     folder: '',
@@ -84,6 +89,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       if (response.ok) {
         setOrders(response.data as OrdersState);
         setIsFiltered(true);
+        setSelectedClient(filters.clientCode);
       } else {
         toast.error(response.data as string);
       }
@@ -144,7 +150,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       <div className="flex flex-col sm:items-center sm:flex-row justify-between mb-4 gap-2">
         <p className="text-lg text-center bg-gray-100 w-full sm:w-fit border-2 px-3.5 py-2 rounded-md">
           Client selected:
-          <span className="px-1.5 font-semibold">{filters.clientCode}</span>
+          <span className="px-1.5 font-semibold">{selectedClient}</span>
         </p>
         <div className="items-center flex gap-2">
           <div className="inline-flex rounded-md" role="group">
@@ -184,10 +190,9 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
             required
             className="appearance-none cursor-pointer px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
             <option value={30}>30</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
           </select>
           <FilterButton
             loading={loading}
@@ -197,6 +202,13 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
             clientsData={props.clientsData}
             className="w-full justify-between sm:w-auto"
           />
+          {orders?.items?.length !== 0 && (
+            <Details
+              clientCode={selectedClient}
+              className="w-full justify-between sm:w-auto"
+              filters={filters}
+            />
+          )}
         </div>
       </div>
 
@@ -313,19 +325,9 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No orders found!
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No orders found!" type={Type.danger} />
           ))}
       </div>
-
-      <Details clientCode={filters.clientCode} />
 
       <style jsx>
         {`

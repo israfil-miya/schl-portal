@@ -1,16 +1,35 @@
 'use client';
+import generateInvoice, {
+  BillDataType,
+  CustomerDataType,
+  InvoiceDataType,
+  VendorDataType,
+} from '@/lib/invoice';
 import { cn, fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 import { OrderDataType } from '@/models/Orders';
+import { getTodayDate } from '@/utility/date';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
-import { X } from 'lucide-react';
+import { PlusCircleIcon, X } from 'lucide-react';
+import moment from 'moment-timezone';
+import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+
 const baseZIndex = 50; // 52
 
 interface DetailsProps {
+  className?: string;
   clientCode: string;
+  filters: {
+    folder: string;
+    clientCode: string;
+    task: string;
+    status: string;
+    fromDate: string;
+    toDate: string;
+  };
 }
 
 const Details: React.FC<DetailsProps> = props => {
@@ -18,12 +37,35 @@ const Details: React.FC<DetailsProps> = props => {
   const [clientDetails, setClientDetails] = useState<ClientDataType | null>(
     null,
   );
+  const { data: session } = useSession();
+
   const [orders, setOrders] = useState<OrderDataType[]>([]);
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [invoiceCreating, setInvoiceCreating] = useState<boolean>(false);
 
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const [customer, setCustomer] = useState({
+    companyName: '',
+    companyAddress: '',
+    contactPerson: '',
+    email: '',
+    contactNumber: '',
+    invoiceNumber: '',
+    currency: '',
+    prices: '',
+  });
+
+  const [vendor, setVendor] = useState({
+    companyName: 'Studio Click House Ltd.',
+    contactPerson: 'Raiyan Abrar',
+    streetAddress: 'Tengra Road, Ma HolyCity Tower, Level 2',
+    city: 'Demra, Dhaka-1361, Bangladesh',
+    contactNumber: '+46855924212, +8801819727117',
+    email: 'info@studioclickhouse.com',
+  });
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
@@ -36,27 +78,187 @@ const Details: React.FC<DetailsProps> = props => {
     }
   };
 
+  const prepareBillData = (orders: OrderDataType[]): BillDataType[] => {
+    const billData = orders.map((order, index) => {
+      return {
+        date: moment(order.createdAt).format('YYYY-MM-DD'),
+        job_name: order.folder,
+        quantity: order.quantity,
+        unit_price: order.rate ?? 0,
+        total: function () {
+          return this.quantity * this.unit_price;
+        },
+      };
+    });
+    return billData;
+  };
+
+  const createInvoice = useCallback(async () => {
+    try {
+      setInvoiceCreating(true);
+
+      if (!customer.invoiceNumber) {
+        toast.error('Please enter an Invoice Number');
+        return;
+      }
+
+      if (!customer.currency) {
+        toast.error('Please enter a currency symbol/code');
+        return;
+      }
+
+      const billData = prepareBillData(orders);
+
+      if (!billData.length) {
+        toast.error('No orders found to create invoice');
+        return;
+      }
+
+      const invoiceData: InvoiceDataType = {
+        customer: {
+          client_name: customer.companyName,
+          client_code: props.clientCode,
+          contact_person: customer.contactPerson,
+          address: customer.companyAddress,
+          contact_number: customer.contactNumber,
+          email: customer.email,
+          invoice_number: customer.invoiceNumber,
+          currency: customer.currency,
+        },
+        vendor: {
+          company_name: vendor.companyName,
+          contact_person: vendor.contactPerson,
+          street_address: vendor.streetAddress,
+          city: vendor.city,
+          contact_number: vendor.contactNumber,
+          email: vendor.email,
+        },
+      };
+
+      const fileName = `invoice_studioclickhouse_${customer.invoiceNumber}.xlsx`;
+
+      let toastId = toast.loading('Generating invoice...');
+
+      const invoice = await generateInvoice(invoiceData, billData);
+      if (!invoice) {
+        toast.error('Unable to generate invoice');
+        return;
+      }
+
+      toast.success("Invoice generated successfully. Don't close!", {
+        id: toastId,
+      });
+
+      // Save invoice in local storage
+      const url = window.URL.createObjectURL(invoice);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = fileName;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+
+      toastId = toast.loading('Saving invoice in database...');
+
+      const database_url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/invoice?action=store-invoice';
+
+      const database_options: {} = {
+        method: 'POST',
+        body: JSON.stringify({
+          client_id: clientDetails?._id,
+          client_code: clientDetails?.client_code,
+          created_by: session?.user?.real_name,
+          time_period: {
+            fromDate: props.filters.fromDate,
+            toDate: props.filters.toDate || getTodayDate(),
+          },
+          total_orders: orders.length,
+          invoice_number: customer.invoiceNumber,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      let database_response = await fetchApi(database_url, database_options);
+
+      if (!database_response.ok) {
+        toast.error(database_response.data as string);
+        return;
+      }
+
+      toast.success("Invoice saved successfully in database. Don't close!", {
+        id: toastId,
+      });
+
+      toastId = toast.loading('Saving invoice in ftp...');
+
+      const formData = new FormData();
+      formData.append(
+        'invoice',
+        new File([invoice], fileName, { type: invoice.type }),
+      );
+
+      const ftp_url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/ftp?action=insert-file';
+      const ftp_options: {} = {
+        method: 'POST',
+        body: formData,
+        headers: {
+          folder_name: 'invoice',
+        },
+      };
+
+      let ftp_response = await fetchApi(ftp_url, ftp_options);
+
+      if (!ftp_response.ok) {
+        toast.error(ftp_response.data as string);
+        return;
+      }
+
+      toast.success('Invoice saved successfully in ftp', {
+        id: toastId,
+      });
+
+      toast.success('Invoice created successfully!');
+    } catch (e) {
+      console.error(e);
+      toast.error('An error occurred while creating invoice');
+    } finally {
+      setInvoiceCreating(false);
+    }
+  }, [
+    customer,
+    vendor,
+    orders,
+    clientDetails,
+    props.filters,
+    props.clientCode,
+    session,
+  ]);
+
   const getClientOrders = useCallback(async () => {
     try {
       setLoading(true);
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/order?action=get-client-orders';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
       let options: {} = {
         method: 'POST',
         headers: {
+          filtered: true,
+          paginated: false,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          client_code: props.clientCode,
+          ...props.filters,
         }),
       };
 
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setOrders(response.data as OrderDataType[]);
+        setOrders(response.data.items as OrderDataType[]);
       } else {
         toast.error(response.data as string);
       }
@@ -67,7 +269,7 @@ const Details: React.FC<DetailsProps> = props => {
       setLoading(false);
     }
     return;
-  }, [props.clientCode]);
+  }, []);
 
   const getClientDetails = useCallback(async () => {
     try {
@@ -106,26 +308,6 @@ const Details: React.FC<DetailsProps> = props => {
       getClientOrders();
     }
   }, [props.clientCode, getClientOrders, getClientDetails]);
-
-  const [customer, setCustomer] = useState({
-    companyName: '',
-    companyAddress: '',
-    contactPerson: '',
-    email: '',
-    contactNumber: '',
-    invoiceNumber: '',
-    currency: '',
-    prices: '',
-  });
-
-  const [vendor, setVendor] = useState({
-    companyName: 'Studio Click House Ltd.',
-    contactPerson: 'Raiyan Abrar',
-    streetAddress: 'Tengra Road, Ma HolyCity Tower, Level 2',
-    city: 'Demra, Dhaka-1361, Bangladesh',
-    contactNumber: '+46855924212, +8801819727117',
-    email: 'info@studioclickhouse.com',
-  });
 
   useEffect(() => {
     initFlowbite();
@@ -175,22 +357,8 @@ const Details: React.FC<DetailsProps> = props => {
     setVendor({ ...vendor, [e.target.name]: e.target.value });
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <span>Loading...</span>
-      </div>
-    );
-  }
-
   if (!clientDetails) {
-    return (
-      <div className="max-w-4xl mx-auto mt-8 p-6 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-        <p className="text-center font-semibold">
-          Client data couldn&apos;t be retrieved!
-        </p>
-      </div>
-    );
+    return null;
   }
 
   if (!orders.length) {
@@ -200,12 +368,16 @@ const Details: React.FC<DetailsProps> = props => {
   return (
     <>
       <button
-        onClick={() => {
-          setIsOpen(true);
-        }}
-        className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+        disabled={loading}
+        onClick={() => setIsOpen(true)}
+        type="button"
+        className={cn(
+          `flex items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
+          props.className,
+        )}
       >
-        Create Invoice
+        {loading ? 'Loading...' : 'Invoice'}
+        <PlusCircleIcon size={18} />
       </button>
 
       <section
@@ -248,7 +420,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="companyName"
                       name="companyName"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.companyName}
                       type="text"
                     />
@@ -264,7 +436,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="contactPerson"
                       name="contactPerson"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.contactPerson}
                       type="text"
                     />
@@ -280,7 +452,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="email"
                       name="email"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.email}
                       type="email"
                     />
@@ -296,7 +468,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="contactNumber"
                       name="contactNumber"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.contactNumber}
                       type="tel"
                     />
@@ -312,7 +484,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="invoiceNumber"
                       name="invoiceNumber"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.invoiceNumber}
                       type="text"
                     />
@@ -328,7 +500,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="currency"
                       name="currency"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.currency}
                       type="text"
                     />
@@ -345,7 +517,7 @@ const Details: React.FC<DetailsProps> = props => {
                       rows={3}
                       name="prices"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.prices}
                     />
                   </div>
@@ -361,7 +533,7 @@ const Details: React.FC<DetailsProps> = props => {
                       rows={3}
                       name="companyAddress"
                       onChange={handleChangeClient}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.companyAddress}
                     />
                   </div>
@@ -384,7 +556,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="vendorCompanyName"
                       name="companyName"
                       onChange={handleChangeVendor}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.companyName}
                       type="text"
                     />
@@ -400,7 +572,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="vendorContactPerson"
                       name="contactPerson"
                       onChange={handleChangeVendor}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.contactPerson}
                       type="text"
                     />
@@ -416,7 +588,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="vendorEmail"
                       name="email"
                       onChange={handleChangeVendor}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.email}
                       type="email"
                     />
@@ -432,7 +604,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="vendorContactNumber"
                       name="contactNumber"
                       onChange={handleChangeVendor}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.contactNumber}
                       type="tel"
                     />
@@ -448,7 +620,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="vendorStreetAddress"
                       name="streetAddress"
                       onChange={handleChangeVendor}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.streetAddress}
                       type="text"
                     />
@@ -464,7 +636,7 @@ const Details: React.FC<DetailsProps> = props => {
                       id="vendorCity"
                       name="city"
                       onChange={handleChangeVendor}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.city}
                       type="text"
                     />
@@ -484,19 +656,19 @@ const Details: React.FC<DetailsProps> = props => {
                 onClick={() => setIsOpen(false)}
                 className="rounded-md bg-gray-600 text-white hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
-                disabled={loading}
+                disabled={invoiceCreating}
               >
                 Close
               </button>
               <button
-                disabled={loading}
+                disabled={invoiceCreating}
                 onClick={() => {
-                  formRef.current?.requestSubmit();
+                  createInvoice();
                 }}
                 className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
-                {props ? 'Creating...' : 'Create'}
+                {invoiceCreating ? 'Creating...' : 'Create'}
               </button>
             </div>
           </footer>

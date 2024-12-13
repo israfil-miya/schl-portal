@@ -16,7 +16,6 @@ export interface CustomerDataType {
   address: string;
   contact_number: string;
   email: string;
-  prices: string;
   invoice_number: string;
   currency: string;
 }
@@ -107,10 +106,10 @@ async function addHeader(
   }
 }
 
-export default async function createInvoice(
+export default async function generateInvoice(
   invoiceData: InvoiceDataType,
   billData: BillDataType[],
-): Promise<File | Boolean> {
+): Promise<Blob | false> {
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('INVOICE', {
@@ -1192,11 +1191,6 @@ export default async function createInvoice(
       '"' + currencySymbol + '"'
     }#,##0.00`;
 
-    // To visualize the toast.promise() function on generating the invoice
-    // await new Promise((resolve) => {
-    //   setTimeout(resolve, 5000);
-    // });
-
     // Write the workbook to a Blob and create a download link
     const fileName = `invoice_studioclickhouse_${invoiceData.customer.invoice_number}.xlsx`;
     const data = await workbook.xlsx.writeBuffer();
@@ -1204,14 +1198,8 @@ export default async function createInvoice(
     const blob = new Blob([data], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
-    const url = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.click();
-    window.URL.revokeObjectURL(url);
 
-    return new File([blob], fileName, { type: blob.type });
+    return blob;
   } catch (e) {
     console.error('Error generating invoice: ', e);
     return false;

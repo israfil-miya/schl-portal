@@ -185,7 +185,7 @@ const Table: React.FC = props => {
   }
 
   async function downloadFile(invoiceNumber: string) {
-    const toastId = toast.info('Triggering the download...');
+    const toastId = toast.loading('Triggering the download...');
     try {
       const fileName = 'invoice_studioclickhouse_' + invoiceNumber + '.xlsx';
 
