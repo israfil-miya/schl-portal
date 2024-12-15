@@ -4,10 +4,10 @@ import { z } from 'zod';
 
 export const validationSchema = z
   .object({
-    e_id: z.string(),
-    real_name: z.string(),
-    joining_date: z.string(),
-    phone: z.string(),
+    e_id: z.string().min(1, 'Employee ID is required.'),
+    real_name: z.string().min(1, 'Real Name is required.'),
+    joining_date: z.string().min(1, 'Joining Date is required.'),
+    phone: z.string().min(1, 'Phone is required.'),
     email: z
       .optional(z.string().email('This is not a valid email.'))
       .default(''),
@@ -18,19 +18,19 @@ export const validationSchema = z
       .default(''),
     designation: z.string(),
     department: z.enum([
-      'production',
-      'marketing',
-      'software',
-      'accounting',
-      'management',
-      'hr',
-      'administration',
-      'others',
+      'Production',
+      'Marketing',
+      'Software',
+      'Accounting',
+      'Management',
+      'HR',
+      'Administration',
+      'Others',
     ]),
     gross_salary: z.number(),
     bonus_eid_ul_fitr: z.optional(z.number()).default(0),
     bonus_eid_ul_adha: z.optional(z.number()).default(0),
-    status: z.enum(['active', 'inactive', 'resigned', 'fired']),
+    status: z.enum(['Active', 'Inactive', 'Resigned', 'Fired']),
     provident_fund: z.number(),
     pf_start_date: z.string(),
     pf_history: z.optional(
@@ -62,14 +62,30 @@ export const validationSchema = z
       let pfStartDate = moment(data.pf_start_date, 'YYYY-MM-DD');
       const currentDate = moment().format('YYYY-MM-DD');
 
-      if (!pfStartDate.isBefore(currentDate)) {
+      if (!pfStartDate.isSameOrBefore(currentDate)) {
         return false;
       }
       return true;
     },
     {
-      message: "PF Start Date must be before today's date",
+      message: "PF Start Date must be today's date or before",
       path: ['pf_start_date'],
+    },
+  )
+  .refine(
+    data => {
+      if (
+        data.department == 'Marketing' &&
+        (data.company_provided_name?.length ||
+          data.company_provided_name == null)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'Company Provided Name is required for Marketing Department',
+      path: ['company_provided_name'],
     },
   );
 

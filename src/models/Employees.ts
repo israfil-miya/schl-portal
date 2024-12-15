@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-interface ProvidentFundHistory extends mongoose.Document {
+interface ProvidentFundHistory {
   date: string;
   gross: number;
   provident_fund: number;

@@ -22,21 +22,21 @@ export const bloodGroupOptions = [
 ];
 
 export const departmentOptions = [
-  { value: 'production', label: 'Production' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'software', label: 'Software' },
-  { value: 'accounting', label: 'Accounting' },
-  { value: 'management', label: 'Management' },
-  { value: 'hr', label: 'HR' },
-  { value: 'administration', label: 'Administration' },
-  { value: 'others', label: 'Others' },
+  { value: 'Production', label: 'Production' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Software', label: 'Software' },
+  { value: 'Accounting', label: 'Accounting' },
+  { value: 'Management', label: 'Management' },
+  { value: 'HR', label: 'HR' },
+  { value: 'Administration', label: 'Administration' },
+  { value: 'Others', label: 'Others' },
 ];
 
 export const statusOptions = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'resigned', label: 'Resigned' },
-  { value: 'fired', label: 'Fired' },
+  { value: 'Active', label: 'Active' },
+  { value: 'Inactive', label: 'Inactive' },
+  { value: 'Resigned', label: 'Resigned' },
+  { value: 'Fired', label: 'Fired' },
 ];
 
 const Form: React.FC = () => {
@@ -63,11 +63,11 @@ const Form: React.FC = () => {
       nid: '',
       blood_group: '',
       designation: '',
-      department: 'production',
+      department: 'Production',
       gross_salary: 0,
       bonus_eid_ul_fitr: 0,
       bonus_eid_ul_adha: 0,
-      status: 'active',
+      status: 'Active',
       provident_fund: 0,
       pf_start_date: '',
       pf_history: [],
@@ -422,6 +422,23 @@ const Form: React.FC = () => {
             )}
           />
         </div>
+        {/* Company Provided Name */}
+        {watch('department') === 'Marketing' && (
+          <div>
+            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+              <span className="uppercase">Company Provided Name</span>
+              <span className="text-red-700 text-wrap block text-xs">
+                {errors.company_provided_name &&
+                  errors.company_provided_name?.message}
+              </span>
+            </label>
+            <input
+              {...register('company_provided_name')}
+              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              type="text"
+            />
+          </div>
+        )}
       </div>
 
       <div>

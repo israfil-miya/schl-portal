@@ -133,7 +133,7 @@ async function handleStoreInvoice(
     const resData = await Invoice.create([data], { session });
     const updatedClientData = await Client.findByIdAndUpdate(
       data.client_id,
-      { last_invoice_number: data.invoice_number },
+      // { last_invoice_number: data.invoice_number + 1 }, // Increment the invoice number (commented out for testing)
       { session, new: true }, // Pass the session here
     );
 

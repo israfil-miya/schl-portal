@@ -7,8 +7,7 @@ import { redirect } from 'next/navigation';
 import React from 'react';
 import Profile from './components/Profile';
 
-const getEmployeeInfo = async () => {
-  const session = await auth();
+const getEmployeeInfo = async (employee_name: string) => {
   try {
     let url: string =
       process.env.NEXT_PUBLIC_BASE_URL +
@@ -18,7 +17,7 @@ const getEmployeeInfo = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ real_name: session?.user.real_name }),
+      body: JSON.stringify({ real_name: employee_name }),
     };
 
     const response = await fetchApi(url, options);
@@ -35,23 +34,19 @@ const getEmployeeInfo = async () => {
   }
 };
 
-async function MyAccountPage() {
-  console.log('My Account Page');
+async function AccountPage({
+  searchParams,
+}: {
+  searchParams: { name: string };
+}) {
+  const employee_name = decodeURIComponent(searchParams.name);
   const session = await auth();
-  const avatarURI = await generateAvatar(session?.user.real_name || '');
-  const employeeInfo = await getEmployeeInfo();
+  const avatarURI = await generateAvatar(employee_name || '');
+  const employeeInfo = await getEmployeeInfo(employee_name);
 
   if (employeeInfo === null) {
     console.error('Employee info is null');
     redirect('/');
-  }
-
-  const cookieStore = cookies();
-  const token = cookieStore.get('verify-token.tmp')?.value;
-  const verified = verifyCookie(token, session?.user.db_id || '');
-
-  if (!verified) {
-    redirect('/protected?redirect=' + '/my-account');
   }
 
   return (
@@ -61,4 +56,4 @@ async function MyAccountPage() {
   );
 }
 
-export default MyAccountPage;
+export default AccountPage;

@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn, generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import {
   setCalculatedZIndex,
@@ -10,7 +10,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
-import { SquarePen, X } from 'lucide-react';
+import { KeySquare, SquarePen, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
@@ -228,16 +228,35 @@ const EditButton: React.FC<PropsType> = props => {
               </div>
 
               <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
                   <span className="uppercase">Password*</span>
                   <span className="text-red-700 text-wrap block text-xs">
                     {errors.password && errors.password.message}
                   </span>
                 </label>
-                <input
-                  {...register('password')}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                />
+                <div className="flex items-center">
+                  <input
+                    {...register('password')}
+                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  />
+                  <button
+                    onClick={() => {
+                      setValue(
+                        'password',
+                        generatePassword(
+                          watch('real_name').split(' ')[
+                            watch('real_name').split(' ').length - 1
+                          ],
+                          watch('name'),
+                        ),
+                      );
+                    }}
+                    type="button"
+                    className="bg-gray-200 hover:bg-gray-300 text-black py-3.5 px-4 rounded-r focus:outline-none transition duration-100 delay-100"
+                  >
+                    <KeySquare size={18} />
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-x-3 gap-y-4 mb-4">

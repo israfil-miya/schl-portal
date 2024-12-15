@@ -7,6 +7,7 @@ export const getTodayDate_DD_MM_YYYY = () => {
 };
 
 export const formatTime = (time24: string) => {
+  if (!time24) return '';
   return moment(time24, 'HH:mm').format('hh:mm A');
 };
 

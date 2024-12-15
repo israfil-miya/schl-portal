@@ -190,10 +190,7 @@ export default async function generateInvoice(
       tl: { col: 2, row: 0.5 },
       ext: { width: 210, height: 150 },
     };
-    const file = await getFileFromUrl(
-      '/images/NEW-SCH-logo-text-grey.png',
-      'logo.png',
-    );
+    const file = await getFileFromUrl('/images/logo-grey.png', 'logo.png');
 
     const logoDataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();

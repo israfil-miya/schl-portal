@@ -141,11 +141,11 @@ const Details: React.FC<DetailsProps> = props => {
 
       const invoice = await generateInvoice(invoiceData, billData);
       if (!invoice) {
-        toast.error('Unable to generate invoice');
+        toast.error('Unable to generate invoice', { id: toastId });
         return;
       }
 
-      toast.success("Invoice generated successfully. Don't close!", {
+      toast.success('Invoice generated successfully', {
         id: toastId,
       });
 
@@ -157,7 +157,7 @@ const Details: React.FC<DetailsProps> = props => {
       anchor.click();
       window.URL.revokeObjectURL(url);
 
-      toastId = toast.loading('Saving invoice in database...');
+      toast.loading('Saving invoice in database...', { id: toastId });
 
       const database_url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/invoice?action=store-invoice';
@@ -183,7 +183,7 @@ const Details: React.FC<DetailsProps> = props => {
       let database_response = await fetchApi(database_url, database_options);
 
       if (!database_response.ok) {
-        toast.error(database_response.data as string);
+        toast.error(database_response.data as string, { id: toastId });
         return;
       }
 
@@ -191,7 +191,7 @@ const Details: React.FC<DetailsProps> = props => {
         id: toastId,
       });
 
-      toastId = toast.loading('Saving invoice in ftp...');
+      toast.loading('Saving invoice in ftp...', { id: toastId });
 
       const formData = new FormData();
       formData.append(
@@ -212,13 +212,15 @@ const Details: React.FC<DetailsProps> = props => {
       let ftp_response = await fetchApi(ftp_url, ftp_options);
 
       if (!ftp_response.ok) {
-        toast.error(ftp_response.data as string);
+        toast.error(ftp_response.data as string, { id: toastId });
         return;
       }
 
       toast.success('Invoice saved successfully in ftp', {
         id: toastId,
       });
+
+      toast.dismiss(toastId);
 
       toast.success('Invoice created successfully!');
     } catch (e) {

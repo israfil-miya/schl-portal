@@ -1,6 +1,5 @@
 import { auth } from '@/auth';
 import { verifyCookie } from '@/lib/utils';
-import Cookies from 'js-cookie';
 import { useSession } from 'next-auth/react';
 import { cookies } from 'next/headers';
 import { permanentRedirect, useSearchParams } from 'next/navigation';

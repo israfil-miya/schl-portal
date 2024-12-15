@@ -24,7 +24,7 @@ async function handleInsertFile(req: NextRequest): Promise<{
 
     const formData = await req.formData();
 
-    const file = formData.get('file') as File | null;
+    const file = formData.get('invoice') as File | null;
     if (!file) {
       return { data: 'File blob is required', status: 400 };
     }
