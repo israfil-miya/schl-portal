@@ -17,6 +17,15 @@ export const formatDate = (dateString: string | Date) => {
   return moment(dateString).format("Do MMM. 'YY");
 };
 
+export function formatTimestamp(timestamp: string) {
+  const formattedDate = moment(timestamp);
+
+  return {
+    date: formattedDate.format('DD-MM-YYYY') || '',
+    time: formattedDate.format('HH:mm') || '',
+  };
+}
+
 export const toISODate = (
   dateStr: string,
   hours = 0,

@@ -372,9 +372,10 @@ async function handleApproveResponse(data: {
       }
 
       if (!resData) {
-        throw new Error(
-          `Failed to process ${approvalData.req_type} for ID: ${approvalData.id}`,
-        );
+        return {
+          data: `Failed to process ${approvalData.req_type}`,
+          status: 400,
+        };
       }
 
       // Update approval status
@@ -409,6 +410,9 @@ export async function POST(req: NextRequest) {
     case 'multiple-response':
       res = await handleMultipleResponse(req);
       return NextResponse.json(res.data, { status: res.status });
+    case 'get-all-approvals':
+      res = await handleGetAllApprovals(req);
+      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
@@ -418,9 +422,6 @@ export async function GET(req: NextRequest) {
   let res: { data: any; status: number };
 
   switch (getQuery(req).action) {
-    case 'get-all-approvals':
-      res = await handleGetAllApprovals(req);
-      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }

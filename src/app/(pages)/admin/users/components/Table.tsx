@@ -70,11 +70,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           page,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          staleUser: true,
-          regularUser: false,
-          test: false,
-        }),
+        body: JSON.stringify({}),
       };
 
       let response = await fetchApi(url, options);
