@@ -105,7 +105,6 @@ const Form: React.FC<PropsType> = props => {
 
   async function createUser(userData: UserDataType) {
     try {
-      setLoading(true);
       const parsed = validationSchema.safeParse(userData);
 
       if (!parsed.success) {
@@ -114,24 +113,58 @@ const Form: React.FC<PropsType> = props => {
         return;
       }
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(parsed.data),
-      };
+      if (
+        session?.user.role == 'admin' &&
+        (parsed.data.role == 'super' || parsed.data.role == 'admin')
+      ) {
+        toast.error("You don't have the permission to create this user");
+        return;
+      }
 
-      const response = await fetchApi(url, options);
+      setLoading(true);
 
-      if (response.ok) {
-        toast.success('Created new user successfully');
-        reset();
-        // reset the form after successful submission
+      if (session?.user.role == 'super') {
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(parsed.data),
+        };
+
+        const response = await fetchApi(url, options);
+
+        if (response.ok) {
+          toast.success('Created new user successfully');
+          reset();
+          // reset the form after successful submission
+        } else {
+          toast.error(response.data as string);
+        }
       } else {
-        toast.error(response.data as string);
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            req_type: 'User Create',
+            req_by: session?.user.real_name,
+            ...parsed.data,
+          }),
+        };
+
+        let response = await fetchApi(url, options);
+
+        if (response.ok) {
+          toast.success('Request sent for approval');
+        } else {
+          toast.error(response.data.message);
+        }
       }
 
       console.log('data', parsed.data, userData);

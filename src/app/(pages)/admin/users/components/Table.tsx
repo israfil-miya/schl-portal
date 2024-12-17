@@ -127,7 +127,8 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
 
   async function deleteUser(userId: string, reqBy: string) {
     try {
-      let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -137,6 +138,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           req_type: 'User Delete',
           req_by: reqBy,
           id: userId,
+          // for view action you have to pass the user data as well to show in the modal
         }),
       };
 
@@ -156,7 +158,6 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
 
   async function editUser(editedUserData: UserDataType) {
     try {
-      setLoading(true);
       const parsed = validationSchema.safeParse(editedUserData);
 
       if (!parsed.success) {
@@ -164,6 +165,18 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
         toast.error('Invalid form data');
         return;
       }
+
+      if (
+        (session?.user.role === 'admin' &&
+          ['super', 'admin'].includes(parsed.data.role)) ||
+        (session?.user.db_id === parsed.data._id &&
+          session?.user.role !== parsed.data.role)
+      ) {
+        toast.error("You don't have the permission to edit this user");
+        return;
+      }
+
+      setLoading(true);
 
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=edit-user';

@@ -18,10 +18,15 @@ export interface RegexQuery {
 }
 
 export interface Query {
+  $or?: Array<{
+    is_rejected?: boolean | { $eq: boolean };
+    checked_by?: string | { $eq: string; $ne: string };
+  }>;
+  is_rejected?: boolean | { $eq: boolean };
+  checked_by?: string | { $eq: string; $ne: string };
+
   req_type?: RegexQuery;
   req_by?: RegexQuery;
-  checked_by?: { $ne?: string | boolean; $eq?: string | boolean };
-  is_rejected?: { $eq?: boolean | string; $ne?: boolean | string };
   createdAt?: { $gte?: string; $lte?: string };
 }
 
@@ -68,7 +73,17 @@ async function handleSingleResponse(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const { id, response, checked_by } = await req.json();
+    const {
+      id,
+      response,
+      checked_by,
+      ...additionalData
+    }: {
+      response: string;
+      checked_by: string;
+      id: string;
+      [key: string]: string | string[] | undefined | number;
+    } = await req.json();
 
     // Input validation
     if (!response || !checked_by || !id) {
@@ -81,7 +96,11 @@ async function handleSingleResponse(req: NextRequest): Promise<{
     }
 
     if (response === 'approve') {
-      return handleApproveResponse({ checked_by, approval_id: id });
+      return handleApproveResponse({
+        checked_by,
+        approval_id: id,
+        ...additionalData,
+      });
     }
 
     return { data: 'Invalid response type', status: 400 };
@@ -132,16 +151,28 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
     addRegexField(query, 'req_by', reqBy, true);
     addRegexField(query, 'req_type', reqType, true);
 
+    const orConditions: any[] = [];
+
     if (approvedCheck) {
-      query.is_rejected = { $eq: false };
-      query.checked_by = { $ne: 'None' };
+      orConditions.push({
+        is_rejected: false,
+        checked_by: { $ne: 'None' },
+      });
     }
     if (rejectedCheck) {
-      query.is_rejected = { $eq: true };
-      query.checked_by = { $ne: 'None' };
+      orConditions.push({
+        is_rejected: true,
+        checked_by: { $ne: 'None' },
+      });
     }
     if (waitingCheck) {
-      query.checked_by = { $eq: 'None' };
+      orConditions.push({
+        checked_by: 'None',
+      });
+    }
+
+    if (orConditions.length > 0) {
+      query.$or = orConditions;
     }
 
     console.log(query);
@@ -221,10 +252,12 @@ async function handleMultipleResponse(req: NextRequest): Promise<{
       response,
       checked_by,
       approval_ids,
+      ...additionalData
     }: {
       response: string;
       checked_by: string;
       approval_ids: string[];
+      [key: string]: string | string[] | undefined | number;
     } = await req.json();
 
     // Input validation
@@ -242,7 +275,11 @@ async function handleMultipleResponse(req: NextRequest): Promise<{
     }
 
     if (response === 'approve') {
-      return handleApproveResponse({ checked_by, approval_ids });
+      return handleApproveResponse({
+        checked_by,
+        approval_ids,
+        ...additionalData,
+      });
     }
 
     return { data: 'Invalid response type', status: 400 };
@@ -378,15 +415,17 @@ async function handleApproveResponse(data: {
         };
       }
 
-      // Update approval status
-      return Approval.findByIdAndUpdate(
-        data._id,
+      // Actually await the update and return the updated approval
+      const updatedApproval = await Approval.findByIdAndUpdate(
+        approval_ID,
         {
           checked_by: data.checked_by,
           is_rejected: false,
         },
         { new: true },
       );
+
+      return updatedApproval;
     });
 
     const results = await Promise.all(approvalPromises);

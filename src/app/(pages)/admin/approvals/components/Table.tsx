@@ -1,9 +1,6 @@
 'use client';
 
-import Badge from '@/components/Badge';
-import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
-import { EmployeeDataType } from '@/models/Employees';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -11,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 // import { ApprovalDataType, validationSchema } from '../schema';
+import Badge from '@/components/Badge';
 import { ApprovalDataType } from '@/models/Approvals';
 import { formatTimestamp } from '@/utility/date';
 import { CircleCheckBig, CircleX } from 'lucide-react';
@@ -24,7 +22,7 @@ type ApprovalsState = {
   items: ApprovalDataType[];
 };
 
-const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
+const Table: React.FC = props => {
   const [approvals, setApprovals] = useState<ApprovalsState>({
     pagination: {
       count: 0,
@@ -171,7 +169,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
       let toastId = toast.loading('Sending request for approval...');
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/approval?action=single-response';
+        '/api/approval?action=multiple-response';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -338,11 +336,11 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           style={{ display: 'flex', alignItems: 'center' }}
         >
           {approvalIds.length !== 0 && (
-            <div className="align-middle text-center d-flex align-items-center ms-5 justify-content-center">
+            <div className="align-middle text-center flex gap-1 ms-4">
               <button
                 onClick={() => {
                   let confirmation = confirm(
-                    'Are you sure you want to approve these approvals?',
+                    'Are you sure you want to approve selected requests?',
                   );
                   if (confirmation) {
                     multipleApproval('approve');
@@ -355,7 +353,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
               <button
                 onClick={() => {
                   let confirmation = confirm(
-                    'Are you sure you want to reject these approvals?',
+                    'Are you sure you want to reject selected requests?',
                   );
                   if (confirmation) {
                     multipleApproval('reject');
@@ -382,24 +380,28 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                     className="text-center"
                     style={{ verticalAlign: 'middle' }}
                   >
-                    <div className="inline-block items-center">
-                      <div className="flex gap-2">
-                        <input
-                          type="checkbox"
-                          id="selectAllCheckbox"
-                          checked={
-                            approvalIds.length ===
-                              approvals?.items?.filter(
-                                item => item.checked_by === 'None',
-                              ).length &&
+                    <div className="flex justify-center items-center h-full py-1">
+                      <input
+                        type="checkbox"
+                        id="selectAllCheckbox"
+                        disabled={
+                          approvals?.items?.length === 0 ||
+                          approvals?.items?.filter(
+                            item => item.checked_by === 'None',
+                          ).length === 0
+                        }
+                        checked={
+                          approvalIds.length ===
                             approvals?.items?.filter(
                               item => item.checked_by === 'None',
-                            ).length !== 0
-                          }
-                          className="w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                          onChange={handleSelectAll}
-                        />
-                      </div>
+                            ).length &&
+                          approvals?.items?.filter(
+                            item => item.checked_by === 'None',
+                          ).length !== 0
+                        }
+                        className="disabled:cursor-default w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded-md cursor-pointer"
+                        onChange={handleSelectAll}
+                      />
                     </div>
                   </th>
                   <th>Requester</th>
@@ -412,13 +414,16 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
               <tbody>
                 {approvals?.items?.map((approval, index) => (
                   <tr key={String(approval._id)}>
-                    <td>
-                      <div className="form-check align-middle text-center d-flex align-items-center justify-content-center">
+                    <td
+                      className="text-center"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <div className="flex justify-center items-center h-full py-1">
                         <input
                           disabled={approval.checked_by !== 'None'}
                           type="checkbox"
                           id={`checkbox_${String(approval._id)}`}
-                          className="w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                          className="disabled:cursor-default w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded-md cursor-pointer"
                           checked={approvalIds.includes(String(approval._id))}
                           onChange={() =>
                             handleCheckboxChange(String(approval._id))
@@ -427,14 +432,35 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                       </div>
                     </td>
                     <td className="text-wrap">{approval.req_by}</td>
-                    <td className="text-wrap">
-                      {approval.checked_by && approval.checked_by !== 'None'
-                        ? approval.is_rejected
-                          ? 'Rejected'
-                          : 'Approved'
-                        : 'Waiting'}
+                    <td
+                      className="uppercase text-wrap"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      {approval.checked_by && approval.checked_by !== 'None' ? (
+                        approval.is_rejected ? (
+                          <Badge
+                            value={'Rejected'}
+                            className="bg-red-600 text-white border-red-600"
+                          />
+                        ) : (
+                          <Badge
+                            value={'Approved'}
+                            className="bg-green-600 text-white border-green-600"
+                          />
+                        )
+                      ) : (
+                        <Badge
+                          value={'Waiting'}
+                          className="bg-gray-600 text-white border-gray-600"
+                        />
+                      )}
                     </td>
-                    <td className="text-wrap">{approval.req_type}</td>
+                    <td
+                      className="text-center"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      <Badge value={approval.req_type} className="uppercase" />
+                    </td>
                     <td className="text-wrap">
                       {formatTimestamp(approval.createdAt!).date}
                       {' | '}
@@ -444,9 +470,9 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                       className="text-center"
                       style={{ verticalAlign: 'middle' }}
                     >
-                      <div className="inline-block">
+                      <div className="flex justify-center items-center h-full py-1">
                         <div className="flex gap-2">
-                          {approval.checked_by == 'None' && (
+                          {approval.checked_by == 'None' ? (
                             <>
                               <button
                                 onClick={() =>
@@ -455,7 +481,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                                     'approve',
                                   )
                                 }
-                                className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 flex items-center"
                               >
                                 <CircleCheckBig size={18} />
                               </button>
@@ -464,10 +490,25 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                                 onClick={() =>
                                   singleApproval(String(approval._id), 'reject')
                                 }
-                                className="rounded-md bg-red-600 hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                className="rounded-md bg-red-600 hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 flex items-center"
                               >
                                 <CircleX size={18} />
                               </button>
+                            </>
+                          ) : (
+                            <>
+                              Checked by{' '}
+                              <span className="font-semibold">
+                                {approval.checked_by}
+                              </span>{' '}
+                              on{' '}
+                              <span className="font-semibold">
+                                {formatTimestamp(approval.createdAt!).date}{' '}
+                              </span>{' '}
+                              at{' '}
+                              <span className="font-semibold">
+                                {formatTimestamp(approval.createdAt!).time}
+                              </span>
                             </>
                           )}
                         </div>

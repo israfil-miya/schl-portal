@@ -142,7 +142,8 @@ const Table = () => {
       //   return;
       // }
 
-      let url: string = process.env.NEXT_PUBLIC_PORTAL_URL + '/api/approval';
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
       let options: {} = {
         method: 'POST',
         headers: {
