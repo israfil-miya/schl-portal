@@ -137,7 +137,7 @@ async function handleGetAllClients(req: NextRequest): Promise<{
     } else {
       const skip = (page - 1) * ITEMS_PER_PAGE;
       const count: number = await Client.countDocuments(searchQuery);
-      let clients: ClientDataType[];
+      let clients: any[];
 
       if (paginated) {
         clients = (await Client.aggregate([

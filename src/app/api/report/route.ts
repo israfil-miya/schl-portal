@@ -518,7 +518,7 @@ async function handleGetAllReports(req: NextRequest): Promise<{
           },
         ]);
       } else {
-        reports = (await Report.find(searchQuery).lean()) as ReportDataType[];
+        reports = await Report.find(searchQuery).lean();
       }
 
       console.log('GET REPORTS: SEARCH Query:', searchQuery);

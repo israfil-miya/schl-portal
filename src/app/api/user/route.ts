@@ -162,7 +162,7 @@ async function handleGetAllUsers(req: NextRequest): Promise<{
           },
         ]);
       } else {
-        users = (await User.find(searchQuery).lean()) as UserDataType[];
+        users = await User.find(searchQuery).lean();
       }
 
       const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);

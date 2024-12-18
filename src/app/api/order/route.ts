@@ -105,10 +105,10 @@ async function handleGetUnfinishedOrders(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const orders = (await Order.find({
+    const orders: any[] = await Order.find({
       status: { $nin: ['Finished', 'Correction'] },
       type: { $ne: 'Test' },
-    }).lean()) as OrderDataType[];
+    }).lean();
 
     if (orders) {
       const sortedOrders = orders
@@ -136,10 +136,10 @@ async function handleGetRedoOrders(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const orders = (await Order.find({
+    const orders: any[] = await Order.find({
       $or: [{ type: 'Test' }, { status: 'Correction' }],
       status: { $ne: 'Finished' },
-    }).lean()) as OrderDataType[];
+    }).lean();
 
     if (orders) {
       const sortedOrders = orders
@@ -231,7 +231,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
       }
 
       const count: number = await Order.countDocuments(searchQuery);
-      let orders: OrderDataType[];
+      let orders: any[];
 
       if (paginated) {
         orders = (await Order.aggregate([
@@ -284,11 +284,11 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ])) as OrderDataType[];
       } else {
-        orders = (await Order.find(searchQuery)
+        orders = await Order.find(searchQuery)
           .sort({
             createdAt: -1,
           })
-          .lean()) as OrderDataType[];
+          .lean();
       }
 
       console.log('SEARCH Query:', searchQuery);
@@ -710,18 +710,18 @@ async function handleGetOrdersByCountry(req: NextRequest): Promise<{
 
     const countryFilter =
       country === 'Others' ? { $nin: countriesList } : country;
-    const clientsAll = (await Client.find(
+    const clientsAll = await Client.find(
       { country: countryFilter },
       { client_code: 1, country: 1 },
-    ).lean()) as ClientDataType[];
+    ).lean();
 
-    const returnData: OrderDetails = { details: [], totalFiles: 0 };
+    const returnData: any = { details: [], totalFiles: 0 };
     await Promise.all(
       clientsAll.map(async clientData => {
-        const orders = (await Order.find({
+        const orders = await Order.find({
           ...query,
           client_code: clientData.client_code,
-        }).lean()) as OrderDataType[];
+        }).lean();
         orders.forEach(order => {
           returnData.details.push({ ...order, country: clientData.country });
           returnData.totalFiles += order.quantity;
@@ -758,10 +758,10 @@ async function handleGetOrdersByMonth(req: NextRequest): Promise<{
 
   try {
     const skip = (page - 1) * ITEMS_PER_PAGE;
-    const clients = (await Client.find(query, { client_code: 1 })
+    const clients = await Client.find(query, { client_code: 1 })
       .skip(skip)
       .limit(ITEMS_PER_PAGE)
-      .lean()) as ClientDataType[];
+      .lean();
     const result: ClientOrdersByMonth[] = [];
 
     for (const client of clients) {
@@ -780,10 +780,10 @@ async function handleGetOrdersByMonth(req: NextRequest): Promise<{
         .toDate();
       const endDate = moment().endOf('month').toDate();
 
-      const orders = (await Order.find({
+      const orders = await Order.find({
         client_code: client.client_code,
         createdAt: { $gte: startDate, $lte: endDate },
-      }).lean()) as OrderDataType[];
+      }).lean();
 
       orders.forEach((order: any) => {
         const monthYear = moment(order.createdAt).format('YYYY-MM');
@@ -810,11 +810,11 @@ async function handleGetOrdersByMonth(req: NextRequest): Promise<{
 
         if (count) {
           const { start, end } = getMonthRange(formattedMonthYear);
-          invoiced = !!((await Invoice.findOne({
+          invoiced = !!(await Invoice.findOne({
             client_code: client.client_code,
             'time_period.fromDate': { $gte: start },
             'time_period.toDate': { $lte: end },
-          }).lean()) as InvoiceDataType);
+          }).lean());
         }
 
         clientOrders.orders.push({

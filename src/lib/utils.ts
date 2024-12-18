@@ -202,3 +202,24 @@ export const verifyCookie = (token?: string, id?: string) => {
     return false;
   }
 };
+
+export function incrementInvoiceNumber(invoiceNumber: string): string {
+  // Match the prefix (non-numeric) and numeric parts
+  const match = invoiceNumber.match(/^([A-Za-z]*)(\d+)$/);
+
+  if (!match) {
+    throw new Error('Invalid invoice number format');
+  }
+
+  const prefix = match[1]; // Extract the non-numeric prefix (e.g., 'XO')
+  const numericPart = match[2]; // Extract the numeric part (e.g., '0028')
+
+  // Increment the numeric part
+  const incrementedNumber = (parseInt(numericPart, 10) + 1).toString();
+
+  // Pad the numeric part with leading zeros to match the original length
+  const paddedNumber = incrementedNumber.padStart(numericPart.length, '0');
+
+  // Return the new invoice number
+  return `${prefix}${paddedNumber}`;
+}

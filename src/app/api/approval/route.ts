@@ -190,7 +190,7 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
       const count: number = await Approval.countDocuments(searchQuery);
-      let approvals: ApprovalDataType[];
+      let approvals: any[];
 
       if (paginated) {
         approvals = (await Approval.aggregate([
@@ -212,11 +212,11 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ])) as ApprovalDataType[];
       } else {
-        approvals = (await Approval.find(searchQuery)
+        approvals = await Approval.find(searchQuery)
           .sort({
             createdAt: -1,
           })
-          .lean()) as ApprovalDataType[];
+          .lean();
       }
 
       console.log('SEARCH Query:', searchQuery);
@@ -350,8 +350,7 @@ async function handleApproveResponse(data: {
       : [data.approval_id!];
 
     const approvalPromises = ids.map(async (approval_ID: string) => {
-      const approvalData: ApprovalDataType | null =
-        await Approval.findById(approval_ID).lean();
+      const approvalData: any = await Approval.findById(approval_ID).lean();
 
       if (!approvalData) {
         throw new Error(`Approval not found for ID: ${approval_ID}`);

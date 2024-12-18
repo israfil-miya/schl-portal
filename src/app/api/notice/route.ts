@@ -76,7 +76,7 @@ async function handleGetAllNotices(req: NextRequest): Promise<{
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
       const count: number = await Notice.countDocuments(searchQuery);
-      let notices: NoticeDataType[];
+      let notices: any[];
 
       if (paginated) {
         notices = (await Notice.aggregate([
@@ -86,11 +86,11 @@ async function handleGetAllNotices(req: NextRequest): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ])) as NoticeDataType[];
       } else {
-        notices = (await Notice.find(searchQuery)
+        notices = await Notice.find(searchQuery)
           .sort({
             createdAt: -1,
           })
-          .lean()) as NoticeDataType[];
+          .lean();
       }
 
       console.log('SEARCH Query:', searchQuery);

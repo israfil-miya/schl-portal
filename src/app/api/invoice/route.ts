@@ -1,4 +1,4 @@
-import { dbConnect, getQuery } from '@/lib/utils';
+import { dbConnect, getQuery, incrementInvoiceNumber } from '@/lib/utils';
 import Client from '@/models/Clients';
 import Invoice, { InvoiceDataType } from '@/models/Invoices';
 import { toISODate } from '@/utility/date';
@@ -79,7 +79,7 @@ async function handleGetAllInvoices(req: NextRequest): Promise<{
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
       const count: number = await Invoice.countDocuments(searchQuery);
-      let invoices: InvoiceDataType[];
+      let invoices: any[];
 
       if (paginated) {
         invoices = (await Invoice.aggregate([
@@ -89,11 +89,11 @@ async function handleGetAllInvoices(req: NextRequest): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ])) as InvoiceDataType[];
       } else {
-        invoices = (await Invoice.find(searchQuery)
+        invoices = await Invoice.find(searchQuery)
           .sort({
             createdAt: -1,
           })
-          .lean()) as InvoiceDataType[];
+          .lean();
       }
 
       console.log('SEARCH Query:', searchQuery);
@@ -133,7 +133,7 @@ async function handleStoreInvoice(
     const resData = await Invoice.create([data], { session });
     const updatedClientData = await Client.findByIdAndUpdate(
       data.client_id,
-      // { last_invoice_number: data.invoice_number + 1 }, // Increment the invoice number (commented out for testing)
+      { last_invoice_number: incrementInvoiceNumber(data.invoice_number) }, // Increment the invoice number
       { session, new: true }, // Pass the session here
     );
 

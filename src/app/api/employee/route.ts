@@ -330,10 +330,10 @@ async function handleGetAllMarketers(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const marketers = (await Employee.find({
+    const marketers: any[] = await Employee.find({
       department: 'Marketing',
       status: 'Active',
-    }).lean()) as EmployeeDataType[];
+    }).lean();
 
     return { data: marketers, status: 200 };
   } catch (e) {

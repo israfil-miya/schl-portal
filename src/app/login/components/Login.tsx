@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
-import LoginForm from './Form';
-import { toast } from 'sonner';
+import '@/app/globals.css';
 import moment from 'moment-timezone';
+import React from 'react';
+import { toast } from 'sonner';
+import LoginForm from './Form';
 
 const Login: React.FC = () => {
   toast.info('Welcome to Studio Click House Ltd.', { id: 'welcome' });
