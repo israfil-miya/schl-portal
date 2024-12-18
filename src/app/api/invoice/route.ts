@@ -199,6 +199,9 @@ export async function POST(req: NextRequest) {
     case 'delete-invoice':
       res = await handleDeleteInvoice(req);
       return NextResponse.json(res.data, { status: res.status });
+    case 'store-invoice':
+      res = await handleStoreInvoice(req);
+      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
@@ -208,9 +211,6 @@ export async function GET(req: NextRequest) {
   let res: { data: any; status: number };
 
   switch (getQuery(req).action) {
-    case 'store-invoice':
-      res = await handleStoreInvoice(req);
-      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
