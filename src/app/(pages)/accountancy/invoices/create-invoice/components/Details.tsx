@@ -256,6 +256,7 @@ const Details: React.FC<DetailsProps> = props => {
         body: JSON.stringify({
           ...props.filters,
         }),
+        cache: 'no-store',
       };
 
       let response = await fetchApi(url, options);

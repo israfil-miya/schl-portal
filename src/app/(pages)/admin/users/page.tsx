@@ -26,6 +26,7 @@ export const getAllEmployees = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({}),
+      cache: 'no-store',
     };
 
     const response = await fetchApi(url, options);

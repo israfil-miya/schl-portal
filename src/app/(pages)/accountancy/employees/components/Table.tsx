@@ -91,6 +91,7 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({}),
+        cache: 'no-store',
       };
 
       let response = await fetchApi(url, options);
@@ -130,6 +131,7 @@ const Table = () => {
         body: JSON.stringify({
           ...filters,
         }),
+        cache: 'no-store',
       };
 
       let response = await fetchApi(url, options);
