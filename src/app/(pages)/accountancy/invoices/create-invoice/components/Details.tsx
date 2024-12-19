@@ -248,6 +248,7 @@ const Details: React.FC<DetailsProps> = props => {
       let options: {} = {
         method: 'POST',
         headers: {
+          Accept: '*/*',
           filtered: true,
           paginated: false,
           'Content-Type': 'application/json',
@@ -323,7 +324,7 @@ const Details: React.FC<DetailsProps> = props => {
           ? clientDetails.address.trim().endsWith(',')
             ? `${clientDetails.address} ${clientDetails.country}`
             : `${clientDetails.address}, ${clientDetails.country}`
-          : clientDetails.country ?? '',
+          : (clientDetails.country ?? ''),
         contactPerson: clientDetails.contact_person ?? '',
         email: clientDetails.email ?? '',
         contactNumber: clientDetails.contact_number ?? '',

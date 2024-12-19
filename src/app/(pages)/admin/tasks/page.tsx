@@ -21,6 +21,7 @@ const getAllClients = async () => {
     let options: {} = {
       method: 'POST',
       headers: {
+        Accept: '*/*',
         paginated: false,
         filtered: false,
         'Content-Type': 'application/json',

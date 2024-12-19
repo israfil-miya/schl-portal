@@ -62,6 +62,7 @@ const Table = () => {
       let options: {} = {
         method: 'POST',
         headers: {
+          Accept: '*/*',
           filtered: false,
           paginated: true,
           items_per_page: itemPerPage,
@@ -99,6 +100,7 @@ const Table = () => {
       let options: {} = {
         method: 'POST',
         headers: {
+          Accept: '*/*',
           filtered: true,
           paginated: true,
           items_per_page: itemPerPage,

@@ -85,6 +85,7 @@ const Table = () => {
       let options: {} = {
         method: 'POST',
         headers: {
+          Accept: '*/*',
           filtered: false,
           paginated: false,
           'Content-Type': 'application/json',
@@ -121,6 +122,7 @@ const Table = () => {
       let options: {} = {
         method: 'POST',
         headers: {
+          Accept: '*/*',
           filtered: true,
           paginated: false,
           'Content-Type': 'application/json',
