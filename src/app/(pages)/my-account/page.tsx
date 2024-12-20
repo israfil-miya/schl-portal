@@ -19,6 +19,7 @@ const getEmployeeInfo = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ real_name: session?.user.real_name }),
+      cache: 'no-store',
     };
 
     const response = await fetchApi(url, options);

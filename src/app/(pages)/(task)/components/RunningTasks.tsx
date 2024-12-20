@@ -1,6 +1,7 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
+import Link from '@/components/NextLink';
 import { fetchApi } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
@@ -81,7 +82,16 @@ function RunningTasks() {
               {orders?.map((order, index) => (
                 <tr key={String(order._id)}>
                   <td>{index + 1}</td>
-                  <td>{order.client_code}</td>
+                  <td>
+                    <Link
+                      href={
+                        '/browse/single-order?id=' +
+                        encodeURIComponent(String(order._id))
+                      }
+                    >
+                      {order.client_code}
+                    </Link>
+                  </td>
 
                   <td className="text-pretty">{order.folder}</td>
                   <td>{order.quantity}</td>

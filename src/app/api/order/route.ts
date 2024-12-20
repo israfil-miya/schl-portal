@@ -321,8 +321,8 @@ async function handleGetOrdersById(req: NextRequest): Promise<{
 }> {
   try {
     const headersList = await headers();
-    let _id = headersList.get('_id');
-    const orders = (await Order.findById(_id)) as OrderDataType;
+    let id = headersList.get('id');
+    const orders = (await Order.findById(id)) as OrderDataType;
     if (orders) {
       return { data: orders, status: 200 };
     } else {

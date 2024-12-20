@@ -45,7 +45,6 @@ export const taskOptions = [
   { value: 'Multipath', label: 'Multipath' },
   { value: 'Pattern change', label: 'Pattern change' },
   { value: 'Color change', label: 'Color change' },
-  { value: 'Clipping path', label: 'Clipping path' },
   { value: '3D Neck shot', label: '3D Neck shot' },
   { value: 'Liquify retouch', label: 'Liquify retouch' },
   { value: 'Trade retouch', label: 'Trade retouch' },
@@ -57,6 +56,7 @@ export const taskOptions = [
   { value: 'Symmetry liquify', label: 'Symmetry liquify' },
   { value: 'Video Retouch', label: 'Video Retouch' },
   { value: 'Resize', label: 'Resize' },
+  { value: 'Masking', label: 'Masking' },
 ];
 
 export const typeOptions = [
