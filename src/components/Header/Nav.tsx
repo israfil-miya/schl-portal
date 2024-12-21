@@ -268,6 +268,14 @@ const Nav: React.FC<PropsType> = props => {
                       View All
                     </Link>
                   </li>
+                  <li>
+                    <Link
+                      className={cn('block px-4 py-2 hover:bg-primary')}
+                      href={'/accountancy/invoices/invoice-summary'}
+                    >
+                      Summary
+                    </Link>
+                  </li>
                 </ul>
               </div>
             </li>
