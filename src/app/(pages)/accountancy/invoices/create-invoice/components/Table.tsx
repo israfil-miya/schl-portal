@@ -14,8 +14,9 @@ import {
   CirclePlus,
   ClipboardCopy,
 } from 'lucide-react';
+import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Details from './Details';
@@ -38,8 +39,6 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     items: [],
   });
 
-  const router = useRouter();
-
   const [isFiltered, setIsFiltered] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const [pageCount, setPageCount] = useState<number>(0);
@@ -49,20 +48,42 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const prevPageCount = useRef<number>(0);
   const prevPage = useRef<number>(1);
 
+  const searchParams = useSearchParams();
+  const c_code =
+    searchParams.get('c-code') || props.clientsData?.[0].client_code;
+  const month = searchParams.get('month') || moment().format('MMMM-YYYY');
+  const { from, to } = getMonthRange(month);
+
   const { data: session } = useSession();
 
-  const [selectedClient, setSelectedClient] = useState<string>(
-    props.clientsData?.[0].client_code || '',
-  );
+  const [selectedClient, setSelectedClient] = useState<string>(c_code || '');
 
   const [filters, setFilters] = useState({
     folder: '',
-    clientCode: props.clientsData?.[0].client_code || '',
+    clientCode: c_code || '',
     task: '',
     status: '',
-    fromDate: '',
-    toDate: '',
+    fromDate: from,
+    toDate: to,
   });
+
+  function getMonthRange(monthYear: string): { from: string; to: string } {
+    if (!monthYear) return { from: '', to: '' };
+
+    const [monthName, year] = monthYear.split('-');
+    const monthNumber = moment().month(monthName).format('MM');
+
+    const startDate = moment
+      .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
+      .startOf('month')
+      .format('YYYY-MM-DD');
+    const endDate = moment
+      .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
+      .endOf('month')
+      .format('YYYY-MM-DD');
+
+    return { from: startDate, to: endDate };
+  }
 
   async function getAllOrdersFiltered() {
     try {
@@ -115,6 +136,10 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       return p + 1;
     });
   }
+
+  useEffect(() => {
+    if (isFiltered) getAllOrdersFiltered();
+  }, [c_code, month]);
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {

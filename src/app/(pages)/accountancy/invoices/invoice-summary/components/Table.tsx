@@ -107,8 +107,8 @@ const Table = () => {
       let options: {} = {
         method: 'POST',
         headers: {
+          // page,
           items_per_page: itemPerPage,
-          page,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
