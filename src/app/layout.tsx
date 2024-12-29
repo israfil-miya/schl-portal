@@ -3,7 +3,6 @@ import { auth } from '@/auth';
 import Header from '@/components/Header';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
-import { SessionProvider } from 'next-auth/react';
 import { Karla, Lato } from 'next/font/google';
 import { Toaster } from 'sonner';
 

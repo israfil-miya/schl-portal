@@ -19,7 +19,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import FilterButton from './Filter';
 
-interface SummaryDataType {
+interface TrackerDataType {
   client_code: string;
   orders: Array<{
     [key: string]: {
@@ -30,16 +30,16 @@ interface SummaryDataType {
   }>;
 }
 
-type SummaryDataState = {
+type TrackerDataState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: SummaryDataType[];
+  items: TrackerDataType[];
 };
 
 const Table = () => {
-  const [summaryData, setSummaryData] = useState<SummaryDataState>({
+  const [trackerData, setTrackerData] = useState<TrackerDataState>({
     pagination: {
       count: 0,
       pageCount: 0,
@@ -85,13 +85,13 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setSummaryData(response.data as SummaryDataState);
+        setTrackerData(response.data as TrackerDataState);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving summaryData data');
+      toast.error('An error occurred while retrieving invoice data');
     } finally {
       setLoading(false);
     }
@@ -119,14 +119,14 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        setSummaryData(response.data as SummaryDataState);
+        setTrackerData(response.data as TrackerDataState);
         setIsFiltered(true);
       } else {
         toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while retrieving summaryData data');
+      toast.error('An error occurred while retrieving invoice data');
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ const Table = () => {
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
-      if (summaryData?.pagination?.pageCount == 1) return;
+      if (trackerData?.pagination?.pageCount == 1) return;
       if (!isFiltered) getAllDataByMonth();
       else getAllDataByMonthFiltered();
     }
@@ -161,16 +161,16 @@ const Table = () => {
   }, [page]);
 
   useEffect(() => {
-    if (summaryData?.pagination?.pageCount !== undefined) {
+    if (trackerData?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
         if (!isFiltered) getAllDataByMonthFiltered();
       }
-      if (summaryData) setPageCount(summaryData?.pagination?.pageCount);
-      prevPageCount.current = summaryData?.pagination?.pageCount;
+      if (trackerData) setPageCount(trackerData?.pagination?.pageCount);
+      prevPageCount.current = trackerData?.pagination?.pageCount;
       prevPage.current = 1;
     }
-  }, [summaryData?.pagination?.pageCount]);
+  }, [trackerData?.pagination?.pageCount]);
 
   useEffect(() => {
     // Reset to first page when itemPerPage changes
@@ -201,7 +201,7 @@ const Table = () => {
               className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
             >
               <label>
-                Page <b>{summaryData?.items?.length !== 0 ? page : 0}</b> of{' '}
+                Page <b>{trackerData?.items?.length !== 0 ? page : 0}</b> of{' '}
                 <b>{pageCount}</b>
               </label>
             </button>
@@ -242,12 +242,12 @@ const Table = () => {
 
       <div className="table-responsive text-nowrap text-base">
         {!loading &&
-          (summaryData?.items?.length !== 0 ? (
+          (trackerData?.items?.length !== 0 ? (
             <table className="table border table-bordered table-striped">
               <thead>
                 <tr>
                   <th>Client Code</th>
-                  {summaryData?.items?.[0]?.orders.map((data, index) => {
+                  {trackerData?.items?.[0]?.orders.map((data, index) => {
                     const month = Object.keys(data)[0];
                     return <th key={index}>{month.split(' ')[0]}</th>; // <-- to display only month
                     // return <td key={month}>{month}</td>; // <-- to display month and year
@@ -255,7 +255,7 @@ const Table = () => {
                 </tr>
               </thead>
               <tbody>
-                {summaryData?.items?.map((data, index) => (
+                {trackerData?.items?.map((data, index) => (
                   <tr key={index}>
                     <td className="text-start fit ps-4">{data.client_code}</td>
                     {data.orders.map((ordersData, i) => {
@@ -275,6 +275,7 @@ const Table = () => {
                           key={`${month} - ${orderCount}`}
                         >
                           <Link
+                            target="_blank"
                             href={
                               process.env.NEXT_PUBLIC_BASE_URL +
                               `/accountancy/invoices/create-invoice?c-code=${encodeURIComponent(

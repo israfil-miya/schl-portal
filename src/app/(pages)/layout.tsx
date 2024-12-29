@@ -11,7 +11,7 @@ export default async function PageLayout({
   const session = await auth();
 
   return (
-    <SessionProvider session={session}>
+    <SessionProvider session={session} refetchOnWindowFocus={false}>
       <Header />
       {children}
     </SessionProvider>

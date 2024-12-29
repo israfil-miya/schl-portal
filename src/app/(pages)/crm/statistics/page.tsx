@@ -1,6 +1,5 @@
 import { auth } from '@/auth';
 import Header from '@/components/Header';
-import { SessionProvider } from 'next-auth/react';
 import Link from 'next/link';
 import React from 'react';
 import Cards from './components/card/Cards';
