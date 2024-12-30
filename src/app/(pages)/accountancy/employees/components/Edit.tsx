@@ -127,6 +127,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('e_id')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter employee ID"
                 />
               </div>
               <div>
@@ -140,6 +141,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('real_name')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter full name"
                 />
               </div>
               <div>
@@ -153,6 +155,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('joining_date')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="date"
+                  placeholder="Select joining date"
                 />
               </div>
               <div>
@@ -166,6 +169,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('phone')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter phone number"
                 />
               </div>
               <div>
@@ -179,6 +183,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('email')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="email"
+                  placeholder="Enter email address"
                 />
               </div>
               <div>
@@ -192,6 +197,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('nid')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
+                  placeholder="Enter NID number"
                 />
               </div>
               <div>
@@ -205,6 +211,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('birth_date')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="date"
+                  placeholder="Select birth date"
                 />
               </div>
               <div>
@@ -218,6 +225,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('designation')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter designation"
                 />
               </div>
               <div>
@@ -231,6 +239,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('branch')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter branch"
                 />
               </div>
               <div>
@@ -244,6 +253,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('division')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter division"
                 />
               </div>
               <div>
@@ -257,6 +267,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('gross_salary')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
+                  placeholder="Enter gross salary"
                 />
               </div>
               <div>
@@ -271,6 +282,7 @@ const EditButton: React.FC<PropsType> = props => {
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
                   step="0.1"
+                  placeholder="Enter PF percentage"
                 />
               </div>
               <div>
@@ -284,6 +296,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('pf_start_date')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="date"
+                  placeholder="Select PF start date"
                 />
               </div>
 
@@ -340,6 +353,7 @@ const EditButton: React.FC<PropsType> = props => {
                     setValue('bonus_eid_ul_fitr', watch('gross_salary') * 0.5)
                   }
                   step={0.1}
+                  placeholder="Enter Eid-ul-Fitr bonus amount"
                 />
               </div>
               <div>
@@ -359,6 +373,7 @@ const EditButton: React.FC<PropsType> = props => {
                     setValue('bonus_eid_ul_adha', watch('gross_salary') * 0.5)
                   }
                   step={0.1}
+                  placeholder="Enter Eid-ul-Adha bonus amount"
                 />
               </div>
               <div>
@@ -445,6 +460,7 @@ const EditButton: React.FC<PropsType> = props => {
                     {...register('company_provided_name')}
                     className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     type="text"
+                    placeholder="Enter company provided name"
                   />
                 </div>
               )}

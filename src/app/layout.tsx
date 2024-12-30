@@ -1,9 +1,9 @@
 import '@/app/globals.css';
 import { auth } from '@/auth';
-import Header from '@/components/Header';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { Karla, Lato } from 'next/font/google';
+import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 
 // Initialize the fonts
@@ -21,8 +21,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -32,6 +30,7 @@ export default async function RootLayout({
           lato.className,
         )}
       >
+        <NextTopLoader color="#7ba541" height={4} />
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <main>{children}</main>
         <Toaster

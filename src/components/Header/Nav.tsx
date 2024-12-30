@@ -6,9 +6,9 @@ import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { useEffect } from 'react';
-import Link from '../NextLink';
 
 interface PropsType {
   msg?: string | undefined;

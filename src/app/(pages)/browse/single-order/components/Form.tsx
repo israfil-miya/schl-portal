@@ -15,7 +15,7 @@ import Select from 'react-select';
 import { generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { KeySquare } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import { toast } from 'sonner';
 import {
   priorityOptions,

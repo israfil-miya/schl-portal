@@ -1,7 +1,7 @@
 'use client';
 
 import '@/app/globals.css';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import React from 'react';
 
 const NotFound = () => {

@@ -4,7 +4,7 @@ import { fetchApi } from '@/lib/utils';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 // import { ApprovalDataType, validationSchema } from '../schema';

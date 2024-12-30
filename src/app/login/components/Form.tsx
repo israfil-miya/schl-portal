@@ -1,7 +1,7 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 

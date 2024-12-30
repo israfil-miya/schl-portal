@@ -117,20 +117,34 @@ const Form: React.FC = props => {
             </span>
           </label>
           <input
+            type="password"
+            placeholder="Enter old password"
             {...register('old_password')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           />
         </div>
 
         <div>
-          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
-            <span className="uppercase">New password*</span>
+          <label
+            className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
+            htmlFor="grid-password"
+          >
+            New password*
+            <span className="cursor-pointer has-tooltip">
+              &#9432;
+              <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
+                You can generate a new password by clicking the right button
+              </span>
+            </span>
             <span className="text-red-700 text-wrap block text-xs">
               {errors.new_password && errors.new_password.message}
             </span>
           </label>
+
           <div className="flex items-center">
             <input
+              placeholder="Enter new password"
+              type="text"
               {...register('new_password')}
               className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             />
@@ -139,7 +153,7 @@ const Form: React.FC = props => {
                 setValue('new_password', generatePassword(watch('username')));
               }}
               type="button"
-              className="bg-gray-200 hover:bg-gray-300 text-black py-3.5 px-4 rounded-r focus:outline-none transition duration-100 delay-100"
+              className="bg-gray-200 hover:bg-gray-300 text-black py-3 px-4 rounded-r focus:outline-none transition duration-100 delay-100"
             >
               <KeySquare size={18} />
             </button>
@@ -154,6 +168,8 @@ const Form: React.FC = props => {
             </span>
           </label>
           <input
+            placeholder="Confirm new password"
+            type="text"
             {...register('confirm_password')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           />

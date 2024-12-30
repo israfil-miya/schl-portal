@@ -427,6 +427,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.companyName}
                       type="text"
+                      placeholder="Enter customer's company name"
                     />
                   </div>
                   <div>
@@ -443,6 +444,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.contactPerson}
                       type="text"
+                      placeholder="Enter contact person name"
                     />
                   </div>
                   <div>
@@ -459,6 +461,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.email}
                       type="email"
+                      placeholder="Enter email address"
                     />
                   </div>
                   <div>
@@ -475,6 +478,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.contactNumber}
                       type="tel"
+                      placeholder="Enter contact number"
                     />
                   </div>
                   <div>
@@ -491,6 +495,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.invoiceNumber}
                       type="text"
+                      placeholder='Enter invoice number. Eg: "ABC0001"'
                     />
                   </div>
                   <div>
@@ -507,6 +512,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.currency}
                       type="text"
+                      placeholder='Enter currency symbol/code. Eg: "$"'
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -523,6 +529,7 @@ const Details: React.FC<DetailsProps> = props => {
                       onChange={handleChangeClient}
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.prices}
+                      placeholder="Enter prices for the services provided"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -539,6 +546,7 @@ const Details: React.FC<DetailsProps> = props => {
                       onChange={handleChangeClient}
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={customer.companyAddress}
+                      placeholder="Enter company address"
                     />
                   </div>
                 </div>
@@ -563,6 +571,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.companyName}
                       type="text"
+                      placeholder="Enter vendor's company name"
                     />
                   </div>
                   <div>
@@ -579,6 +588,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.contactPerson}
                       type="text"
+                      placeholder="Enter contact person's name"
                     />
                   </div>
                   <div>
@@ -595,6 +605,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.email}
                       type="email"
+                      placeholder="Enter email address"
                     />
                   </div>
                   <div>
@@ -611,6 +622,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.contactNumber}
                       type="tel"
+                      placeholder="Enter contact number"
                     />
                   </div>
                   <div>
@@ -627,6 +639,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.streetAddress}
                       type="text"
+                      placeholder="Enter street address"
                     />
                   </div>
                   <div>
@@ -643,6 +656,7 @@ const Details: React.FC<DetailsProps> = props => {
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       value={vendor.city}
                       type="text"
+                      placeholder="Enter city name"
                     />
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import { UserDataType } from '@/models/Users';
 
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ClientDataType, validationSchema } from '../schema';

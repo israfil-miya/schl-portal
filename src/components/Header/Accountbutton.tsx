@@ -1,7 +1,8 @@
 'use client';
 import { cn } from '@/lib/utils';
 import { UserCog } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import React from 'react';
 
 interface PropsType {

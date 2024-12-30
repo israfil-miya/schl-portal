@@ -1,7 +1,6 @@
 'use client';
 
 import HiddenText from '@/components/HiddenText';
-import Link from '@/components/NextLink';
 import { cn } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import {
@@ -12,6 +11,7 @@ import {
 import { Clock4, Coins, Mail } from 'lucide-react';
 import moment from 'moment-timezone';
 import Image from 'next/image';
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
 interface ProfilePropsTypes {

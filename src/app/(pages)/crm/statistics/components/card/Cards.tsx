@@ -5,7 +5,7 @@ import React from 'react';
 import Card from './Card';
 
 import { BadgeCheck, CirclePause, FlaskConical, Lightbulb } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 
 const Cards = () => {
   const router = useRouter();

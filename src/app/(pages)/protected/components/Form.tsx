@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'nextjs-toploader/app';
 import { toast } from 'sonner';
 
 interface PropsType {
@@ -89,6 +89,7 @@ const Form: React.FC<PropsType> = props => {
             </span>
           </label>
           <input
+            placeholder="JohnDoe001"
             type="text"
             {...register('name')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
@@ -102,6 +103,7 @@ const Form: React.FC<PropsType> = props => {
             </span>
           </label>
           <input
+            placeholder="*******"
             type="password"
             {...register('password')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"

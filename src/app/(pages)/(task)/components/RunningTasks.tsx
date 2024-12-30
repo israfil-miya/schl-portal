@@ -1,12 +1,12 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
-import Link from '@/components/NextLink';
 import { fetchApi } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import TimeRemainingRenderer from './TimeRemainingRenderer';

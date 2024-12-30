@@ -10,11 +10,11 @@ import {
 } from '@/app/(pages)/admin/employees/schema';
 import Badge from '@/components/Badge';
 import HiddenText from '@/components/HiddenText';
-import Link from '@/components/NextLink';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useRouter } from 'nextjs-toploader/app';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
