@@ -105,8 +105,8 @@ function TestAndCorrection() {
                         : null}
                     </td>
                     <td>
-                      {order.download_date
-                        ? formatDate(order.download_date)
+                      {order.delivery_date
+                        ? formatDate(order.delivery_date)
                         : null}
                       {' | '}
                       {order.delivery_bd_time

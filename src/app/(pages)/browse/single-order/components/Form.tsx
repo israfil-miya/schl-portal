@@ -84,9 +84,9 @@ const Form: React.FC<PropsType> = props => {
   const finishOrder = async (orderData: OrderDataType) => {
     try {
       if (
-        props.orderData.quantity !== orderData.quantity ||
-        props.orderData.production !== orderData.production ||
-        props.orderData.qc1 !== orderData.qc1
+        props.orderData.quantity != orderData.quantity ||
+        props.orderData.production != orderData.production ||
+        props.orderData.qc1 != orderData.qc1
       ) {
         toast.error('Save changes before updating the status!');
         return;
