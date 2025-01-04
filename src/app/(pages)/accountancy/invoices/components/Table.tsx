@@ -138,7 +138,7 @@ const Table: React.FC = props => {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/invoice?action=delete-invoice';
       let options: {} = {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           invoice_number: invoiceNumber,
