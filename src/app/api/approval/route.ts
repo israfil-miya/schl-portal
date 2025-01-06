@@ -1,4 +1,3 @@
-import cors from '@/lib/cors';
 import { dbConnect, getQuery } from '@/lib/utils';
 import Approval, { ApprovalDataType } from '@/models/Approvals';
 import Client from '@/models/Clients';
@@ -10,6 +9,7 @@ import { toISODate } from '@/utility/date';
 import { addRegexField } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+
 dbConnect();
 
 export interface RegexQuery {
@@ -441,7 +441,9 @@ export async function POST(req: NextRequest) {
   switch (getQuery(req).action) {
     case 'new-request':
       res = await handleNewRequest(req);
-      return NextResponse.json(res.data, { status: res.status });
+      return NextResponse.json(res.data, {
+        status: res.status,
+      });
     case 'single-response':
       res = await handleSingleResponse(req);
       return NextResponse.json(res.data, { status: res.status });
@@ -463,13 +465,4 @@ export async function GET(req: NextRequest) {
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
-}
-
-export async function OPTIONS(request: Request) {
-  return cors(
-    request,
-    new Response(null, {
-      status: 204,
-    }),
-  );
 }
