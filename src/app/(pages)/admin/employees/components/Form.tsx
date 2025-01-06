@@ -200,7 +200,7 @@ const Form: React.FC = () => {
           <input
             {...register('nid')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            type="number"
+            type="string"
           />
         </div>
         <div>
@@ -263,7 +263,7 @@ const Form: React.FC = () => {
             </span>
           </label>
           <input
-            {...register('gross_salary')}
+            {...register('gross_salary', { valueAsNumber: true })}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="number"
           />
@@ -276,7 +276,7 @@ const Form: React.FC = () => {
             </span>
           </label>
           <input
-            {...register('provident_fund')}
+            {...register('provident_fund', { valueAsNumber: true })}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="number"
             step="0.1"
@@ -334,7 +334,7 @@ const Form: React.FC = () => {
             </span>
           </label>
           <input
-            {...register('bonus_eid_ul_fitr')}
+            {...register('bonus_eid_ul_fitr', { valueAsNumber: true })}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="number"
             onFocus={() =>
@@ -352,7 +352,7 @@ const Form: React.FC = () => {
             </span>
           </label>
           <input
-            {...register('bonus_eid_ul_adha')}
+            {...register('bonus_eid_ul_adha', { valueAsNumber: true })}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="number"
             onFocus={() =>
