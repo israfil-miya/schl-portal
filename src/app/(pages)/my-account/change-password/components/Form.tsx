@@ -52,8 +52,13 @@ const Form: React.FC = props => {
         return;
       }
 
+      if (parsed.data.new_password !== parsed.data.confirm_password) {
+        toast.error('Password does not match');
+        return;
+      }
+
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=change-password';
       let options: {} = {
         method: 'POST',
         headers: {
@@ -65,7 +70,7 @@ const Form: React.FC = props => {
       const response = await fetchApi(url, options);
 
       if (response.ok) {
-        toast.success('Created new user successfully');
+        toast.success(response.data as string);
         reset();
         // reset the form after successful submission
       } else {

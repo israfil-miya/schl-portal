@@ -191,16 +191,16 @@ async function handleChangePassword(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
-  const { username, oldPassword, newPassword } = await req.json();
+  const { username, old_password, new_password } = await req.json();
 
   try {
     const userData = await User.findOne({
       name: username,
-      password: oldPassword,
+      password: old_password,
     });
 
     if (userData) {
-      userData.password = newPassword;
+      userData.password = new_password;
       await userData.save();
       return { data: 'Password changed successfully', status: 200 };
     } else {
