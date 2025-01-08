@@ -3,6 +3,7 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import { cn, fetchApi } from '@/lib/utils';
+import { ClientDataType } from '@/models/Clients';
 import { formatDate, formatTime } from '@/utility/date';
 import {
   BookCheck,
@@ -29,7 +30,7 @@ type OrdersState = {
   items: OrderDataType[];
 };
 
-const Table = () => {
+const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [orders, setOrders] = useState<OrdersState>({
     pagination: {
       count: 0,
@@ -526,6 +527,7 @@ const Table = () => {
                             orderData={order}
                             submitHandler={editOrder}
                             loading={loading}
+                            clientsData={props.clientsData}
                           />
                         </div>
                       </div>

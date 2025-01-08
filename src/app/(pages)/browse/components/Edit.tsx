@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { ClientDataType } from '@/models/Clients';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -13,11 +14,13 @@ import { SquarePen, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
+import { toast } from 'sonner';
 import { OrderDataType, validationSchema } from '../schema';
 
 const baseZIndex = 50; // 52
 
 interface PropsType {
+  clientsData: ClientDataType[];
   loading: boolean;
   orderData: OrderDataType;
   submitHandler: (editedOrderData: OrderDataType) => Promise<void>;
@@ -74,6 +77,19 @@ const EditButton: React.FC<PropsType> = props => {
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  const clientNames = props.clientsData.map(client => client.client_name);
+  const clientCodes = props.clientsData.map(client => client.client_code);
+
+  let clientNameOptions = (clientNames || []).map(clientName => ({
+    value: clientName,
+    label: clientName,
+  }));
+
+  let clientCodeOptions = (clientCodes || []).map(clientCode => ({
+    value: clientCode,
+    label: clientCode,
+  }));
+
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
       popupRef.current &&
@@ -115,6 +131,51 @@ const EditButton: React.FC<PropsType> = props => {
     console.log(props.orderData);
   }, [isOpen]);
 
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0,
+      borderRight: 'none',
+      width: '200px',
+      paddingTop: '0.25rem' /* 12px */,
+      paddingBottom: '0.25rem' /* 12px */,
+      cursor: 'pointer',
+      backgroundColor: '#f3f4f6',
+      '&:hover': {
+        borderColor: '#e5e7eb',
+      },
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      width: '200px',
+    }),
+  };
+
+  const getClientNameOnFocus = () => {
+    try {
+      const clientCode = watch('client_code');
+
+      if (clientCode === '') return;
+
+      const client = props.clientsData.find(
+        client => client.client_code === clientCode,
+      );
+
+      if (client) {
+        setValue('client_name', client.client_name);
+      } else {
+        toast.info('No client found with the code provided');
+      }
+    } catch (e) {
+      console.error(
+        'An error occurred while retrieving client name on input focus',
+      );
+    } finally {
+      return;
+    }
+  };
+
   return (
     <>
       <button
@@ -154,6 +215,81 @@ const EditButton: React.FC<PropsType> = props => {
             onSubmit={handleSubmit(onSubmit)}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Client Code*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.client_code && errors.client_code.message}
+                  </span>
+                </label>
+                <div className="flex">
+                  <Select
+                    options={clientCodeOptions}
+                    value={
+                      clientCodeOptions.find(
+                        (code?: { value: string; label: string }) =>
+                          code?.value === watch('client_code'),
+                      ) || null
+                    }
+                    styles={customStyles}
+                    onChange={(
+                      selectedOption: { value: string; label: string } | null,
+                    ) => {
+                      setValue(
+                        'client_code',
+                        selectedOption ? selectedOption.value : '',
+                      );
+                    }}
+                    placeholder="Select an option"
+                    isSearchable={true}
+                    classNamePrefix="react-select"
+                    isClearable={true}
+                  />
+                  <input
+                    {...register('client_code')}
+                    className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="text"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Client Name*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.client_name && errors.client_name.message}
+                  </span>
+                </label>
+                <div className="flex">
+                  <Select
+                    options={clientNameOptions}
+                    value={
+                      clientNameOptions.find(
+                        (name?: { value: string; label: string }) =>
+                          name?.value === watch('client_name'),
+                      ) || null
+                    }
+                    styles={customStyles}
+                    onChange={(
+                      selectedOption: { value: string; label: string } | null,
+                    ) => {
+                      setValue(
+                        'client_name',
+                        selectedOption ? selectedOption.value : '',
+                      );
+                    }}
+                    placeholder="Select an option"
+                    isSearchable={true}
+                    classNamePrefix="react-select"
+                    isClearable={true}
+                  />
+                  <input
+                    {...register('client_name')}
+                    className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="text"
+                    onFocus={getClientNameOnFocus}
+                  />
+                </div>
+              </div>
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Folder*</span>
