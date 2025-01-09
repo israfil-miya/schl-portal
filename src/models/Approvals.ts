@@ -27,6 +27,7 @@ interface ApprovalType {
   is_prospected?: boolean;
   prospect_status?: string;
   is_lead?: boolean;
+  lead_origin: string | null;
   lead_withdrawn?: boolean;
 
   // Users Database Entry

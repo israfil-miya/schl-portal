@@ -23,11 +23,12 @@ export interface ReportType {
   prospect_status: string;
   is_lead: boolean;
   regular_client: boolean; // limited to crm portal
-  permanent_client: boolean; // added in erp portal
+  permanent_client: boolean; // added in erp portal to mark permanent clients (a regular client can be marked as permanent)
   lead_withdrawn: boolean;
   test_given_date_history: string[];
   onboard_date: string;
   createdAt: string;
+  lead_origin?: string | null;
   updatedAt: string;
 }
 
@@ -94,6 +95,7 @@ const ReportSchema = new mongoose.Schema<ReportDocType>(
     regular_client: { type: Boolean, default: false },
     permanent_client: { type: Boolean, default: false },
     test_given_date_history: { type: [String] },
+    lead_origin: { type: String, default: null }, // null for non-lead, string (self | marketer name) for lead
     onboard_date: { type: String, default: '' },
   },
   {
