@@ -54,6 +54,8 @@ async function handleNewRequest(
   try {
     const data = await req.json();
 
+    console.log('APPROVAL REQUEST: ', data);
+
     const resData = await Approval.create(data);
 
     if (resData) {
@@ -399,9 +401,13 @@ async function handleApproveResponse(data: {
             createdAt: undefined,
             updatedAt: undefined,
           };
+
+          console.log(editData);
+
           resData = await Report.findByIdAndUpdate(approvalData.id, editData, {
             new: true,
           });
+
           break;
         default:
           throw new Error(`Unsupported request type: ${approvalData.req_type}`);
@@ -413,6 +419,8 @@ async function handleApproveResponse(data: {
           status: 400,
         };
       }
+
+      console.log('APPROVAL RESPONSE: ', resData);
 
       // Actually await the update and return the updated approval
       const updatedApproval = await Approval.findByIdAndUpdate(

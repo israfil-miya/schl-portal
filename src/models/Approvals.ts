@@ -79,6 +79,7 @@ const ApprovalSchema = new mongoose.Schema<ApprovalDocType>(
     is_prospected: { type: Boolean },
     prospect_status: { type: String },
     is_lead: { type: Boolean },
+    lead_origin: { type: String, default: null }, // null for non-lead, string (generated | marketer name) for lead
     lead_withdrawn: { type: Boolean },
 
     // Users Database Entry

@@ -14,34 +14,36 @@ const TimeRemainingRenderer = (props: any) => {
         'Asia/Dhaka',
       );
       const now = moment().tz('Asia/Dhaka');
-      const diff = targetDate.diff(now); // Difference in milliseconds
-      setDiff(diff);
 
-      if (diff <= 0) {
+      const diffMs = targetDate.diff(now); // Difference in milliseconds
+      setDiff(diffMs);
+
+      if (diffMs <= 0) {
         setTimeRemaining('Over');
       } else {
-        const duration = moment.duration(diff); // Get the duration object
-        const days = duration.days(); // Extract days
-        const hours = duration.hours(); // Extract hours
-        const minutes = duration.minutes(); // Extract minutes
-        const seconds = duration.seconds(); // Extract seconds
+        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+        );
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
         setTimeRemaining(`${days}d : ${hours}h : ${minutes}m : ${seconds}s`);
       }
     };
 
-    calculateTimeRemaining(); // Calculate initially
-    const interval = setInterval(calculateTimeRemaining, 1000); // Update every second
+    // Run the function initially and then every second
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
 
-    return () => clearInterval(interval); // Clear interval on unmount
+    // Cleanup on component unmount
+    return () => clearInterval(interval);
   }, [props.data.delivery_date, props.data.delivery_bd_time]);
 
+  // Badge color rendering logic based on remaining time
   if (diff <= 0) {
     return (
-      <Badge
-        className="bg-gray-600 text-white border-gray-600"
-        value={timeRemaining}
-      />
+      <Badge className="bg-gray-600 text-white border-gray-600" value="Over" />
     );
   } else if (diff <= 30 * 60 * 1000) {
     return (
@@ -57,13 +59,14 @@ const TimeRemainingRenderer = (props: any) => {
         value={timeRemaining}
       />
     );
-  } else
+  } else {
     return (
       <Badge
         className="bg-green-600 text-white border-green-600"
         value={timeRemaining}
       />
     );
+  }
 };
 
 export default TimeRemainingRenderer;
