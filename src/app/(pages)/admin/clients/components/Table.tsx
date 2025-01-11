@@ -49,6 +49,7 @@ const Table = () => {
     clientCode: '',
     contactPerson: '',
     countryName: '',
+    category: '',
   });
 
   const [marketerNames, setMarketerNames] = useState<string[]>([]);
@@ -354,6 +355,7 @@ const Table = () => {
                   <th>Client Code</th>
                   <th>Client Name</th>
                   <th>Marketer</th>
+                  <th>Category</th>
                   <th>Contact Person</th>
                   <th>Email</th>
                   <th>Country</th>
@@ -369,6 +371,7 @@ const Table = () => {
 
                     <td className="text-wrap">{client.client_name}</td>
                     <td className="text-wrap">{client.marketer}</td>
+                    <td className="text-wrap">{client.category}</td>
                     <td className="text-wrap">{client.contact_person}</td>
                     <td className="text-wrap">{client.email}</td>
                     <td className="text-wrap">{client.country}</td>

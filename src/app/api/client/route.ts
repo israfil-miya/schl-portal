@@ -22,11 +22,12 @@ export interface Query {
   country?: RegexQuery;
   contact_person?: RegexQuery;
   marketer?: RegexQuery;
+  category?: RegexQuery;
 }
 
 export type RegexFields = Extract<
   keyof Query,
-  'country' | 'client_code' | 'contact_person' | 'marketer'
+  'country' | 'client_code' | 'contact_person' | 'marketer' | 'category'
 >;
 
 async function handleCreateClient(req: NextRequest): Promise<{
@@ -115,7 +116,8 @@ async function handleGetAllClients(req: NextRequest): Promise<{
 
     const filters = await req.json();
 
-    const { countryName, clientCode, contactPerson, marketerName } = filters;
+    const { countryName, clientCode, contactPerson, marketerName, category } =
+      filters;
 
     let query: Query = {};
 
@@ -123,6 +125,7 @@ async function handleGetAllClients(req: NextRequest): Promise<{
     addIfDefined(query, 'client_code', clientCode);
     addIfDefined(query, 'contact_person', contactPerson);
     addIfDefined(query, 'marketer', marketerName);
+    addIfDefined(query, 'category', category);
 
     console.log(query);
 

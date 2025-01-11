@@ -20,6 +20,7 @@ interface PropsType {
     clientCode: string;
     contactPerson: string;
     countryName: string;
+    category: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   loading: boolean;
@@ -63,6 +64,7 @@ const FilterButton: React.FC<PropsType> = props => {
       clientCode: '',
       contactPerson: '',
       countryName: '',
+      category: '',
     });
   };
 
@@ -150,6 +152,18 @@ const FilterButton: React.FC<PropsType> = props => {
                     }))
                   }
                   placeholder="Select marketer"
+                />
+              </div>
+              <div>
+                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                  Category
+                </label>
+                <input
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="category"
+                  value={filters.category}
+                  onChange={handleChange}
+                  type="text"
                 />
               </div>
               <div>

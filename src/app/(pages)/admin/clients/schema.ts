@@ -11,6 +11,7 @@ export const validationSchema = z.object({
   marketer: z
     .string({ invalid_type_error: "Marketer can't be empty" })
     .min(1, "Marketer can't be empty"),
+  category: z.optional(z.string()),
   contact_person: z.optional(z.string()),
   designation: z.optional(z.string()),
   contact_number: z.optional(z.string()),

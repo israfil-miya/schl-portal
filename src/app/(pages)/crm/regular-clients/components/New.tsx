@@ -18,10 +18,14 @@ const CreateButton: React.FC<PropsType> = props => {
   const [editedBy, setEditedBy] = useState<string>('');
   const popupRef = useRef<HTMLElement>(null);
 
+  console;
+
   const [editedData, setEditedData] = useState<{ [key: string]: any }>({
     ...props.clientData,
     updated_by: session?.user.real_name || '',
   });
+
+  console.log('editedData category', editedData);
 
   useEffect(() => {
     if (!isOpen) {
@@ -132,6 +136,22 @@ const CreateButton: React.FC<PropsType> = props => {
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   name="client_name"
                   value={editedData.client_name}
+                  onChange={handleChange}
+                  type="text"
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
+                  htmlFor="grid-password"
+                >
+                  Category
+                </label>
+                <input
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="category"
+                  value={editedData.category}
                   onChange={handleChange}
                   type="text"
                 />

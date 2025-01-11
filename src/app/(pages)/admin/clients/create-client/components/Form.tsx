@@ -66,6 +66,7 @@ const Form: React.FC<PropsType> = props => {
       address: '',
       prices: '',
       currency: '',
+      category: '',
       last_invoice_number: null,
       updated_by: session?.user.real_name || '',
     },
@@ -177,6 +178,19 @@ const Form: React.FC<PropsType> = props => {
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Category</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.category && errors.category.message}
+            </span>
+          </label>
+          <input
+            {...register('category')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="text"
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
             <span className="uppercase">Contact Person</span>
             <span className="text-red-700 text-wrap block text-xs">
               {errors.contact_person && errors.contact_person.message}
@@ -188,6 +202,7 @@ const Form: React.FC<PropsType> = props => {
             type="text"
           />
         </div>
+
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
             <span className="uppercase">Designation</span>

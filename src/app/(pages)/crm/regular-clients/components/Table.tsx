@@ -341,6 +341,7 @@ const Table = () => {
                                   designation: item.designation,
                                   contact_number: item.contact_number,
                                   email: item.email_address,
+                                  category: item.category,
                                   marketer: item.marketer_name,
                                 }}
                                 submitHandler={convertToClient}
