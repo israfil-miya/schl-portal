@@ -32,21 +32,25 @@ export const toISODate = (
   minutes = 0,
   seconds = 0,
   milliseconds = 0,
-): Date => {
+): Date | null => {
   if (!dateStr) {
-    return moment().startOf('day').toDate(); // Default to the start of today if `dateStr` is empty
+    return moment().startOf('day').toDate(); // Default to start of today
   }
 
-  const isoDate = moment
-    .utc(dateStr) // Parse dateStr in UTC
+  const isoDate = moment.utc(dateStr);
+
+  if (!isoDate.isValid()) {
+    return null; // Return null if the date is invalid
+  }
+
+  return isoDate
     .set({
       hour: hours,
       minute: minutes,
       second: seconds,
       millisecond: milliseconds,
-    }); // Set time
-
-  return isoDate.toDate(); // Convert to JavaScript Date object
+    })
+    .toDate();
 };
 
 export const calculateTimeDifference = (

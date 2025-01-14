@@ -534,6 +534,8 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
       {},
     );
 
+    console.log('MERGED ORDERS: ', mergedOrders, orders, query);
+
     const ordersQP: OrderData[] = Object.values(mergedOrders);
     return { data: ordersQP, status: 200 };
   } catch (e) {

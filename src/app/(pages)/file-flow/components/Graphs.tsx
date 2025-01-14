@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 // import ClientsOnboardGraph from './ClientsOnboardGraph';
 // import ReportsCountGraph from './ReportsCountGraph';
 // import TestOrdersTrendGraph from './TestOrdersTrendGraph';
-import { FiltersContextProvider } from '../FiltersContext';
+import { FiltersContext } from '../FiltersContext';
 
 const Graphs = () => {
   const { data: session } = useSession();
@@ -16,38 +16,40 @@ const Graphs = () => {
     statusData: false,
   });
 
+  const filtersCtx = React.useContext(FiltersContext);
+
   const [flowData, setFlowData] = useState({});
   const [statusData, setStatusData] = useState({});
 
-  // async function getReportsCount() {
-  //   try {
-  //     setIsLoading(prevData => ({ ...prevData, reportsCount: true }));
+  async function getFlowData() {
+    try {
+      setIsLoading(prevData => ({ ...prevData, flowData: true }));
 
-  //     let url: string =
-  //       process.env.NEXT_PUBLIC_BASE_URL +
-  //       '/api/report?action=get-reports-count';
-  //     let options: {} = {
-  //       method: 'GET',
-  //       headers: {
-  //         name: session?.user.provided_name,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     };
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-orders-qp';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          from_date: filtersCtx?.filters.fromDate,
+          to_date: filtersCtx?.filters.toDate,
+          'Content-Type': 'application/json',
+        },
+      };
 
-  //     let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
-  //     if (response.ok) {
-  //       setReportsCount(response.data);
-  //     } else {
-  //       toast.error(response.data);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error('An error occurred while retrieving reports count data');
-  //   } finally {
-  //     setIsLoading(prevData => ({ ...prevData, reportsCount: false }));
-  //   }
-  // }
+      if (response.ok) {
+        setFlowData(response.data);
+      } else {
+        toast.error(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving flow data');
+    } finally {
+      setIsLoading(prevData => ({ ...prevData, flowData: false }));
+    }
+  }
 
   // async function getClientsOnboard() {
   //   try {
@@ -121,11 +123,11 @@ const Graphs = () => {
   //   }
   // }
 
-  // useEffect(() => {
-  //   getReportsCount();
-  //   getClientsOnboard();
-  //   getTestOrdersTrend();
-  // }, []);
+  useEffect(() => {
+    getFlowData();
+  }, []);
+
+  console.log('flowData', flowData);
 
   return (
     // <div className="px-2">
