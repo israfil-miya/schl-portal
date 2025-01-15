@@ -60,6 +60,7 @@ export const taskOptions = [
   { value: 'Video Retouch', label: 'Video Retouch' },
   { value: 'Resize', label: 'Resize' },
   { value: 'Masking', label: 'Masking' },
+  { value: 'Dusting', label: 'Dusting' },
 ];
 
 export const typeOptions = [
