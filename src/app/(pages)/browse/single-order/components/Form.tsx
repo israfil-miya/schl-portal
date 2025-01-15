@@ -6,15 +6,11 @@ import {
   setMenuPortalTarget,
 } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 
-import { generatePassword } from '@/lib/utils';
-import { EmployeeDataType } from '@/models/Employees';
-import { KeySquare } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 import { toast } from 'sonner';
 import {
