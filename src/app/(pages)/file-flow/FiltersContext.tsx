@@ -18,8 +18,8 @@ const FiltersContext = createContext<FiltersContextType | null>(null);
 
 function FiltersContextProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFilters] = React.useState<FiltersType>({
-    fromDate: moment().format('YYYY-MM-DD'),
-    toDate: moment().subtract(30, 'days').format('YYYY-MM-DD'),
+    fromDate: moment().subtract(30, 'days').format('YYYY-MM-DD'),
+    toDate: moment().format('YYYY-MM-DD'),
     flowType: 'files',
   });
 
@@ -32,8 +32,8 @@ function FiltersContextProvider({ children }: { children: React.ReactNode }) {
 
   const resetFilters = () => {
     setFilters({
-      fromDate: moment().format('YYYY-MM-DD'),
-      toDate: moment().subtract(30, 'days').format('YYYY-MM-DD'),
+      fromDate: moment().subtract(30, 'days').format('YYYY-MM-DD'),
+      toDate: moment().format('YYYY-MM-DD'),
       flowType: 'files',
     });
   };

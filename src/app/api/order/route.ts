@@ -57,7 +57,7 @@ const monthNames = [
 
 const countriesList = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden'];
 
-interface OrderData {
+export interface OrderData {
   date: string;
   orderQuantity: number;
   orderPending: number;
@@ -70,7 +70,7 @@ interface CountryOrderData {
   fileQuantity: number;
   isoDate?: Date;
 }
-interface StatusOrderData {
+export interface StatusOrderData {
   date: string;
   orderQuantity: number;
   orderPending: number;
@@ -534,8 +534,6 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
       {},
     );
 
-    console.log('MERGED ORDERS: ', mergedOrders, orders, query);
-
     const ordersQP: OrderData[] = Object.values(mergedOrders);
     return { data: ordersQP, status: 200 };
   } catch (e) {
@@ -636,8 +634,10 @@ async function handleGetOrdersStatus(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const statusFromDate = getDateRange(14).from;
-    const statusToDate = getDateRange(14).to;
+    const daysOfData = 14;
+
+    const statusFromDate = getDateRange(daysOfData).from;
+    const statusToDate = getDateRange(daysOfData).to;
 
     const ordersForStatus = await Order.find({
       createdAt: {
