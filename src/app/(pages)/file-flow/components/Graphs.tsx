@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 // import TestOrdersTrendGraph from './TestOrdersTrendGraph';
 import { OrderData, StatusOrderData } from '@/app/api/order/route';
 import { FiltersContext } from '../FiltersContext';
+import FlowDataGraph from './FlowDataGraph';
+import StatusDataGraph from './StatusDataGraph';
 
 const Graphs = () => {
   const { data: session } = useSession();
@@ -140,11 +142,23 @@ const Graphs = () => {
             flowData[flowData.length - 1]?.date
           }`}
         </p>
-        {/* <FlowDataGraph
+        <FlowDataGraph
           isLoading={isLoading.flowData}
-          data={reportsCount}
+          data={flowData}
           className="h-80"
-        /> */}
+        />
+      </div>
+      <div className="mb-4 p-2 bg-gray-50 border-2">
+        <p className="text-center mt-4 text-lg underline font-semibold uppercase">
+          {`Current Status Period: ${statusData[0]?.date} - ${
+            statusData[statusData.length - 1]?.date
+          } (Last 14 days)`}
+        </p>
+        <StatusDataGraph
+          isLoading={isLoading.statusData}
+          data={statusData}
+          className="h-80"
+        />
       </div>
 
       {/*  <div className="mb-4 p-2 bg-gray-50 border-2">

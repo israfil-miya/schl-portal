@@ -66,6 +66,7 @@ export const calculateTimeDifference = (
   return deliveryDateTime.diff(asiaDhakaTime);
 };
 
+// used to generate graph data for date range
 export function getDatesInRange(fromTime: string, toTime: string): string[] {
   const dates: string[] = [];
   let currentDate = moment(fromTime);
