@@ -511,11 +511,12 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
     // Initialize mergedOrders with zero values
     const mergedOrders: Record<string, OrderData> = {};
     dateRange.forEach(date => {
-      const [year, month, day] = date.split('-');
-      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+      // const [year, month, day] = date.split('-');
+      // const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+      // console.log(`Year: ${year}, Month: ${month}, Day: ${day}`, formattedDate);
 
-      mergedOrders[formattedDate] = {
-        date: formattedDate,
+      mergedOrders[date] = {
+        date: date,
         orderQuantity: 0,
         orderPending: 0,
         fileQuantity: 0,
@@ -526,18 +527,18 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
     // Update mergedOrders with actual data
     orders.forEach((order: any) => {
       const date = order.createdAt.toISOString().split('T')[0];
-      const [year, month, day] = date.split('-');
-      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+      // const [year, month, day] = date.split('-');
+      // const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
-      if (!mergedOrders[formattedDate]) {
+      if (!mergedOrders[date]) {
         return;
       }
 
-      mergedOrders[formattedDate].fileQuantity += order.quantity;
-      mergedOrders[formattedDate].orderQuantity++;
+      mergedOrders[date].fileQuantity += order.quantity;
+      mergedOrders[date].orderQuantity++;
       if (order.status !== 'Finished') {
-        mergedOrders[formattedDate].filePending += order.quantity;
-        mergedOrders[formattedDate].orderPending++;
+        mergedOrders[date].filePending += order.quantity;
+        mergedOrders[date].orderPending++;
       }
     });
 
@@ -656,12 +657,12 @@ async function handleGetOrdersStatus(req: NextRequest): Promise<{
     const mergedOrdersStatus = ordersForStatus.reduce(
       (merged: Record<string, StatusOrderData>, order: any) => {
         const date = order.createdAt.toISOString().split('T')[0];
-        const [year, month, day] = date.split('-');
-        const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+        // const [year, month, day] = date.split('-');
+        // const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
-        if (!merged[formattedDate]) {
-          merged[formattedDate] = {
-            date: formattedDate,
+        if (!merged[date]) {
+          merged[date] = {
+            date: date,
             orderQuantity: 0,
             orderPending: 0,
             fileQuantity: 0,
@@ -669,14 +670,14 @@ async function handleGetOrdersStatus(req: NextRequest): Promise<{
           };
         }
 
-        merged[formattedDate].fileQuantity += order.quantity;
-        merged[formattedDate].orderQuantity++;
+        merged[date].fileQuantity += order.quantity;
+        merged[date].orderQuantity++;
         if (order.status !== 'Finished') {
-          merged[formattedDate].filePending += order.quantity;
-          merged[formattedDate].orderPending++;
+          merged[date].filePending += order.quantity;
+          merged[date].orderPending++;
         }
 
-        merged[formattedDate].isoDate = order.createdAt;
+        merged[date].isoDate = order.createdAt;
 
         return merged;
       },

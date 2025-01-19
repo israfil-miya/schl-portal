@@ -2,6 +2,7 @@
 
 import { OrderData } from '@/app/api/order/route';
 import BarChart from '@/components/Charts/Bar.chart';
+import moment from 'moment-timezone';
 import React, { useEffect, useState } from 'react';
 import { FiltersContext } from '../FiltersContext';
 
@@ -40,6 +41,8 @@ const StatusDataGraph: React.FC<StatusDataGraphProps> = ({
     let quantityTotal = 0;
     let quantityPending = 0;
 
+    const dataLabels = data.map(d => moment(d.date).format('MMMM DD'));
+
     // Calculate totals
     data.forEach(entry => {
       if (filtersCtx?.filters.flowType === 'files') {
@@ -53,7 +56,7 @@ const StatusDataGraph: React.FC<StatusDataGraphProps> = ({
 
     // Set chart data
     setGraphData({
-      labels: data.map(entry => entry.date),
+      labels: dataLabels,
       datasets: [
         {
           label: `Total ${filtersCtx?.filters.flowType === 'files' ? 'Files' : 'Orders'} (${quantityTotal})`,

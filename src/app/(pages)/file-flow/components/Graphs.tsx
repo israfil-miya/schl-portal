@@ -1,13 +1,17 @@
 'use client';
 
+/*
+The mismatch in numbers (between Status and Flow graphs) occurs because handleGetOrdersQP excludes test orders and shows all dates with zeros,
+while handleGetOrdersStatus includes test orders and only shows dates with actual orders.
+This causes the same dates to show different values in the two graphs.
+*/
+
+import { OrderData, StatusOrderData } from '@/app/api/order/route';
 import { fetchApi } from '@/lib/utils';
+import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-// import ClientsOnboardGraph from './ClientsOnboardGraph';
-// import ReportsCountGraph from './ReportsCountGraph';
-// import TestOrdersTrendGraph from './TestOrdersTrendGraph';
-import { OrderData, StatusOrderData } from '@/app/api/order/route';
 import { FiltersContext } from '../FiltersContext';
 import FlowDataGraph from './FlowDataGraph';
 import StatusDataGraph from './StatusDataGraph';
@@ -133,14 +137,14 @@ const Graphs = () => {
   return (
     <div className="px-2">
       <div className="mb-4 p-2 bg-gray-50 border-2">
-        <p className="text-center mt-4 text-lg underline font-semibold uppercase">
+        <p className="text-center mt-4 text-lg underline underline-offset-2 font-semibold uppercase">
           {`${
             filtersCtx?.filters.flowType == 'files'
               ? 'Files Flow'
               : 'Orders Flow'
-          } Period: ${flowData[0]?.date} - ${
-            flowData[flowData.length - 1]?.date
-          }`}
+          } Period: ${moment(flowData[0]?.date).format('DD MMM')} – ${moment(
+            flowData[flowData.length - 1]?.date,
+          ).format('DD MMM')}`}
         </p>
         <FlowDataGraph
           isLoading={isLoading.flowData}
@@ -149,10 +153,10 @@ const Graphs = () => {
         />
       </div>
       <div className="mb-4 p-2 bg-gray-50 border-2">
-        <p className="text-center mt-4 text-lg underline font-semibold uppercase">
-          {`Current Status Period: ${statusData[0]?.date} - ${
-            statusData[statusData.length - 1]?.date
-          } (Last 14 days)`}
+        <p className="text-center mt-4 text-lg underline underline-offset-2 font-semibold uppercase">
+          {`Current Status Period: ${moment(statusData[0]?.date).format('DD MMM')} – ${moment(
+            statusData[statusData.length - 1]?.date,
+          ).format('DD MMM')} (Last 14 days)`}
         </p>
         <StatusDataGraph
           isLoading={isLoading.statusData}
