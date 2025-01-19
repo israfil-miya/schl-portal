@@ -57,7 +57,7 @@ const monthNames = [
 
 const countriesList = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden'];
 
-interface OrderData {
+export interface OrderData {
   date: string;
   orderQuantity: number;
   orderPending: number;
@@ -70,7 +70,7 @@ interface CountryOrderData {
   fileQuantity: number;
   isoDate?: Date;
 }
-interface StatusOrderData {
+export interface StatusOrderData {
   date: string;
   orderQuantity: number;
   orderPending: number;
@@ -494,45 +494,52 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
     let query: any = { type: { $ne: 'Test' } };
 
     if (fromDate || toDate) {
-      query.createdAt = {};
       query.createdAt = {
         ...(fromDate && { $gte: toISODate(fromDate) }),
         ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
       };
     }
 
-    if (!fromDate && !toDate) {
-      delete query.createdAt;
-    }
-
     const orders = await Order.find(query);
-    const mergedOrders = orders.reduce(
-      (merged: Record<string, OrderData>, order: any) => {
-        const date = order.createdAt.toISOString().split('T')[0];
-        const [year, month, day] = date.split('-');
-        const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
-        if (!merged[formattedDate]) {
-          merged[formattedDate] = {
-            date: formattedDate,
-            orderQuantity: 0,
-            orderPending: 0,
-            fileQuantity: 0,
-            filePending: 0,
-          };
-        }
-
-        merged[formattedDate].fileQuantity += order.quantity;
-        merged[formattedDate].orderQuantity++;
-        if (order.status !== 'Finished') {
-          merged[formattedDate].filePending += order.quantity;
-          merged[formattedDate].orderPending++;
-        }
-
-        return merged;
-      },
-      {},
+    // Generate complete range of dates using the utility function
+    const dateRange: string[] = getDatesInRange(
+      fromDate || new Date().toISOString(),
+      toDate || new Date().toISOString(),
     );
+
+    // Initialize mergedOrders with zero values
+    const mergedOrders: Record<string, OrderData> = {};
+    dateRange.forEach(date => {
+      const [year, month, day] = date.split('-');
+      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+
+      mergedOrders[formattedDate] = {
+        date: formattedDate,
+        orderQuantity: 0,
+        orderPending: 0,
+        fileQuantity: 0,
+        filePending: 0,
+      };
+    });
+
+    // Update mergedOrders with actual data
+    orders.forEach((order: any) => {
+      const date = order.createdAt.toISOString().split('T')[0];
+      const [year, month, day] = date.split('-');
+      const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
+
+      if (!mergedOrders[formattedDate]) {
+        return;
+      }
+
+      mergedOrders[formattedDate].fileQuantity += order.quantity;
+      mergedOrders[formattedDate].orderQuantity++;
+      if (order.status !== 'Finished') {
+        mergedOrders[formattedDate].filePending += order.quantity;
+        mergedOrders[formattedDate].orderPending++;
+      }
+    });
 
     const ordersQP: OrderData[] = Object.values(mergedOrders);
     return { data: ordersQP, status: 200 };
@@ -634,8 +641,10 @@ async function handleGetOrdersStatus(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const statusFromDate = getDateRange(14).from;
-    const statusToDate = getDateRange(14).to;
+    const daysOfData = 14;
+
+    const statusFromDate = getDateRange(daysOfData).from;
+    const statusToDate = getDateRange(daysOfData).to;
 
     const ordersForStatus = await Order.find({
       createdAt: {

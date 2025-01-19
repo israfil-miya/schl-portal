@@ -7,7 +7,10 @@ import { toast } from 'sonner';
 // import ClientsOnboardGraph from './ClientsOnboardGraph';
 // import ReportsCountGraph from './ReportsCountGraph';
 // import TestOrdersTrendGraph from './TestOrdersTrendGraph';
-import { FiltersContextProvider } from '../FiltersContext';
+import { OrderData, StatusOrderData } from '@/app/api/order/route';
+import { FiltersContext } from '../FiltersContext';
+import FlowDataGraph from './FlowDataGraph';
+import StatusDataGraph from './StatusDataGraph';
 
 const Graphs = () => {
   const { data: session } = useSession();
@@ -16,74 +19,75 @@ const Graphs = () => {
     statusData: false,
   });
 
-  const [flowData, setFlowData] = useState({});
-  const [statusData, setStatusData] = useState({});
+  const filtersCtx = React.useContext(FiltersContext);
 
-  // async function getReportsCount() {
-  //   try {
-  //     setIsLoading(prevData => ({ ...prevData, reportsCount: true }));
+  const [flowData, setFlowData] = useState<OrderData[]>([]);
+  const [statusData, setStatusData] = useState<StatusOrderData[]>([]);
 
-  //     let url: string =
-  //       process.env.NEXT_PUBLIC_BASE_URL +
-  //       '/api/report?action=get-reports-count';
-  //     let options: {} = {
-  //       method: 'GET',
-  //       headers: {
-  //         name: session?.user.provided_name,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     };
+  const getFlowData = async () => {
+    try {
+      setIsLoading(prevData => ({ ...prevData, flowData: true }));
 
-  //     let response = await fetchData(url, options);
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-orders-qp';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          from_date: filtersCtx?.filters.fromDate,
+          to_date: filtersCtx?.filters.toDate,
+          'Content-Type': 'application/json',
+        },
+      };
 
-  //     if (response.ok) {
-  //       setReportsCount(response.data);
-  //     } else {
-  //       toast.error(response.data);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error('An error occurred while retrieving reports count data');
-  //   } finally {
-  //     setIsLoading(prevData => ({ ...prevData, reportsCount: false }));
-  //   }
-  // }
+      let response = await fetchApi(url, options);
 
-  // async function getClientsOnboard() {
-  //   try {
-  //     setIsLoading(prevData => ({
-  //       ...prevData,
-  //       clientsOnboard: true,
-  //     }));
+      if (response.ok) {
+        setFlowData(response.data);
+      } else {
+        toast.error(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving flow data');
+    } finally {
+      setIsLoading(prevData => ({ ...prevData, flowData: false }));
+    }
+  };
 
-  //     let url: string =
-  //       process.env.NEXT_PUBLIC_BASE_URL +
-  //       '/api/report?action=get-clients-onboard';
-  //     let options: {} = {
-  //       method: 'GET',
-  //       headers: {
-  //         name: session?.user.provided_name,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     };
+  const getStatusData = async () => {
+    try {
+      setIsLoading(prevData => ({
+        ...prevData,
+        statusData: true,
+      }));
 
-  //     let response = await fetchData(url, options);
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL +
+        '/api/order?action=get-orders-status';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
 
-  //     if (response.ok) {
-  //       setClientsOnboard(response.data);
-  //     } else {
-  //       toast.error(response.data);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error('An error occurred while retrieving clients onboard data');
-  //   } finally {
-  //     setIsLoading(prevData => ({
-  //       ...prevData,
-  //       clientsOnboard: false,
-  //     }));
-  //   }
-  // }
+      let response = await fetchApi(url, options);
+
+      if (response.ok) {
+        setStatusData(response.data);
+      } else {
+        toast.error(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving status data');
+    } finally {
+      setIsLoading(prevData => ({
+        ...prevData,
+        statusData: false,
+      }));
+    }
+  };
 
   // async function getTestOrdersTrend() {
   //   try {
@@ -121,47 +125,64 @@ const Graphs = () => {
   //   }
   // }
 
-  // useEffect(() => {
-  //   getReportsCount();
-  //   getClientsOnboard();
-  //   getTestOrdersTrend();
-  // }, []);
+  useEffect(() => {
+    getFlowData();
+    getStatusData();
+  }, []);
 
   return (
-    // <div className="px-2">
-    //   <div className="mb-4 p-2 bg-gray-50 border-2">
-    //     <p className="text-center mt-4 text-lg underline font-semibold uppercase">
-    //       Reports Count (last 12 month)
-    //     </p>
-    //     <ReportsCountGraph
-    //       isLoading={isLoading.reportsCount}
-    //       data={reportsCount}
-    //       className="h-80"
-    //     />
-    //   </div>
-    //   <div className="mb-4 p-2 bg-gray-50 border-2">
-    //     <p className="text-center mt-4 text-lg underline font-semibold uppercase">
-    //       Clients Onboard (last 12 month)
-    //     </p>
+    <div className="px-2">
+      <div className="mb-4 p-2 bg-gray-50 border-2">
+        <p className="text-center mt-4 text-lg underline font-semibold uppercase">
+          {`${
+            filtersCtx?.filters.flowType == 'files'
+              ? 'Files Flow'
+              : 'Orders Flow'
+          } Period: ${flowData[0]?.date} - ${
+            flowData[flowData.length - 1]?.date
+          }`}
+        </p>
+        <FlowDataGraph
+          isLoading={isLoading.flowData}
+          data={flowData}
+          className="h-80"
+        />
+      </div>
+      <div className="mb-4 p-2 bg-gray-50 border-2">
+        <p className="text-center mt-4 text-lg underline font-semibold uppercase">
+          {`Current Status Period: ${statusData[0]?.date} - ${
+            statusData[statusData.length - 1]?.date
+          } (Last 14 days)`}
+        </p>
+        <StatusDataGraph
+          isLoading={isLoading.statusData}
+          data={statusData}
+          className="h-80"
+        />
+      </div>
 
-    //     <ClientsOnboardGraph
-    //       isLoading={isLoading.clientsOnboard}
-    //       data={clientsOnboard}
-    //       className="h-80"
-    //     />
-    //   </div>
-    //   <div className="mb-4 p-2 bg-gray-50 border-2">
-    //     <p className="text-center mt-4 text-lg underline font-semibold uppercase">
-    //       Test Orders Trend (last 12 month)
-    //     </p>
-    //     <TestOrdersTrendGraph
-    //       isLoading={isLoading.testOrdersTrend}
-    //       data={testOrdersTrend}
-    //       className="h-80"
-    //     />
-    //   </div>
-    // </div>
-    <></>
+      {/*  <div className="mb-4 p-2 bg-gray-50 border-2">
+      <p className="text-center mt-4 text-lg underline font-semibold uppercase">
+         Clients Onboard (last 12 month)
+       </p>
+
+      <ClientsOnboardGraph
+         isLoading={isLoading.clientsOnboard}
+         data={clientsOnboard}
+        className="h-80"
+       />
+      </div>
+      <div className="mb-4 p-2 bg-gray-50 border-2">
+     <p className="text-center mt-4 text-lg underline font-semibold uppercase">
+          Test Orders Trend (last 12 month)
+     </p>
+     <TestOrdersTrendGraph
+          isLoading={isLoading.testOrdersTrend}
+          data={testOrdersTrend}
+         className="h-80"
+        />
+       </div> */}
+    </div>
   );
 };
 
