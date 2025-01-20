@@ -1,32 +1,40 @@
 'use client';
 
-/*
-The mismatch in numbers (between Status and Flow graphs) occurs because handleGetOrdersQP excludes test orders and shows all dates with zeros,
-while handleGetOrdersStatus includes test orders and only shows dates with actual orders.
-This causes the same dates to show different values in the two graphs.
-*/
-
-import { OrderData, StatusOrderData } from '@/app/api/order/route';
+import { OrderData } from '@/app/api/order/route';
 import { fetchApi } from '@/lib/utils';
+import { getDateRange } from '@/utility/date';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { FiltersContext } from '../FiltersContext';
+import CountryDataHeatMap from './CountryDataHeatMap';
 import FlowDataGraph from './FlowDataGraph';
 import StatusDataGraph from './StatusDataGraph';
+
+export type CountryData = Record<
+  string,
+  Array<{
+    date: string;
+    orderQuantity: number;
+    fileQuantity: number;
+  }>
+>;
 
 const Graphs = () => {
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState({
     flowData: false,
     statusData: false,
+    countryData: false,
   });
 
   const filtersCtx = React.useContext(FiltersContext);
 
   const [flowData, setFlowData] = useState<OrderData[]>([]);
-  const [statusData, setStatusData] = useState<StatusOrderData[]>([]);
+  const [statusData, setStatusData] = useState<OrderData[]>([]);
+
+  const [countryData, setCountryData] = useState<CountryData>({});
 
   const getFlowData = async () => {
     try {
@@ -59,18 +67,18 @@ const Graphs = () => {
   };
 
   const getStatusData = async () => {
+    const daysOfData = 14;
+
     try {
-      setIsLoading(prevData => ({
-        ...prevData,
-        statusData: true,
-      }));
+      setIsLoading(prevData => ({ ...prevData, statusData: true }));
 
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/order?action=get-orders-status';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-orders-qp';
       let options: {} = {
         method: 'GET',
         headers: {
+          from_date: getDateRange(daysOfData).from,
+          to_date: getDateRange(daysOfData).to,
           'Content-Type': 'application/json',
         },
       };
@@ -86,52 +94,50 @@ const Graphs = () => {
       console.error(error);
       toast.error('An error occurred while retrieving status data');
     } finally {
-      setIsLoading(prevData => ({
-        ...prevData,
-        statusData: false,
-      }));
+      setIsLoading(prevData => ({ ...prevData, statusData: false }));
     }
   };
 
-  // async function getTestOrdersTrend() {
-  //   try {
-  //     setIsLoading(prevData => ({
-  //       ...prevData,
-  //       testOrdersTrend: true,
-  //     }));
+  async function getCountryData() {
+    try {
+      setIsLoading(prevData => ({
+        ...prevData,
+        countryData: true,
+      }));
 
-  //     let url: string =
-  //       process.env.NEXT_PUBLIC_BASE_URL +
-  //       '/api/report?action=get-test-orders-trend';
-  //     let options: {} = {
-  //       method: 'GET',
-  //       headers: {
-  //         name: session?.user.provided_name,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     };
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-orders-cd';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          from_date: filtersCtx?.filters.fromDate,
+          to_date: filtersCtx?.filters.toDate,
+          'Content-Type': 'application/json',
+        },
+      };
 
-  //     let response = await fetchData(url, options);
+      let response = await fetchApi(url, options);
 
-  //     if (response.ok) {
-  //       setTestOrdersTrend(response.data);
-  //     } else {
-  //       toast.error(response.data);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error('An error occurred while retrieving test orders trend data');
-  //   } finally {
-  //     setIsLoading(prevData => ({
-  //       ...prevData,
-  //       testOrdersTrend: false,
-  //     }));
-  //   }
-  // }
+      if (response.ok) {
+        setCountryData(response.data);
+      } else {
+        toast.error(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving country data');
+    } finally {
+      setIsLoading(prevData => ({
+        ...prevData,
+        countryData: false,
+      }));
+    }
+  }
 
   useEffect(() => {
     getFlowData();
     getStatusData();
+    getCountryData();
   }, []);
 
   return (
@@ -160,7 +166,15 @@ const Graphs = () => {
         </p>
         <StatusDataGraph
           isLoading={isLoading.statusData}
-          data={statusData}
+          data={statusData.slice(-14)}
+          className="h-80"
+        />
+      </div>
+
+      <div className="mb-4 p-2 bg-gray-50 border-2 table-responsive">
+        <CountryDataHeatMap
+          isLoading={isLoading.statusData}
+          data={countryData}
           className="h-80"
         />
       </div>

@@ -68,15 +68,6 @@ interface CountryOrderData {
   date: string;
   orderQuantity: number;
   fileQuantity: number;
-  isoDate?: Date;
-}
-export interface StatusOrderData {
-  date: string;
-  orderQuantity: number;
-  orderPending: number;
-  fileQuantity: number;
-  filePending: number;
-  isoDate?: Date;
 }
 
 interface OrderDetails {
@@ -491,7 +482,8 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
     const fromDate = headersList.get('from_date');
     const toDate = headersList.get('to_date');
 
-    let query: any = { type: { $ne: 'Test' } };
+    // let query: any = { type: { $ne: 'Test' } };
+    let query: any = {};
 
     if (fromDate || toDate) {
       query.createdAt = {
@@ -562,7 +554,6 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     const query: any = { type: { $ne: 'Test' } };
 
     if (fromDate || toDate) {
-      query.createdAt = {};
       query.createdAt = {
         ...(fromDate && { $gte: toISODate(fromDate) }),
         ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
@@ -607,16 +598,15 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     Object.entries(ordersDetails).forEach(([country, ordersArr]) => {
       const sortedDates = ordersArr.reduce<Record<string, CountryOrderData>>(
         (merged, order) => {
-          const date = order.createdAt.toISOString().split('T')[0];
+          const date = order.createdAt.toISOString().split('T')[0]; // "YYYY-MM-DD"
           const [year, month, day] = date.split('-');
-          const formattedDate = `${monthNames[+month - 1]} ${day}`;
+          const formattedDate = `${year}-${month}-${day}`;
 
           if (!merged[formattedDate]) {
             merged[formattedDate] = {
               date: formattedDate,
               orderQuantity: 0,
               fileQuantity: 0,
-              isoDate: order.createdAt,
             };
           }
           merged[formattedDate].fileQuantity += order.quantity;
@@ -627,65 +617,13 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
         {},
       );
 
-      ordersCD[country] = Object.values(sortedDates);
+      // Assign data for the country
+      ordersCD[country] = Object.values(sortedDates).sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
     });
 
     return { data: ordersCD, status: 200 };
-  } catch (e) {
-    console.error(e);
-    return { data: 'An error occurred', status: 500 };
-  }
-}
-
-async function handleGetOrdersStatus(req: NextRequest): Promise<{
-  data: string | StatusOrderData[];
-  status: number;
-}> {
-  try {
-    const daysOfData = 14;
-
-    const statusFromDate = getDateRange(daysOfData).from;
-    const statusToDate = getDateRange(daysOfData).to;
-
-    const ordersForStatus = await Order.find({
-      createdAt: {
-        $gte: new Date(statusFromDate),
-        $lte: new Date(statusToDate).setHours(23, 59, 59, 999),
-      },
-    });
-
-    const mergedOrdersStatus = ordersForStatus.reduce(
-      (merged: Record<string, StatusOrderData>, order: any) => {
-        const date = order.createdAt.toISOString().split('T')[0];
-        // const [year, month, day] = date.split('-');
-        // const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
-
-        if (!merged[date]) {
-          merged[date] = {
-            date: date,
-            orderQuantity: 0,
-            orderPending: 0,
-            fileQuantity: 0,
-            filePending: 0,
-          };
-        }
-
-        merged[date].fileQuantity += order.quantity;
-        merged[date].orderQuantity++;
-        if (order.status !== 'Finished') {
-          merged[date].filePending += order.quantity;
-          merged[date].orderPending++;
-        }
-
-        merged[date].isoDate = order.createdAt;
-
-        return merged;
-      },
-      {},
-    );
-
-    const ordersStatus: StatusOrderData[] = Object.values(mergedOrdersStatus);
-    return { data: ordersStatus, status: 200 };
   } catch (e) {
     console.error(e);
     return { data: 'An error occurred', status: 500 };
@@ -940,9 +878,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(res.data, { status: res.status });
     case 'get-order-by-id':
       res = await handleGetOrdersById(req);
-      return NextResponse.json(res.data, { status: res.status });
-    case 'get-orders-status':
-      res = await handleGetOrdersStatus(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-orders-qp':
       res = await handleGetOrdersQP(req);
