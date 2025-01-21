@@ -99,6 +99,7 @@ const Graphs = () => {
   };
 
   async function getCountryData() {
+    const daysOfData = 30;
     try {
       setIsLoading(prevData => ({
         ...prevData,
@@ -110,8 +111,8 @@ const Graphs = () => {
       let options: {} = {
         method: 'GET',
         headers: {
-          from_date: filtersCtx?.filters.fromDate,
-          to_date: filtersCtx?.filters.toDate,
+          from_date: getDateRange(daysOfData).from,
+          to_date: getDateRange(daysOfData).to,
           'Content-Type': 'application/json',
         },
       };
@@ -120,6 +121,8 @@ const Graphs = () => {
 
       if (response.ok) {
         setCountryData(response.data);
+
+        console.log('Country Data:', response.data);
       } else {
         toast.error(response.data);
       }
@@ -158,9 +161,22 @@ const Graphs = () => {
           className="h-80"
         />
       </div>
+
+      <div className="mb-4 p-2 bg-gray-50 border-2">
+        <p className="text-center mt-4 mb-10 text-lg underline underline-offset-2 font-semibold uppercase">
+          {`Production Overview Period: ${moment(countryData['Others']?.[0]?.date).format('DD MMM')} – ${moment(
+            countryData['Others']?.[countryData['Others']?.length - 1]?.date,
+          ).format('DD MMM')} (Last 30 days)`}
+        </p>
+        <CountryDataHeatMap
+          isLoading={isLoading.statusData}
+          data={countryData}
+        />
+      </div>
+
       <div className="mb-4 p-2 bg-gray-50 border-2">
         <p className="text-center mt-4 text-lg underline underline-offset-2 font-semibold uppercase">
-          {`Current Status Period: ${moment(statusData[0]?.date).format('DD MMM')} – ${moment(
+          {`House Status Period: ${moment(statusData[0]?.date).format('DD MMM')} – ${moment(
             statusData[statusData.length - 1]?.date,
           ).format('DD MMM')} (Last 14 days)`}
         </p>
@@ -170,36 +186,6 @@ const Graphs = () => {
           className="h-80"
         />
       </div>
-
-      <div className="mb-4 p-2 bg-gray-50 border-2 table-responsive">
-        <CountryDataHeatMap
-          isLoading={isLoading.statusData}
-          data={countryData}
-          className="h-80"
-        />
-      </div>
-
-      {/*  <div className="mb-4 p-2 bg-gray-50 border-2">
-      <p className="text-center mt-4 text-lg underline font-semibold uppercase">
-         Clients Onboard (last 12 month)
-       </p>
-
-      <ClientsOnboardGraph
-         isLoading={isLoading.clientsOnboard}
-         data={clientsOnboard}
-        className="h-80"
-       />
-      </div>
-      <div className="mb-4 p-2 bg-gray-50 border-2">
-     <p className="text-center mt-4 text-lg underline font-semibold uppercase">
-          Test Orders Trend (last 12 month)
-     </p>
-     <TestOrdersTrendGraph
-          isLoading={isLoading.testOrdersTrend}
-          data={testOrdersTrend}
-         className="h-80"
-        />
-       </div> */}
     </div>
   );
 };

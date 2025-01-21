@@ -2,7 +2,6 @@
 
 import { OrderData } from '@/app/api/order/route';
 import BarChart from '@/components/Charts/Bar.chart';
-import { transparentize } from '@/utility/chart';
 import moment from 'moment-timezone';
 import React, { useEffect, useState } from 'react';
 import { FiltersContext } from '../FiltersContext';

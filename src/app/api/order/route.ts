@@ -593,32 +593,52 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
       ];
     });
 
+    // Generate date range
+    const dateRange: string[] = [];
+    if (fromDate && toDate) {
+      let currentDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split('T')[0]); // "YYYY-MM-DD"
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+
     // Process and format data for each country
     const ordersCD: Record<string, CountryOrderData[]> = {};
     Object.entries(ordersDetails).forEach(([country, ordersArr]) => {
       const sortedDates = ordersArr.reduce<Record<string, CountryOrderData>>(
         (merged, order) => {
           const date = order.createdAt.toISOString().split('T')[0]; // "YYYY-MM-DD"
-          const [year, month, day] = date.split('-');
-          const formattedDate = `${year}-${month}-${day}`;
 
-          if (!merged[formattedDate]) {
-            merged[formattedDate] = {
-              date: formattedDate,
+          if (!merged[date]) {
+            merged[date] = {
+              date,
               orderQuantity: 0,
               fileQuantity: 0,
             };
           }
-          merged[formattedDate].fileQuantity += order.quantity;
-          merged[formattedDate].orderQuantity++;
+          merged[date].fileQuantity += order.quantity;
+          merged[date].orderQuantity++;
 
           return merged;
         },
         {},
       );
 
+      // Ensure every date in the range is represented
+      const fullDateData: Record<string, CountryOrderData> = {};
+      dateRange.forEach(date => {
+        fullDateData[date] = sortedDates[date] || {
+          date,
+          orderQuantity: 0,
+          fileQuantity: 0,
+        };
+      });
+
       // Assign data for the country
-      ordersCD[country] = Object.values(sortedDates).sort(
+      ordersCD[country] = Object.values(fullDateData).sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       );
     });
