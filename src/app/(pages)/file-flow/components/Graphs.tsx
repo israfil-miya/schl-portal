@@ -8,7 +8,7 @@ import { useSession } from 'next-auth/react';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { FiltersContext } from '../FiltersContext';
-import CountryDataHeatMap from './CountryDataHeatMap';
+import CountryDataHeatMap from './CountryDataTable';
 import FlowDataGraph from './FlowDataGraph';
 import StatusDataGraph from './StatusDataGraph';
 

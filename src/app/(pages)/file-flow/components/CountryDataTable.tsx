@@ -1,15 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import React from 'react';
 import { FiltersContext } from '../FiltersContext';
 import { CountryData } from './Graphs';
 
-interface CountryDataHeatMapProps {
+interface CountryDataTableProps {
   isLoading: boolean;
   data: CountryData;
 }
 
-const FlowHeatmap: React.FC<CountryDataHeatMapProps> = ({
+const CountryDataTable: React.FC<CountryDataTableProps> = ({
   data: flowData,
   isLoading,
 }) => {
@@ -70,7 +71,22 @@ const FlowHeatmap: React.FC<CountryDataHeatMapProps> = ({
                         ? (data?.fileQuantity ?? 0)
                         : (data?.orderQuantity ?? 0);
 
-                    return <td key={idx}>{value}</td>;
+                    return (
+                      <td key={idx}>
+                        <Link
+                          href={
+                            value
+                              ? 'file-flow/country-data?c=' +
+                                encodeURIComponent(country.trim()) +
+                                '&d=' +
+                                encodeURIComponent(date.trim())
+                              : '#'
+                          }
+                        >
+                          {value}
+                        </Link>
+                      </td>
+                    );
                   })}
                   <td className="font-bold">{countryTotals[rowIndex]}</td>
                 </tr>
@@ -95,4 +111,4 @@ const FlowHeatmap: React.FC<CountryDataHeatMapProps> = ({
   );
 };
 
-export default FlowHeatmap;
+export default CountryDataTable;
