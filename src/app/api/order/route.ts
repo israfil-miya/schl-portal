@@ -70,7 +70,7 @@ interface CountryOrderData {
   fileQuantity: number;
 }
 
-interface OrderDetails {
+export interface OrderDetails {
   details: (OrderDataType & { country: string })[];
   totalFiles: number;
 }
@@ -551,7 +551,8 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     const headersList = await headers();
     const fromDate = headersList.get('from_date') as string;
     const toDate = headersList.get('to_date') as string;
-    const query: any = { type: { $ne: 'Test' } };
+    // const query: any = { type: { $ne: 'Test' } };
+    const query: any = {};
 
     if (fromDate || toDate) {
       query.createdAt = {
@@ -662,7 +663,8 @@ async function handleGetOrdersByCountry(req: NextRequest): Promise<{
 
     if (!country) throw new Error('Country must be provided');
 
-    let query: any = { type: { $ne: 'Test' } };
+    // let query: any = { type: { $ne: 'Test' } };
+    let query: any = {};
 
     if (fromDate || toDate) {
       query.createdAt = {};
@@ -709,6 +711,7 @@ const DATE_FORMAT = {
   FULL_MONTH_YEAR: 'MMMM YYYY',
 };
 
+// used in invoice route
 async function handleGetOrdersByMonth(req: NextRequest): Promise<{
   data: string | PaginatedData<ClientOrdersByMonth[]>;
   status: number;
