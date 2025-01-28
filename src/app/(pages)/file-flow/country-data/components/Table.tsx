@@ -38,9 +38,11 @@ const Table: React.FC<{ country: string; date: string }> = props => {
     country: props.country ?? 'Others',
   });
 
-  const getOrderDetails = useCallback(async () => {
+  const getOrderDetails = async () => {
     try {
       // setLoading(true);
+
+      console.log('filters --> ', filters);
 
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL +
@@ -69,11 +71,11 @@ const Table: React.FC<{ country: string; date: string }> = props => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     getOrderDetails();
-  }, [getOrderDetails]);
+  }, []);
 
   return (
     <>
@@ -170,7 +172,7 @@ const Table: React.FC<{ country: string; date: string }> = props => {
               <tbody>
                 <tr key={0}>
                   <td className="align-center text-center text-wrap">
-                    No Employees To Show.
+                    No Orders To Show.
                   </td>
                 </tr>
               </tbody>

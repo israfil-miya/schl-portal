@@ -49,6 +49,7 @@ const FilterButton: React.FC<PropsType> = props => {
       ...prevData,
       [name]: value,
     }));
+    console.log('filters', filters);
   };
 
   const handleResetFilters = () => {

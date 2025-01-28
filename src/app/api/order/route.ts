@@ -551,7 +551,6 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     const headersList = await headers();
     const fromDate = headersList.get('from_date') as string;
     const toDate = headersList.get('to_date') as string;
-    // const query: any = { type: { $ne: 'Test' } };
     const query: any = {};
 
     if (fromDate || toDate) {
@@ -561,12 +560,16 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
       };
     }
 
-    if (!fromDate && !toDate) {
-      delete query.createdAt;
-    }
-
     // Retrieve clients and initialize country mapping
     const clientsAll = await Client.find({}, { client_code: 1, country: 1 });
+    const clientCodeCountryMap = clientsAll.reduce(
+      (map, client) => {
+        map[client.client_code] = client.country || 'Others';
+        return map;
+      },
+      {} as Record<string, string>,
+    );
+
     const ordersDetails: Record<string, any[]> = {
       ...countriesList.reduce(
         (acc, country) => ({ ...acc, [country]: [] }),
@@ -575,23 +578,18 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
       Others: [],
     };
 
-    // Collect all orders for each client
-    const orderPromises = clientsAll.map(client =>
-      Order.find(
-        { ...query, client_code: client.client_code },
-        { createdAt: 1, quantity: 1 },
-      ),
-    );
-    const ordersAll = await Promise.all(orderPromises);
+    // Retrieve all orders
+    const ordersAll = await Order.find(query, {
+      client_code: 1,
+      createdAt: 1,
+      quantity: 1,
+    });
 
     // Map orders to their respective countries
-    ordersAll.forEach((clientOrders, index) => {
-      const clientCountry = clientsAll[index].country || 'Others';
+    ordersAll.forEach(order => {
+      const clientCountry = clientCodeCountryMap[order.client_code] || 'Others';
       const country = ordersDetails[clientCountry] ? clientCountry : 'Others';
-      ordersDetails[country] = [
-        ...(ordersDetails[country] || []),
-        ...clientOrders,
-      ];
+      ordersDetails[country] = [...(ordersDetails[country] || []), order];
     });
 
     // Generate date range

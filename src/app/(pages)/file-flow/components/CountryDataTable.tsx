@@ -10,10 +10,9 @@ interface CountryDataTableProps {
   data: CountryData;
 }
 
-const CountryDataTable: React.FC<CountryDataTableProps> = ({
-  data: flowData,
-  isLoading,
-}) => {
+const CountryDataTable: React.FC<CountryDataTableProps> = props => {
+  const flowData = props.data as CountryData;
+
   const filtersCtx = React.useContext(FiltersContext); // { filters: { fromDate: string, toDate: string, flowType: 'files' | 'orders' } }
   const flowType = filtersCtx?.filters.flowType;
 
@@ -44,10 +43,10 @@ const CountryDataTable: React.FC<CountryDataTableProps> = ({
 
   return (
     <>
-      {isLoading ? <p className="text-center">Loading...</p> : null}
+      {props.isLoading ? <p className="text-center">Loading...</p> : <></>}
 
-      {!isLoading && (
-        <div className="table-responsive">
+      <div className="table-responsive text-nowrap text-base">
+        {!props.isLoading && (
           <table className="table table-bordered table-striped">
             <thead style={{ backgroundColor: '#7ba541', color: 'white' }}>
               <tr>
@@ -105,8 +104,8 @@ const CountryDataTable: React.FC<CountryDataTableProps> = ({
               </tr>
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 };

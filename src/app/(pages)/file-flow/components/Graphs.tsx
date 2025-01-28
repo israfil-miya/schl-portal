@@ -169,7 +169,7 @@ const Graphs = () => {
           ).format('DD MMM')} (Last 30 days)`}
         </p>
         <CountryDataHeatMap
-          isLoading={isLoading.statusData}
+          isLoading={isLoading.countryData}
           data={countryData}
         />
       </div>
