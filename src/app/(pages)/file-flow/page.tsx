@@ -12,7 +12,9 @@ function FileFlowPage() {
           !!! This page is under construction !!!
         </p>
       </div> */}
-      <Graphs />
+      <div className="px-4 mt-8 mb-4">
+        <Graphs />
+      </div>
     </FiltersContextProvider>
   );
 }
