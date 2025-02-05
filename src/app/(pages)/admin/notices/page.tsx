@@ -1,6 +1,5 @@
-import Header from '@/components/Header';
 import React from 'react';
-import Table from './components/Table';
+// import Table from './components/Table';
 
 const NoticesPage = async () => {
   // return (
