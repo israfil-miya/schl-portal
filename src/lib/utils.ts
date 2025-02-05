@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { isRedirectError } from 'next/dist/client/components/redirect';
-import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import { NextRequest } from 'next/server';
 import { twMerge } from 'tailwind-merge';
 
@@ -169,11 +168,6 @@ export const generateAvatar = async (text: string): Promise<string> => {
   return avatar;
 };
 
-/**
- * Creates a delay for a specified number of milliseconds.
- * @param ms - The number of milliseconds to delay.
- * @returns A Promise that resolves after the specified delay.
- */
 export const delay = (ms: number): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms));
 };
@@ -203,7 +197,7 @@ export const verifyCookie = (token?: string, id?: string) => {
   }
 };
 
-export function incrementInvoiceNumber(invoiceNumber: string): string {
+export const incrementInvoiceNumber = (invoiceNumber: string): string => {
   // Match the prefix (non-numeric) and numeric parts
   const match = invoiceNumber.match(/^([A-Za-z]*)(\d+)$/);
 
@@ -222,4 +216,4 @@ export function incrementInvoiceNumber(invoiceNumber: string): string {
 
   // Return the new invoice number
   return `${prefix}${paddedNumber}`;
-}
+};

@@ -9,7 +9,7 @@ import { initFlowbite } from 'flowbite';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import TimeRemainingRenderer from './TimeRemainingRenderer';
+import OrderRenderer from './OrderRenderer';
 
 function RunningTasks() {
   const [loading, setLoading] = useState(true);
@@ -57,11 +57,11 @@ function RunningTasks() {
 
   return (
     <>
-      <div className="table-responsive text-lg">
+      <div className="table-responsive text-md">
         {orders?.length !== 0 ? (
-          <table className="table table-hover border table-bordered">
+          <table className="table border table-bordered">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 text-nowrap">
                 <th>S/N</th>
                 <th>Client Code</th>
                 <th>Folder</th>
@@ -80,70 +80,16 @@ function RunningTasks() {
             </thead>
             <tbody className="text-base">
               {orders?.map((order, index) => (
-                <tr key={String(order._id)}>
-                  <td>{index + 1}</td>
-                  <td>
-                    <Link
-                      href={
-                        '/browse/single-order?id=' +
-                        encodeURIComponent(String(order._id))
-                      }
-                    >
-                      {order.client_code}
-                    </Link>
-                  </td>
-
-                  <td className="text-pretty">{order.folder}</td>
-                  <td>{order.quantity}</td>
-                  <td>
-                    {order.download_date
-                      ? formatDate(order.download_date)
-                      : null}
-                  </td>
-                  <td>
-                    {order.delivery_date
-                      ? formatDate(order.delivery_date)
-                      : null}
-                    {' | '}
-                    {order.delivery_bd_time
-                      ? formatTime(order.delivery_bd_time)
-                      : null}
-                  </td>
-
-                  <td
-                    className="uppercase text-nowrap"
-                    style={{ verticalAlign: 'middle' }}
-                  >
-                    <TimeRemainingRenderer data={order} />
-                  </td>
-
-                  <td
-                    className="uppercase text-wrap"
-                    style={{ verticalAlign: 'middle' }}
-                  >
-                    {order.task?.split('+').map((task, index) => {
-                      return <Badge key={index} value={task} />;
-                    })}
-                  </td>
-                  <td>{order.et}</td>
-                  <td>{order.production}</td>
-                  <td>{order.qc1}</td>
-                  <td>
-                    <ClickToCopy text={order.folder_path} />
-                  </td>
-                  <td
-                    className="uppercase text-wrap"
-                    style={{ verticalAlign: 'middle' }}
-                  >
-                    <Badge value={order.type} />
-                  </td>
-                  <ExtendableTd data={order.comment} />
-                </tr>
+                <OrderRenderer
+                  order={order}
+                  index={index}
+                  key={String(order._id)}
+                />
               ))}
             </tbody>
           </table>
         ) : (
-          <table className="table border table-bordered table-striped">
+          <table className="table border">
             <tbody>
               <tr key={0}>
                 <td className="align-center text-center text-wrap">
@@ -154,12 +100,15 @@ function RunningTasks() {
           </table>
         )}
       </div>
-
       <style jsx>
         {`
+          .table {
+            font-size: 15px;
+          }
+
           th,
           td {
-            padding: 2.5px 10px;
+            padding: 3px 6px;
           }
         `}
       </style>

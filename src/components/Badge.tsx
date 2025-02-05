@@ -11,7 +11,7 @@ function Badge({
   return (
     <span
       className={cn(
-        'bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400',
+        'bg-gray-200 text-gray-900 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-gray-400',
         className,
       )}
     >

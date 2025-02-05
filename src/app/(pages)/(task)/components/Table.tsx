@@ -16,15 +16,15 @@ const Table = () => {
     <>
       <div className="gap-8 flex flex-col">
         <div>
-          <span className="text-2xl font-semibold underline flex justify-center mb-4">
+          <h3 className="text-2xl tracking-wider font-semibold underline flex justify-center mb-4">
             Test & Correction
-          </span>
+          </h3>
           <TestAndCorrectionTable />
         </div>
         <div>
-          <span className="text-2xl font-semibold underline flex justify-center mb-4">
+          <h3 className="text-2xl tracking-wider font-semibold underline flex justify-center mb-4">
             Running Tasks
-          </span>
+          </h3>
           <RunningTasksTable />
         </div>
       </div>

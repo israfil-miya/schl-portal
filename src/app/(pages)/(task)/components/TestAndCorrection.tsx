@@ -59,11 +59,11 @@ function TestAndCorrection() {
 
   return (
     <>
-      <div className="table-responsive text-lg">
+      <div className="table-responsive text-md">
         {orders?.length !== 0 ? (
           <table className="table table-hover border table-bordered">
             <thead>
-              <tr className="bg-gray-50">
+              <tr className="bg-gray-50 text-nowrap">
                 <th>S/N</th>
                 <th>Client Code</th>
                 <th>Folder</th>
@@ -97,14 +97,14 @@ function TestAndCorrection() {
                       </Link>
                     </td>
 
-                    <td>{order.folder}</td>
+                    <td className="text-nowrap">{order.folder}</td>
                     <td>{order.quantity}</td>
-                    <td>
+                    <td className="text-nowrap">
                       {order.download_date
                         ? formatDate(order.download_date)
                         : null}
                     </td>
-                    <td>
+                    <td className="text-nowrap">
                       {order.delivery_date
                         ? formatDate(order.delivery_date)
                         : null}
@@ -164,9 +164,13 @@ function TestAndCorrection() {
 
       <style jsx>
         {`
+          .table {
+            font-size: 15px;
+          }
+
           th,
           td {
-            padding: 2.5px 10px;
+            padding: 8px 6px;
           }
         `}
       </style>

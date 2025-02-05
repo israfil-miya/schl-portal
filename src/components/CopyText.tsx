@@ -1,7 +1,13 @@
 import { copy } from '@/lib/utils';
 import React from 'react';
 
-function ClickToCopy({ text }: { text: string }) {
+function ClickToCopy({
+  text,
+  preview = true,
+}: {
+  text: string;
+  preview?: boolean;
+}) {
   return (
     <span
       className="hover:underline cursor-pointer"
@@ -9,8 +15,8 @@ function ClickToCopy({ text }: { text: string }) {
         await copy(text);
       }}
     >
-      {text?.substring(0, 20).trim()}
-      {text?.length > 20 && '...'}
+      {preview ? text?.substring(0, 20).trim() : 'CLICK TO COPY'}
+      {preview && text?.length > 20 && '...'}
     </span>
   );
 }
