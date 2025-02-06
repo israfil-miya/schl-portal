@@ -18,4 +18,4 @@ export const validationSchema = z.object({
   __v: z.optional(z.number()),
 });
 
-export type ClientDataType = z.infer<typeof validationSchema>;
+export type NoticeDataType = z.infer<typeof validationSchema>;

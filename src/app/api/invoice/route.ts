@@ -164,8 +164,7 @@ async function handleDeleteInvoice(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const headersList = await headers();
-    const invoice_number = headersList.get('invoice_number');
+    const { invoice_number } = await req.json();
 
     if (!invoice_number) {
       return { data: 'Invoice number is required', status: 400 };

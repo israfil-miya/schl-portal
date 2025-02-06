@@ -141,8 +141,10 @@ const Table: React.FC = props => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          invoice_number: invoiceNumber,
         },
+        body: JSON.stringify({
+          invoice_number: invoiceNumber,
+        }),
       };
 
       let response = await fetchApi(url, options);
@@ -385,18 +387,20 @@ const Table: React.FC = props => {
                       />
                     </td>
                     <td className="text-wrap">{invoice.created_by}</td>
-                    <td className="text-wrap flex gap-2">
-                      <span>
-                        {invoice.time_period?.fromDate
-                          ? formatDate(invoice.time_period.fromDate)
-                          : 'X'}
-                      </span>
-                      <span className="font-bold">—</span>{' '}
-                      <span>
-                        {invoice.time_period?.toDate
-                          ? formatDate(invoice.time_period.toDate)
-                          : 'X'}
-                      </span>
+                    <td className="text-wrap">
+                      <div className="flex gap-2">
+                        <span>
+                          {invoice.time_period?.fromDate
+                            ? formatDate(invoice.time_period.fromDate)
+                            : 'X'}
+                        </span>
+                        <span className="font-bold">—</span>{' '}
+                        <span>
+                          {invoice.time_period?.toDate
+                            ? formatDate(invoice.time_period.toDate)
+                            : 'X'}
+                        </span>
+                      </div>
                     </td>
                     <td className="text-wrap">{invoice.total_orders}</td>
 

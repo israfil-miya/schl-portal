@@ -217,3 +217,13 @@ export const incrementInvoiceNumber = (invoiceNumber: string): string => {
   // Return the new invoice number
   return `${prefix}${paddedNumber}`;
 };
+
+export const constructFileName = (
+  file_name: string,
+  notice_no: string,
+): string => {
+  let file_ext = file_name.split('.').pop();
+  let file_name_without_ext = file_name.split('.').slice(0, -1).join('.');
+  let new_file_name = `${file_name_without_ext}_${notice_no}.${file_ext}`;
+  return new_file_name;
+};

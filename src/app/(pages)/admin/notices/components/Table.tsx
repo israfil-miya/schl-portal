@@ -1,20 +1,29 @@
 'use client';
 
-import { cn, fetchApi } from '@/lib/utils';
+import { cn, constructFileName, fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
-import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CirclePlus,
+  SquareArrowOutUpRight,
+} from 'lucide-react';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { NoticeDataType, validationSchema } from '../schema';
+import DeleteButton from './Delete';
+import EditButton from './Edit';
 import FilterButton from './Filter';
+
 type NoticesState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: { [key: string]: any }[];
+  items: NoticeDataType[];
 };
 
 const Table = () => {
@@ -62,7 +71,11 @@ const Table = () => {
           page,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ channel: 'marketers' }),
+        body: JSON.stringify(
+          userRole !== 'admin' && userRole !== 'super'
+            ? { channel: 'production' }
+            : {},
+        ),
       };
 
       let response = await fetchApi(url, options);
@@ -114,6 +127,112 @@ const Table = () => {
       setIsLoading(false);
     }
     return;
+  }
+
+  async function deleteNotice(noticeData: NoticeDataType) {
+    try {
+      const url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/notice?action=delete-notice';
+      const options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notice_id: noticeData._id }),
+      };
+      const response = await fetchApi(url, options);
+
+      if (response.ok) {
+        if (noticeData.file_name) {
+          console.log(
+            'Deleting file from ftp server',
+            constructFileName(noticeData.file_name, noticeData.notice_no),
+            noticeData.file_name,
+            noticeData.notice_no,
+          );
+
+          const ftpDeleteConfirmation = confirm(
+            'Delete attached file from the FTP server?',
+          );
+          if (ftpDeleteConfirmation) {
+            let ftp_url: string =
+              process.env.NEXT_PUBLIC_BASE_URL + '/api/ftp?action=delete-file';
+            let ftp_options: {} = {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                folder_name: 'notice',
+                file_name: constructFileName(
+                  noticeData.file_name,
+                  noticeData.notice_no,
+                ),
+              },
+            };
+
+            let ftp_response = await fetchApi(ftp_url, ftp_options);
+            if (ftp_response.ok) {
+              toast.success('Deleted the attached file from FTP server');
+            } else {
+              toast.error(ftp_response.data as string);
+            }
+          } else {
+            toast.success(response.data as string);
+          }
+        } else {
+          toast.success('Successfully deleted the notice', {
+            id: 'success',
+          });
+        }
+        if (!isFiltered) await getAllNotices();
+        else await getAllNoticesFiltered();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while deleting the notice');
+    }
+    return;
+  }
+
+  async function editNotice(editedNoticeData: NoticeDataType) {
+    try {
+      setIsLoading(true);
+      const parsed = validationSchema.safeParse(editedNoticeData);
+
+      if (!parsed.success) {
+        console.error(parsed.error.issues.map(issue => issue.message));
+        toast.error('Invalid form data');
+        return;
+      }
+
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/notice?action=edit-notice';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          updated_by: session?.user.real_name,
+        },
+        body: JSON.stringify(parsed.data),
+      };
+
+      const response = await fetchApi(url, options);
+
+      if (response.ok) {
+        toast.success('Updated the notice data');
+
+        if (!isFiltered) await getAllNotices();
+        else await getAllNoticesFiltered();
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while updating the notice');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -178,11 +297,14 @@ const Table = () => {
         {(userRole == 'super' || userRole == 'admin') && (
           <button
             onClick={() =>
-              router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/tasks')
+              router.push(
+                process.env.NEXT_PUBLIC_BASE_URL +
+                  '/admin/notices/create-notice',
+              )
             }
             className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
           >
-            Add new task
+            Add new notice
             <CirclePlus size={18} />
           </button>
         )}
@@ -242,7 +364,7 @@ const Table = () => {
 
       {!isLoading &&
         (notices?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap ">
+          <div className="table-responsive text-nowrap text-md">
             <table className="table table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
@@ -250,50 +372,61 @@ const Table = () => {
                   <th>Date</th>
                   <th>Notice No</th>
                   <th>Title</th>
+                  {(userRole == 'super' || userRole == 'admin') && (
+                    <th>Channel</th>
+                  )}
                   <th>Manage</th>
                 </tr>
               </thead>
               <tbody>
-                {notices?.items?.map((item, index) => {
+                {notices?.items?.map((notice, index) => {
                   return (
-                    <tr key={item.notice_no}>
+                    <tr key={notice.notice_no}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
                       <td>
-                        {item.updatedAt ? formatDate(item.updatedAt) : null}
+                        {notice.createdAt ? formatDate(notice.createdAt) : null}
                       </td>
-                      <td>{item.notice_no}</td>
-                      <td>{item.title}</td>
+                      <td>{notice.notice_no}</td>
+                      <td>{notice.title}</td>
+                      {(userRole == 'super' || userRole == 'admin') && (
+                        <td>
+                          {notice.channel.charAt(0).toUpperCase() +
+                            notice.channel.slice(1)}
+                        </td>
+                      )}
                       <td
                         className="text-center"
                         style={{ verticalAlign: 'middle' }}
                       >
-                        <div className="inline-block  py-1">
-                          <button
-                            onClick={() => {
-                              router.push(
-                                process.env.NEXT_PUBLIC_BASE_URL +
-                                  `/notices/${encodeURIComponent(item.notice_no)}`,
-                              );
-                            }}
-                            className="items-center gap-2 rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              fill="currentColor"
-                              viewBox="0 0 16 16"
+                        <div className="inline-block">
+                          <div className="flex gap-2">
+                            {(userRole == 'super' || userRole == 'admin') && (
+                              <>
+                                <DeleteButton
+                                  noticeData={notice}
+                                  submitHandler={deleteNotice}
+                                />
+                                <EditButton
+                                  loading={isLoading}
+                                  submitHandler={editNotice}
+                                  noticeData={notice}
+                                />
+                              </>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                window.open(
+                                  process.env.NEXT_PUBLIC_BASE_URL +
+                                    `/admin/notices/${encodeURIComponent(notice.notice_no)}`,
+                                  '_blank',
+                                );
+                              }}
+                              className="items-center gap-2 rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2"
                             >
-                              <path
-                                fillRule="evenodd"
-                                d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"
-                              />
-                              <path
-                                fillRule="evenodd"
-                                d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"
-                              />
-                            </svg>
-                          </button>
+                              <SquareArrowOutUpRight size={16} />
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -313,7 +446,7 @@ const Table = () => {
         {`
           th,
           td {
-            padding: 2.5px 10px;
+            padding: 1.5px 5px;
           }
         `}
       </style>

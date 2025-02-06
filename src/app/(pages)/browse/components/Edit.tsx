@@ -384,6 +384,7 @@ const EditButton: React.FC<PropsType> = props => {
                   control={control}
                   render={({ field }) => (
                     <Select
+                      {...field}
                       {...setClassNameAndIsDisabled(isOpen)}
                       options={typeOptions}
                       closeMenuOnSelect={true}

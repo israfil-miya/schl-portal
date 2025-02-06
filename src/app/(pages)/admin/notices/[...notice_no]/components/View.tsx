@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchApi } from '@/lib/utils';
+import { constructFileName, fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
@@ -39,13 +39,6 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
 
-  let constructFileName = (file_name: string, notice_no: string): string => {
-    let file_ext = file_name.split('.').pop();
-    let file_name_without_ext = file_name.split('.').slice(0, -1).join('.');
-    let new_file_name = `${file_name_without_ext}_${notice_no}.${file_ext}`;
-    return new_file_name;
-  };
-
   async function getNotice() {
     try {
       setIsLoading(true);
@@ -63,16 +56,24 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        if (
-          response.data?.channel != 'production' &&
-          (userRole != 'admin' || userRole != 'super')
-        ) {
-          toast.error("The notice doesn't belong to this channel");
-          router.push('/');
+        if (response.data?.channel != 'production') {
+          if (userRole !== 'admin' && userRole !== 'super') {
+            toast.error("The notice doesn't belong to this channel", {
+              id: 'notice-channel',
+            });
+            router.push('/');
+          } else {
+            toast.info(
+              `The notice belongs to ${response.data?.channel} channel`,
+              {
+                id: 'notice-channel',
+              },
+            );
+          }
         }
         setNotice(response.data);
       } else {
-        toast.error(response.data);
+        toast.error(response.data as string, { id: 'notice-error' });
         router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/notices');
       }
     } catch (error) {
@@ -121,8 +122,13 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
   };
 
   useEffect(() => {
-    getNotice();
-  }, [notice_no]);
+    if (notice_no) {
+      getNotice();
+    } else {
+      setIsLoading(false);
+      router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/notices');
+    }
+  }, []);
 
   return (
     <>
