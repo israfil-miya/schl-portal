@@ -14,7 +14,22 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
+import { channelOptions } from '../create-notice/components/Form';
 import { NoticeDataType, validationSchema } from '../schema';
+
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css';
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, 5, 6, false] }], // Dropdown for H1–H6 and normal text
+    ['link', 'image', 'video'], // Link, image, and video
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['clean'],
+  ],
+};
 
 const baseZIndex = 50; // 52
 
@@ -23,11 +38,6 @@ interface PropsType {
   noticeData: NoticeDataType;
   submitHandler: (editedNoticeData: NoticeDataType) => Promise<void>;
 }
-
-export const channelOptions = [
-  { value: 'marketers', label: 'Marketers' },
-  { value: 'production', label: 'Production' },
-];
 
 const EditButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -118,7 +128,7 @@ const EditButton: React.FC<PropsType> = props => {
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
             <h3 className="text-gray-900 text-base lg:text-lg font-semibold uppercase">
-              Edit Order
+              Edit Notice
             </h3>
             <button
               onClick={() => setIsOpen(false)}
@@ -179,6 +189,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('notice_no')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder='e.g. "SCH-20251231-001"'
                 />
               </div>
               <div>
@@ -192,21 +203,31 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('title')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Title of the notice"
                 />
               </div>
             </div>
-            <div>
+            <div className="mb-4">
               <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                 <span className="uppercase">Notice Body*</span>
                 <span className="text-red-700 text-wrap block text-xs">
                   {errors.description && errors.description.message}
                 </span>
               </label>
-              <textarea
-                {...register('description')}
-                rows={15}
-                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                placeholder="Write your notice here..."
+
+              <Controller
+                name="description"
+                control={control}
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <ReactQuill
+                    theme="snow"
+                    value={value}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    modules={modules}
+                    placeholder="Type notice body here"
+                  />
+                )}
               />
             </div>
           </form>

@@ -195,7 +195,7 @@ const Details: React.FC<DetailsProps> = props => {
 
       const formData = new FormData();
       formData.append(
-        'invoice',
+        'file',
         new File([invoice], fileName, { type: invoice.type }),
       );
 

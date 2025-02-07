@@ -1,5 +1,6 @@
 'use client';
 
+import Badge from '@/components/Badge';
 import { cn, constructFileName, fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
 import {
@@ -389,9 +390,11 @@ const Table = () => {
                       <td>{notice.notice_no}</td>
                       <td>{notice.title}</td>
                       {(userRole == 'super' || userRole == 'admin') && (
-                        <td>
-                          {notice.channel.charAt(0).toUpperCase() +
-                            notice.channel.slice(1)}
+                        <td
+                          className="uppercase text-wrap"
+                          style={{ verticalAlign: 'middle' }}
+                        >
+                          <Badge value={notice.channel} />
                         </td>
                       )}
                       <td

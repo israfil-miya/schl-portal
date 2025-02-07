@@ -1,499 +1,363 @@
-// 'use client';
-// import {
-//   priorityOptions,
-//   statusOptions,
-//   taskOptions,
-//   typeOptions,
-// } from '@/app/(pages)/browse/components/Edit';
-// import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
-// import { fetchApi } from '@/lib/utils';
-// import { ClientDataType } from '@/models/Clients';
-// import { setMenuPortalTarget } from '@/utility/selectHelpers';
-// import { zodResolver } from '@hookform/resolvers/zod';
-// import moment from 'moment-timezone';
-// import { useSession } from 'next-auth/react';
-// import { useState } from 'react';
-// import { Controller, useForm } from 'react-hook-form';
-// import Select from 'react-select';
+'use client';
+import { constructFileName, fetchApi } from '@/lib/utils';
+import { setMenuPortalTarget } from '@/utility/selectHelpers';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { CheckCircle, CloudUpload, Loader2 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import Select from 'react-select';
+import { toast } from 'sonner';
+import { NoticeDataType, validationSchema } from '../../schema';
 
-// import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css';
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
-// interface PropsType {
-//   clientsData: ClientDataType[];
-// }
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, 5, 6, false] }], // Dropdown for H1–H6 and normal text
+    ['link', 'image', 'video'], // Link, image, and video
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['clean'],
+  ],
+};
+export const channelOptions = [
+  { value: 'marketers', label: 'Marketers' },
+  { value: 'production', label: 'Production' },
+];
 
-// const Form: React.FC<PropsType> = props => {
-//   const [loading, setLoading] = useState(false);
-//   const { data: session } = useSession();
+const Form: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-//   const {
-//     watch,
-//     register,
-//     handleSubmit,
-//     control,
-//     setValue,
-//     reset,
-//     formState: { errors },
-//   } = useForm<OrderDataType>({
-//     resolver: zodResolver(validationSchema),
-//     defaultValues: {
-//       channel: z.enum(['production', 'marketers']),
-//       notice_no: z.string({ invalid_type_error: 'Notice no. is required' }),
-//       title: z.string({ invalid_type_error: 'Title is required' }),
-//       description: z.string({ invalid_type_error: 'Description is required' }),
-//       file_name: z.optional(z.string()).default(''),
-//       updated_by: session?.user.real_name || '',
-//     },
-//   });
+  const {
+    watch,
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<NoticeDataType>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
+      channel: 'marketers',
+      notice_no: '',
+      title: '',
+      description: '',
+      file_name: '',
+      updated_by: session?.user.real_name || '',
+    },
+  });
 
-//   async function createOrder(orderData: OrderDataType) {
-//     try {
-//       setLoading(true);
-//       const parsed = validationSchema.safeParse(orderData);
+  // You already have a constructFileName function; here's a local version:
+  let constructFileName = (file: File, notice_no: string) => {
+    let file_name = file.name;
+    let file_ext = file_name.split('.').pop();
+    let file_name_without_ext = file_name.split('.').slice(0, -1).join('.');
+    let new_file_name = `${file_name_without_ext}_${notice_no}.${file_ext}`;
+    return new_file_name;
+  };
 
-//       if (!parsed.success) {
-//         console.error(parsed.error.issues.map(issue => issue.message));
-//         toast.error('Invalid form data');
-//         return;
-//       }
+  async function createNotice(noticeData: NoticeDataType) {
+    try {
+      setLoading(true);
+      const parsed = validationSchema.safeParse(noticeData);
 
-//       let url: string =
-//         process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=create-order';
-//       let options: {} = {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           updated_by: session?.user.real_name,
-//         },
-//         body: JSON.stringify(parsed.data),
-//       };
+      if (!parsed.success) {
+        console.error(parsed.error.issues.map(issue => issue.message));
+        toast.error('Invalid form data');
+        return;
+      }
 
-//       const response = await fetchApi(url, options);
+      const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/notice?action=create-notice`;
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          updated_by: session?.user.real_name,
+        },
+        body: JSON.stringify(parsed.data),
+      };
 
-//       if (response.ok) {
-//         toast.success('Created new order successfully');
-//         reset();
-//         // reset the form after successful submission
-//       } else {
-//         toast.error(response.data as string);
-//       }
+      const response = await fetchApi(url, options);
 
-//       console.log('data', parsed.data, orderData);
-//     } catch (error) {
-//       console.error(error);
-//       toast.error('An error occurred while creating new order');
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
+      if (response.ok) {
+        toast.success('Created new notice successfully');
+        if (file) {
+          let formData = new FormData();
+          formData.append(
+            'file',
+            file,
+            constructFileName(file, response.data.notice_no),
+          );
 
-//   const onSubmit = async (data: OrderDataType) => {
-//     await createOrder(data);
-//   };
+          const ftp_url: string =
+            process.env.NEXT_PUBLIC_BASE_URL + '/api/ftp?action=insert-file';
+          const ftp_options: {} = {
+            method: 'POST',
+            body: formData,
+            headers: {
+              folder_name: 'notice',
+            },
+          };
 
-//   const customStyles = {
-//     control: (provided: any) => ({
-//       ...provided,
-//       borderTopRightRadius: 0,
-//       borderBottomRightRadius: 0,
-//       borderRight: 'none',
-//       width: '200px',
-//       paddingTop: '0.25rem' /* 12px */,
-//       paddingBottom: '0.25rem' /* 12px */,
-//       cursor: 'pointer',
-//       backgroundColor: '#f3f4f6',
-//       '&:hover': {
-//         borderColor: '#e5e7eb',
-//       },
-//     }),
-//     menu: (provided: any) => ({
-//       ...provided,
-//       width: '200px',
-//     }),
-//   };
+          let ftp_response = await fetchApi(ftp_url, ftp_options);
 
-//   const getClientNameOnFocus = () => {
-//     try {
-//       const clientCode = watch('client_code');
+          if (!ftp_response.ok) {
+            toast.error(ftp_response.data as string);
+            return;
+          }
 
-//       if (clientCode === '') return;
+          toast.success('Attached file saved successfully in ftp');
+        }
 
-//       const client = props.clientsData.find(
-//         client => client.client_code === clientCode,
-//       );
+        reset();
+        setFile(null);
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while creating new notice');
+    } finally {
+      setLoading(false);
+    }
+  }
 
-//       if (client) {
-//         setValue('client_name', client.client_name);
-//       } else {
-//         toast.info('No client found with the code provided');
-//       }
-//     } catch (e) {
-//       console.error(
-//         'An error occurred while retrieving client name on input focus',
-//       );
-//     } finally {
-//       return;
-//     }
-//   };
+  const onSubmit = async (data: NoticeDataType) => {
+    await createNotice(data);
+  };
 
-//   return (
-//     <form className="" onSubmit={handleSubmit(onSubmit)}>
-//       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Client Code*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.client_code && errors.client_code.message}
-//             </span>
-//           </label>
-//           <div className="flex">
-//             <Select
-//               options={clientCodeOptions}
-//               value={
-//                 clientCodeOptions.find(
-//                   (code?: { value: string; label: string }) =>
-//                     code?.value === watch('client_code'),
-//                 ) || null
-//               }
-//               styles={customStyles}
-//               onChange={(
-//                 selectedOption: { value: string; label: string } | null,
-//               ) => {
-//                 setValue(
-//                   'client_code',
-//                   selectedOption ? selectedOption.value : '',
-//                 );
-//               }}
-//               placeholder="Select an option"
-//               isSearchable={true}
-//               classNamePrefix="react-select"
-//               isClearable={true}
-//             />
-//             <input
-//               {...register('client_code')}
-//               className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//               type="text"
-//             />
-//           </div>
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Client Name*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.client_name && errors.client_name.message}
-//             </span>
-//           </label>
-//           <div className="flex">
-//             <Select
-//               options={clientNameOptions}
-//               value={
-//                 clientNameOptions.find(
-//                   (name?: { value: string; label: string }) =>
-//                     name?.value === watch('client_name'),
-//                 ) || null
-//               }
-//               styles={customStyles}
-//               onChange={(
-//                 selectedOption: { value: string; label: string } | null,
-//               ) => {
-//                 setValue(
-//                   'client_name',
-//                   selectedOption ? selectedOption.value : '',
-//                 );
-//               }}
-//               placeholder="Select an option"
-//               isSearchable={true}
-//               classNamePrefix="react-select"
-//               isClearable={true}
-//             />
-//             <input
-//               {...register('client_name')}
-//               className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//               type="text"
-//               onFocus={getClientNameOnFocus}
-//             />
-//           </div>
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Folder*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.folder && errors.folder.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('folder')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="text"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">NOF*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.quantity && errors.quantity.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('quantity', { valueAsNumber: true })}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="number"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Rate</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.rate && errors.rate.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('rate', { valueAsNumber: true })}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="number"
-//             step="0.01"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Download Date*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.download_date && errors.download_date.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('download_date')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="date"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Delivery Date*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.delivery_date && errors.delivery_date.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('delivery_date')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="date"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Delivery Time*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.delivery_bd_time && errors.delivery_bd_time.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('delivery_bd_time')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="time"
-//           />
-//         </div>
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const allowedExtensions =
+      /\.(xls|xlsx|doc|docx|ppt|pptx|txt|pdf|zip|7z|rar)$/i;
+    const selectedFile = e.target.files?.[0];
 
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Type*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.type && errors.type?.message}
-//             </span>
-//           </label>
+    if (selectedFile && allowedExtensions.test(selectedFile.name)) {
+      setValue('file_name', selectedFile.name);
+      setUploading(true);
+      // Simulate a brief upload delay for UX
+      setTimeout(() => {
+        setFile(selectedFile);
+        setUploading(false);
+      }, 1000);
+    } else {
+      toast.error('Invalid file format');
+      setFile(null);
+    }
+  };
 
-//           <Controller
-//             name="type"
-//             control={control}
-//             render={({ field }) => (
-//               <Select
-//                 options={typeOptions}
-//                 closeMenuOnSelect={true}
-//                 placeholder="Select type"
-//                 classNamePrefix="react-select"
-//                 menuPortalTarget={setMenuPortalTarget}
-//                 value={
-//                   typeOptions.find(option => option.value === field.value) ||
-//                   null
-//                 }
-//                 onChange={option => field.onChange(option ? option.value : '')}
-//               />
-//             )}
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Status*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.status && errors.status?.message}
-//             </span>
-//           </label>
+  // Drag and Drop Handlers
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+  };
 
-//           <Controller
-//             name="status"
-//             control={control}
-//             render={({ field }) => (
-//               <Select
-//                 {...field}
-//                 options={statusOptions}
-//                 closeMenuOnSelect={true}
-//                 placeholder="Select status"
-//                 classNamePrefix="react-select"
-//                 menuPortalTarget={setMenuPortalTarget}
-//                 value={
-//                   statusOptions.find(option => option.value === field.value) ||
-//                   null
-//                 }
-//                 onChange={option => field.onChange(option ? option.value : '')}
-//               />
-//             )}
-//           />
-//         </div>
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    const allowedExtensions =
+      /\.(xls|xlsx|doc|docx|ppt|pptx|txt|pdf|zip|7z|rar)$/i;
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      const selectedFile = droppedFiles[0];
+      if (selectedFile && allowedExtensions.test(selectedFile.name)) {
+        setValue('file_name', selectedFile.name);
+        setUploading(true);
+        // Simulate a brief upload delay for UX
+        setTimeout(() => {
+          setFile(selectedFile);
+          setUploading(false);
+        }, 1000);
+      } else {
+        toast.error('Invalid file format');
+        setFile(null);
+      }
+      e.dataTransfer.clearData();
+    }
+  };
 
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Est. Time (min)*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.et && errors.et.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('et')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="number"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Production*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.production && errors.production.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('production')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="number"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">QC1*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.qc1 && errors.qc1.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('qc1')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="number"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Folder Path*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.folder_path && errors.folder_path.message}
-//             </span>
-//           </label>
-//           <input
-//             {...register('folder_path')}
-//             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//             type="text"
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Assigned Tasks*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.task && errors.task?.message}
-//             </span>
-//           </label>
+  const clearFile = () => {
+    setFile(null);
+    setValue('file_name', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
-//           <Controller
-//             name="task"
-//             control={control}
-//             render={({ field }) => (
-//               <Select
-//                 {...field}
-//                 isSearchable={true}
-//                 isMulti={true}
-//                 options={taskOptions}
-//                 closeMenuOnSelect={false}
-//                 placeholder="Select task(s)"
-//                 classNamePrefix="react-select"
-//                 menuPortalTarget={setMenuPortalTarget}
-//                 menuPlacement="auto"
-//                 menuPosition="fixed" // Prevent clipping by parent containers
-//                 value={
-//                   taskOptions.filter(option =>
-//                     field.value?.split('+').includes(option.value),
-//                   ) || null
-//                 }
-//                 onChange={selectedOptions =>
-//                   field.onChange(
-//                     selectedOptions?.map(option => option.value).join('+') ||
-//                       '',
-//                   )
-//                 }
-//               />
-//             )}
-//           />
-//         </div>
-//         <div>
-//           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//             <span className="uppercase">Priority*</span>
-//             <span className="text-red-700 text-wrap block text-xs">
-//               {errors.priority && errors.priority?.message}
-//             </span>
-//           </label>
+  return (
+    <form className="" onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Channel*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.channel && errors.channel.message}
+            </span>
+          </label>
 
-//           <Controller
-//             name="priority"
-//             control={control}
-//             render={({ field }) => (
-//               <Select
-//                 {...field}
-//                 options={priorityOptions}
-//                 closeMenuOnSelect={true}
-//                 placeholder="Select priority"
-//                 classNamePrefix="react-select"
-//                 menuPortalTarget={setMenuPortalTarget}
-//                 value={
-//                   priorityOptions.find(
-//                     option => option.value === field.value,
-//                   ) || null
-//                 }
-//                 onChange={option => field.onChange(option ? option.value : '')}
-//               />
-//             )}
-//           />
-//         </div>
-//       </div>
-//       <div>
-//         <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-//           <span className="uppercase">Comment</span>
-//           <span className="text-red-700 text-wrap block text-xs">
-//             {errors.comment && errors.comment?.message}
-//           </span>
-//         </label>
-//         <textarea
-//           {...register('comment')}
-//           rows={5}
-//           className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-//           placeholder="Write any instructions or note about the order"
-//         />
-//       </div>
+          <Controller
+            name="channel"
+            control={control}
+            render={({ field }) => (
+              <Select
+                options={channelOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select type"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                value={
+                  channelOptions.find(option => option.value === field.value) ||
+                  null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            )}
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Notice Number*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.notice_no && errors.notice_no.message}
+            </span>
+          </label>
+          <input
+            {...register('notice_no')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="text"
+            placeholder='e.g. "SCH-20251231-001"'
+          />
+        </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Notice Title*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.title && errors.title.message}
+            </span>
+          </label>
+          <input
+            {...register('title')}
+            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+            type="text"
+            placeholder="Title of the notice"
+          />
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+          <span className="uppercase">Notice Body*</span>
+          <span className="text-red-700 text-wrap block text-xs">
+            {errors.description && errors.description.message}
+          </span>
+        </label>
 
-//       <button
-//         disabled={loading}
-//         className="rounded-md bg-primary text-white hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-10 py-2 mt-6 uppercase"
-//         type="submit"
-//       >
-//         {loading ? 'Creating...' : 'Create this task'}
-//       </button>
-//     </form>
-//   );
-// };
+        <Controller
+          name="description"
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <ReactQuill
+              theme="snow"
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              modules={modules}
+              placeholder="Type notice body here"
+            />
+          )}
+        />
+      </div>
 
-// export default Form;
+      <div>
+        <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+          <span className="uppercase">Attach file</span>
+        </label>
+
+        <div className="flex items-center justify-center w-full">
+          <label
+            htmlFor="dropzone-file"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              {uploading ? (
+                <Loader2
+                  size={32}
+                  className="animate-spin text-blue-500 mb-4"
+                />
+              ) : file ? (
+                <CheckCircle size={32} className="text-green-500 mb-4" />
+              ) : (
+                <CloudUpload
+                  size={32}
+                  className="w-10 h-10 mb-4 text-gray-500"
+                />
+              )}
+              <p className="mb-2 text-sm text-gray-500">
+                {uploading ? (
+                  'Uploading...'
+                ) : file ? (
+                  <span className="animate-fade-in">{file.name}</span>
+                ) : (
+                  <span className="font-semibold">
+                    Click to upload or drag and drop
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-gray-500">
+                ( XLS, XLSX, DOC, DOCX, PPT, PPTX, TXT, PDF, ZIP, 7Z, RAR )
+              </p>
+            </div>
+            <input
+              ref={fileInputRef}
+              id="dropzone-file"
+              type="file"
+              className="hidden"
+              accept=".xls,.xlsx,.doc,.docx,.ppt,.pptx,.txt,.pdf,.zip,.7z,.rar"
+              onChange={handleFileInput}
+            />
+          </label>
+        </div>
+        {file && !uploading && (
+          <button
+            type="button"
+            onClick={clearFile}
+            className="mt-2 text-sm text-red-600 hover:text-red-800"
+          >
+            Clear file
+          </button>
+        )}
+      </div>
+
+      <button
+        disabled={loading}
+        className="rounded-md bg-primary text-white hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-primary-foreground px-10 py-2 mt-6 uppercase"
+        type="submit"
+      >
+        {loading ? 'Creating...' : 'Create this notice'}
+      </button>
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fadeInUp 0.5s ease-in-out forwards;
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </form>
+  );
+};
+
+export default Form;

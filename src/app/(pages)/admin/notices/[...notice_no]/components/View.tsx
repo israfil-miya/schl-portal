@@ -8,6 +8,8 @@ import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import 'react-quill/dist/quill.snow.css';
+
 interface ViewNoticeProps {
   notice_no: string;
 }
@@ -143,7 +145,7 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
             </p>
           </div>
           <div
-            className="notice-body text-lg my-3 tracking-wide"
+            className="ql-editor" // Quill's default class for editor content
             dangerouslySetInnerHTML={{ __html: notice.description }}
           />
 
