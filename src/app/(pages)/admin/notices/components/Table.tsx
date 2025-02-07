@@ -388,7 +388,7 @@ const Table = () => {
                         {notice.createdAt ? formatDate(notice.createdAt) : null}
                       </td>
                       <td>{notice.notice_no}</td>
-                      <td>{notice.title}</td>
+                      <td className="text-wrap">{notice.title}</td>
                       {(userRole == 'super' || userRole == 'admin') && (
                         <td
                           className="uppercase text-wrap"
