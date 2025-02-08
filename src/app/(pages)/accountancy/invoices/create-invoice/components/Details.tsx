@@ -273,7 +273,7 @@ const Details: React.FC<DetailsProps> = props => {
       setLoading(false);
     }
     return;
-  }, []);
+  }, [props.filters]);
 
   const getClientDetails = useCallback(async () => {
     try {
@@ -307,11 +307,11 @@ const Details: React.FC<DetailsProps> = props => {
   }, [props.clientCode]);
 
   useEffect(() => {
-    if (props.clientCode) {
+    if (props.filters.clientCode) {
       getClientDetails();
       getClientOrders();
     }
-  }, [props.clientCode, getClientOrders, getClientDetails]);
+  }, [props.filters, getClientDetails, getClientOrders]);
 
   useEffect(() => {
     initFlowbite();
@@ -368,6 +368,8 @@ const Details: React.FC<DetailsProps> = props => {
   if (!orders.length) {
     return null;
   }
+
+  console.log('filters-in-details-modal::: ', props.filters);
 
   return (
     <>

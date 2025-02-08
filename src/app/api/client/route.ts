@@ -131,10 +131,6 @@ async function handleGetAllClients(req: NextRequest): Promise<{
 
     const searchQuery: Query = { ...query };
 
-    let sortQuery: Record<string, 1 | -1> = {
-      createdAt: -1,
-    };
-
     if (!query && isFilter == true) {
       return { data: 'No filter applied', status: 400 };
     } else {
@@ -145,12 +141,41 @@ async function handleGetAllClients(req: NextRequest): Promise<{
       if (paginated) {
         clients = (await Client.aggregate([
           { $match: searchQuery },
-          { $sort: sortQuery },
+          {
+            $addFields: {
+              clientNumber: {
+                $convert: {
+                  input: { $substr: ['$client_code', 0, 4] },
+                  to: 'int',
+                  onError: 0, // Defaults to 0 if conversion fails
+                  onNull: 0, // Defaults to 0 if the input is null
+                },
+              },
+            },
+          },
+          { $sort: { clientNumber: 1 } },
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
+          { $unset: 'clientNumber' },
         ])) as ClientDataType[];
       } else {
-        clients = await Client.find(searchQuery).lean();
+        clients = await Client.aggregate([
+          { $match: searchQuery },
+          {
+            $addFields: {
+              clientNumber: {
+                $convert: {
+                  input: { $substr: ['$client_code', 0, 4] },
+                  to: 'int',
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
+            },
+          },
+          { $sort: { clientNumber: 1 } },
+          { $unset: 'clientNumber' },
+        ]);
       }
 
       console.log('SEARCH Query:', searchQuery);

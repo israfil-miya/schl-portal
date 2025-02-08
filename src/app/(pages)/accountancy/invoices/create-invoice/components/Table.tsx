@@ -119,6 +119,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       toast.error('An error occurred while retrieving orders data');
     } finally {
       setLoading(false);
+      console.log('Filters::: ', filters);
     }
     return;
   }

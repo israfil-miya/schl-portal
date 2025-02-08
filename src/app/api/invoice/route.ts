@@ -1,4 +1,4 @@
-import { dbConnect, getQuery, incrementInvoiceNumber } from '@/lib/utils';
+import { dbConnect, getQuery } from '@/lib/utils';
 import Client from '@/models/Clients';
 import Invoice, { InvoiceDataType } from '@/models/Invoices';
 import { toISODate } from '@/utility/date';
@@ -133,7 +133,7 @@ async function handleStoreInvoice(
     const resData = await Invoice.create([data], { session });
     const updatedClientData = await Client.findByIdAndUpdate(
       data.client_id,
-      { last_invoice_number: incrementInvoiceNumber(data.invoice_number) }, // Increment the invoice number
+      { last_invoice_number: data.invoice_number }, // Increment the invoice number
       { session, new: true }, // Pass the session here
     );
 

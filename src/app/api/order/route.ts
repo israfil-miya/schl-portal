@@ -165,6 +165,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     const paginated: boolean = headersList.get('paginated') === 'true';
 
     const filters = await req.json();
+    console.log('Filters-in-api::: ', filters);
 
     const {
       folder,
@@ -277,7 +278,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
       } else {
         orders = await Order.find(searchQuery)
           .sort({
-            createdAt: -1,
+            createdAt: 1,
           })
           .lean();
       }
