@@ -37,8 +37,9 @@ export interface Query {
   is_prospected?: boolean;
   is_lead?: boolean;
   followup_done?: boolean;
-  regular_client?: boolean;
-  permanent_client?: boolean;
+  // regular_client?: boolean;
+  // permanent_client?: boolean;
+  client_status?: RegexQuery;
   onboard_date?: string | { [key: string]: RegexQuery | string | undefined };
   prospect_status?: RegexQuery;
   calling_date_history?: { [key: string]: any };
@@ -57,7 +58,12 @@ export type BooleanFields = Extract<
 >;
 export type RegexFields = Extract<
   keyof Query,
-  'country' | 'company_name' | 'category' | 'marketer_name' | 'prospect_status'
+  | 'country'
+  | 'company_name'
+  | 'category'
+  | 'marketer_name'
+  | 'prospect_status'
+  | 'client_status'
 >;
 
 async function handleGetTestOrdersTrend(req: NextRequest): Promise<{
@@ -419,8 +425,17 @@ async function handleGetAllReports(req: NextRequest): Promise<{
     query.is_lead = onlyLead || false;
 
     addIfDefined(query, 'followup_done', followupDone);
-    addIfDefined(query, 'regular_client', regularClient);
-    addIfDefined(query, 'permanent_client', permanentClient);
+
+    if (permanentClient) {
+      addRegexField(query, 'client_status', 'approved', true);
+    } else {
+      if (regularClient) {
+        addRegexField(query, 'client_status', 'pending', true);
+      }
+      // else {
+      //   addRegexField(query, 'client_status', 'none', true);
+      // }
+    }
 
     if (staleClient) {
       const twoMonthsAgo = moment().subtract(2, 'months').format('YYYY-MM-DD');
