@@ -548,9 +548,9 @@ const EditButton: React.FC<PropsType> = props => {
               </div>
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Status*</span>
+                  <span className="uppercase">Priority*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.status && errors.status?.message}
+                    {errors.priority && errors.priority.message}
                   </span>
                 </label>
 

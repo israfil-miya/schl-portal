@@ -40,10 +40,12 @@ const Cards = () => {
         icon={<Lightbulb size={32} className="stroke-primary" />}
       />
       <Card
-        title="Regular Clients"
-        description="Clients that consistently place orders."
+        title="Client Approvals"
+        description="Review call reports to approve regular clients."
         onClick={() =>
-          router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/regular-clients')
+          router.push(
+            process.env.NEXT_PUBLIC_BASE_URL + '/crm/client-approvals',
+          )
         }
         icon={<BadgeCheck size={32} className="stroke-primary" />}
       />

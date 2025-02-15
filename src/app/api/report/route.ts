@@ -5,11 +5,11 @@ import {
   addBooleanField,
   addIfDefined,
   addRegexField,
+  createRegexQuery,
 } from '@/utility/filterHelpers';
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-
 dbConnect();
 
 interface ReportCount {
@@ -33,13 +33,10 @@ export interface Query {
   marketer_name?:
     | RegexQuery
     | { [key: string]: RegexQuery | string | undefined };
-  // is_test?: boolean;
   is_prospected?: boolean;
   is_lead?: boolean;
   followup_done?: boolean;
-  // regular_client?: boolean;
-  // permanent_client?: boolean;
-  client_status?: RegexQuery;
+  client_status?: string | { $in: string[] };
   onboard_date?: string | { [key: string]: RegexQuery | string | undefined };
   prospect_status?: RegexQuery;
   calling_date_history?: { [key: string]: any };
@@ -426,15 +423,12 @@ async function handleGetAllReports(req: NextRequest): Promise<{
 
     addIfDefined(query, 'followup_done', followupDone);
 
-    if (permanentClient) {
-      addRegexField(query, 'client_status', 'approved', true);
+    if (regularClient) {
+      query.client_status = 'pending';
     } else {
-      if (regularClient) {
-        addRegexField(query, 'client_status', 'pending', true);
+      if (regularClient === false) {
+        query.client_status = { $in: ['none', 'pending'] };
       }
-      // else {
-      //   addRegexField(query, 'client_status', 'none', true);
-      // }
     }
 
     if (staleClient) {
@@ -491,18 +485,20 @@ async function handleGetAllReports(req: NextRequest): Promise<{
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
       if (generalSearchString) {
+        const searchPattern = createRegexQuery(generalSearchString);
+
         searchQuery['$or'] = [
-          { country: { $regex: generalSearchString, $options: 'i' } },
-          { company_name: { $regex: generalSearchString, $options: 'i' } },
-          { category: { $regex: generalSearchString, $options: 'i' } },
-          { marketer_name: { $regex: generalSearchString, $options: 'i' } },
-          { designation: { $regex: generalSearchString, $options: 'i' } },
-          { website: { $regex: generalSearchString, $options: 'i' } },
-          { contact_person: { $regex: generalSearchString, $options: 'i' } },
-          { contact_number: { $regex: generalSearchString, $options: 'i' } },
-          { calling_status: { $regex: generalSearchString, $options: 'i' } },
-          { email_address: { $regex: generalSearchString, $options: 'i' } },
-          { linkedin: { $regex: generalSearchString, $options: 'i' } },
+          { country: searchPattern! },
+          { company_name: searchPattern! },
+          { category: searchPattern! },
+          { marketer_name: searchPattern! },
+          { designation: searchPattern! },
+          { website: searchPattern! },
+          { contact_person: searchPattern! },
+          { contact_number: searchPattern! },
+          { calling_status: searchPattern! },
+          { email_address: searchPattern! },
+          { linkedin: searchPattern! },
         ];
       }
 

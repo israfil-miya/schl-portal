@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { ClientDataType, ClientType } from '@/models/Clients';
 import { UserRoundPlus, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface PropsType {
-  clientData: { [key: string]: any };
+  clientData: Partial<ClientDataType>;
   loading: boolean;
   submitHandler: (
-    editedData: { [key: string]: any },
-    setEditedData: React.Dispatch<React.SetStateAction<{ [key: string]: any }>>,
+    editedData: Partial<ClientDataType>,
+    setEditedData: React.Dispatch<
+      React.SetStateAction<Partial<ClientDataType>>
+    >,
   ) => Promise<void>;
 }
 
@@ -20,7 +23,7 @@ const CreateButton: React.FC<PropsType> = props => {
 
   console;
 
-  const [editedData, setEditedData] = useState<{ [key: string]: any }>({
+  const [editedData, setEditedData] = useState<Partial<ClientDataType>>({
     ...props.clientData,
     updated_by: session?.user.real_name || '',
   });
@@ -34,7 +37,7 @@ const CreateButton: React.FC<PropsType> = props => {
         updated_by: session?.user.real_name || '',
       });
     }
-  }, [isOpen]);
+  }, [isOpen, props.clientData, session?.user.real_name]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -215,7 +218,7 @@ const CreateButton: React.FC<PropsType> = props => {
                 <input
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   name="email_address"
-                  value={editedData.email_address}
+                  value={editedData.email}
                   onChange={handleChange}
                   type="text"
                 />

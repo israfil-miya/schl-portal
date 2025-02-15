@@ -8,6 +8,7 @@ import {
   createRegexQuery,
 } from '@/utility/filterHelpers';
 import moment from 'moment-timezone';
+import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 dbConnect();
@@ -64,39 +65,54 @@ async function handleConvertToPermanent(req: NextRequest): Promise<{
   data: string | Record<string, number>;
   status: number;
 }> {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const data: ClientDataType = await req.json();
-
     console.log('Received data:', data);
 
-    const resData = await Client.findOneAndUpdate(
+    const existingClientCount = await Client.countDocuments(
       { client_code: data.client_code },
-      data,
-      {
-        new: true,
-        upsert: true,
-      },
+      { session },
     );
 
-    if (resData) {
+    if (existingClientCount > 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return { data: 'Client with the same code already exists', status: 400 };
+    }
+
+    const clientData = await Client.create([data], { session });
+
+    if (clientData) {
       const reportData = await Report.findOneAndUpdate(
         { company_name: data.client_name, is_lead: false },
-        { $set: { permanent_client: true } },
-        {
-          new: true,
-          upsert: true,
-        },
+        { client_status: 'approved' },
+        { new: true, upsert: true, session },
       );
 
       if (reportData) {
+        await session.commitTransaction();
+        session.endSession();
         console.log('Added the client successfully', reportData);
         return { data: 'Added the client successfully', status: 200 };
+      } else {
+        await session.abortTransaction();
+        session.endSession();
+        return {
+          data: 'Unable to change the status of the report',
+          status: 400,
+        };
       }
-      return { data: 'Unable to add new client', status: 400 };
     } else {
+      await session.abortTransaction();
+      session.endSession();
       return { data: 'Unable to add new client', status: 400 };
     }
   } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
     console.error(e);
     return { data: 'An error occurred', status: 500 };
   }

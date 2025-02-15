@@ -4,17 +4,17 @@ export interface ClientType {
   client_code: string;
   client_name: string;
   marketer: string;
-  contact_person: string;
-  designation: string;
-  contact_number: string;
-  email: string;
-  country: string;
-  address: string;
-  prices: string;
-  currency: string;
-  category: string;
-  last_invoice_number: string | null;
-  updated_by: string | null;
+  contact_person?: string;
+  designation?: string;
+  contact_number?: string;
+  email?: string;
+  country?: string;
+  address?: string;
+  prices?: string;
+  currency?: string;
+  category?: string;
+  last_invoice_number?: string | null;
+  updated_by?: string | null;
 }
 
 export type ClientDataType = ClientType & {
