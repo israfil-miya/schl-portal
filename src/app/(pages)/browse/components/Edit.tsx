@@ -255,44 +255,52 @@ const EditButton: React.FC<PropsType> = props => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Client Name*</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.client_name && errors.client_name.message}
-                  </span>
-                </label>
-                <div className="flex">
-                  <Select
-                    options={clientNameOptions}
-                    value={
-                      clientNameOptions.find(
-                        (name?: { value: string; label: string }) =>
-                          name?.value === watch('client_name'),
-                      ) || null
-                    }
-                    styles={customStyles}
-                    onChange={(
-                      selectedOption: { value: string; label: string } | null,
-                    ) => {
-                      setValue(
-                        'client_name',
-                        selectedOption ? selectedOption.value : '',
-                      );
-                    }}
-                    placeholder="Select an option"
-                    isSearchable={true}
-                    classNamePrefix="react-select"
-                    isClearable={true}
-                  />
-                  <input
-                    {...register('client_name')}
-                    className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                    type="text"
-                    onFocus={getClientNameOnFocus}
-                  />
+
+              {(session?.user?.role === 'admin' ||
+                session?.user?.role === 'super') && (
+                <div>
+                  <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                    <span className="uppercase">Client Name*</span>
+                    <span className="text-red-700 text-wrap block text-xs">
+                      {errors.client_name && errors.client_name.message}
+                    </span>
+                  </label>
+                  <div className="flex">
+                    <Select
+                      options={clientNameOptions}
+                      value={
+                        clientNameOptions.find(
+                          (name?: { value: string; label: string }) =>
+                            name?.value === watch('client_name'),
+                        ) || null
+                      }
+                      styles={customStyles}
+                      onChange={(
+                        selectedOption: {
+                          value: string;
+                          label: string;
+                        } | null,
+                      ) => {
+                        setValue(
+                          'client_name',
+                          selectedOption ? selectedOption.value : '',
+                        );
+                      }}
+                      placeholder="Select an option"
+                      isSearchable={true}
+                      classNamePrefix="react-select"
+                      isClearable={true}
+                    />
+                    <input
+                      {...register('client_name')}
+                      className="appearance-none rounded-s-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      type="text"
+                      onFocus={getClientNameOnFocus}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Folder*</span>
@@ -320,23 +328,23 @@ const EditButton: React.FC<PropsType> = props => {
                 />
               </div>
 
-              {session?.user?.role === 'admin' ||
-                (session?.user?.role === 'super' && (
-                  <div>
-                    <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                      <span className="uppercase">Rate</span>
-                      <span className="text-red-700 text-wrap block text-xs">
-                        {errors.rate && errors.rate.message}
-                      </span>
-                    </label>
-                    <input
-                      {...register('rate', { valueAsNumber: true })}
-                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      type="number"
-                      step="0.01"
-                    />
-                  </div>
-                ))}
+              {(session?.user?.role === 'admin' ||
+                session?.user?.role === 'super') && (
+                <div>
+                  <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                    <span className="uppercase">Rate</span>
+                    <span className="text-red-700 text-wrap block text-xs">
+                      {errors.rate && errors.rate.message}
+                    </span>
+                  </label>
+                  <input
+                    {...register('rate', { valueAsNumber: true })}
+                    className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    type="number"
+                    step="0.01"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
