@@ -4,6 +4,7 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import moment from 'moment-timezone';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 
@@ -19,6 +20,8 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
   const [statusColor, setStatusColor] = useState(
     'bg-green-600 text-white border-green-600',
   );
+
+  const { data: session } = useSession();
 
   useEffect(() => {
     // console.log('>>> ' + diff + ' <<<');
@@ -70,15 +73,20 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
       <tr key={props.key}>
         <td>{props.index + 1}</td>
         <td>
-          <Link
-            className="hover:underline cursor-pointer"
-            href={
-              '/browse/single-order?id=' +
-              encodeURIComponent(String(props.order._id))
-            }
-          >
-            {props.order.client_code}
-          </Link>
+          {session?.user?.role === 'admin' ||
+          session?.user?.role === 'super' ? (
+            <Link
+              className="hover:underline cursor-pointer"
+              href={
+                '/browse/single-order?id=' +
+                encodeURIComponent(String(props.order._id))
+              }
+            >
+              {props.order.client_code}
+            </Link>
+          ) : (
+            props.order.client_code
+          )}
         </td>
 
         <td className="text-nowrap">{props.order.folder}</td>

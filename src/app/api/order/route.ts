@@ -165,7 +165,6 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     const paginated: boolean = headersList.get('paginated') === 'true';
 
     const filters = await req.json();
-    console.log('Filters-in-api::: ', filters);
 
     const {
       folder,
@@ -213,12 +212,14 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
       if (generalSearchString) {
+        const searchPattern = createRegexQuery(generalSearchString);
+
         searchQuery['$or'] = [
-          { client_code: createRegexQuery(generalSearchString)! },
-          { client_name: createRegexQuery(generalSearchString)! },
-          { folder: createRegexQuery(generalSearchString)! },
-          { task: createRegexQuery(generalSearchString)! },
-          { folder_path: createRegexQuery(generalSearchString)! },
+          { client_code: searchPattern! },
+          { client_name: searchPattern! },
+          { folder: searchPattern! },
+          { task: searchPattern! },
+          // { folder_path: searchPattern! },
         ];
       }
 
@@ -227,7 +228,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
 
       if (paginated) {
         orders = (await Order.aggregate([
-          { $match: query },
+          { $match: searchQuery },
           {
             $addFields: {
               customSortField: {

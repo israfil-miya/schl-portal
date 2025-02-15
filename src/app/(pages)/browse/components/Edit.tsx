@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { SquarePen, X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
@@ -77,6 +78,7 @@ const EditButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const { data: session } = useSession();
 
   const clientNames = props.clientsData.map(client => client.client_name);
   const clientCodes = props.clientsData.map(client => client.client_code);
@@ -317,20 +319,25 @@ const EditButton: React.FC<PropsType> = props => {
                   type="number"
                 />
               </div>
-              <div>
-                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                  <span className="uppercase">Rate</span>
-                  <span className="text-red-700 text-wrap block text-xs">
-                    {errors.rate && errors.rate.message}
-                  </span>
-                </label>
-                <input
-                  {...register('rate', { valueAsNumber: true })}
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="number"
-                  step="0.01"
-                />
-              </div>
+
+              {session?.user?.role === 'admin' ||
+                (session?.user?.role === 'super' && (
+                  <div>
+                    <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                      <span className="uppercase">Rate</span>
+                      <span className="text-red-700 text-wrap block text-xs">
+                        {errors.rate && errors.rate.message}
+                      </span>
+                    </label>
+                    <input
+                      {...register('rate', { valueAsNumber: true })}
+                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                      type="number"
+                      step="0.01"
+                    />
+                  </div>
+                ))}
+
               <div>
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Download Date*</span>

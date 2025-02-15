@@ -32,7 +32,7 @@ import {
   RegexQuery as notice_RegexQuery,
 } from '@/app/api/notice/route';
 
-import { escapeRegex } from '@/lib/utils';
+import { escapeRegExp } from 'lodash';
 
 type RegexQuery =
   | report_RegexQuery
@@ -57,6 +57,22 @@ type RegexFields =
   | notice_RegexFields;
 type BooleanFields = report_BooleanFields;
 
+export const createFlexibleSearchPattern = (searchString: string): string => {
+  // 1. Escape special regex characters
+  const escaped = escapeRegExp(searchString);
+
+  // 2. Create two patterns:
+  // - One that matches the exact string with optional spaces
+  // - One that matches the string without any spaces
+  const withoutSpaces = escaped.replace(/\s+/g, '');
+  const withFlexibleSpaces = escaped.replace(/\s+/g, '\\s*');
+
+  // 3. Combine patterns with word boundaries
+  const pattern = `\\b(${withoutSpaces}|${withFlexibleSpaces})\\b`;
+
+  return pattern;
+};
+
 // Helper function to create a regex query
 export const createRegexQuery = (
   value?: string,
@@ -65,8 +81,8 @@ export const createRegexQuery = (
   value
     ? {
         $regex: exactMatch
-          ? `^${escapeRegex(value.trim() || '')}$`
-          : escapeRegex(value) || '',
+          ? `^${escapeRegExp(value.trim() || '')}$`
+          : createFlexibleSearchPattern(value) || '',
         $options: 'i',
       }
     : undefined;

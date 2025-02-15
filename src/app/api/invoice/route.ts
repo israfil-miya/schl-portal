@@ -83,7 +83,7 @@ async function handleGetAllInvoices(req: NextRequest): Promise<{
 
       if (paginated) {
         invoices = (await Invoice.aggregate([
-          { $match: query },
+          { $match: searchQuery },
           { $sort: sortQuery },
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },

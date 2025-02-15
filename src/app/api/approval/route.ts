@@ -196,7 +196,7 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
 
       if (paginated) {
         approvals = (await Approval.aggregate([
-          { $match: query },
+          { $match: searchQuery },
           {
             $addFields: {
               // Create a priority field for sorting

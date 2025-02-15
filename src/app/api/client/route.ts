@@ -278,25 +278,26 @@ async function handleDeleteClient(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
 }> {
-  let { client_id }: { client_id: string } = await req.json();
+  // let { client_id }: { client_id: string } = await req.json();
 
   try {
-    const resData = await Client.findByIdAndDelete(client_id);
-    if (resData) {
-      const reportData = await Report.findOne({
-        is_lead: false,
-        company_name: createRegexQuery(resData.client_name.trim()),
-      });
+    // const resData = await Client.findByIdAndDelete(client_id);
+    // if (resData) {
+    // const reportData = await Report.findOne({
+    //   is_lead: false,
+    //   company_name: createRegexQuery(resData.client_name.trim()),
+    // });
 
-      if (reportData) {
-        reportData.permanent_client = false;
-        await reportData.save();
-      }
+    // if (reportData) {
+    //   reportData.permanent_client = false;
+    //   await reportData.save();
+    // }
 
-      return { data: 'Deleted the client successfully', status: 200 };
-    } else {
-      return { data: 'Unable to delete the client', status: 400 };
-    }
+    //   return { data: 'Deleted the client successfully', status: 200 };
+    // } else {
+    //   return { data: 'Unable to delete the client', status: 400 };
+    // }
+    return { data: 'Feature disabled temporarily', status: 400 };
   } catch (e) {
     console.error(e);
     return { data: 'An error occurred', status: 500 };

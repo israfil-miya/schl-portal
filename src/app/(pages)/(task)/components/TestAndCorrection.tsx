@@ -6,6 +6,7 @@ import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -19,6 +20,8 @@ function TestAndCorrection() {
       initFlowbite();
     }
   }, []);
+
+  const { data: session } = useSession();
 
   async function getAllOrders() {
     try {
@@ -86,15 +89,20 @@ function TestAndCorrection() {
                   <tr key={String(order._id)}>
                     <td>{index + 1}</td>
                     <td>
-                      {' '}
-                      <Link
-                        href={
-                          '/browse/single-order?id=' +
-                          encodeURIComponent(String(order._id))
-                        }
-                      >
-                        {order.client_code}
-                      </Link>
+                      {session?.user?.role === 'admin' ||
+                      session?.user?.role === 'super' ? (
+                        <Link
+                          className="hover:underline cursor-pointer"
+                          href={
+                            '/browse/single-order?id=' +
+                            encodeURIComponent(String(order._id))
+                          }
+                        >
+                          {order.client_code}
+                        </Link>
+                      ) : (
+                        order.client_code
+                      )}
                     </td>
 
                     <td className="text-nowrap">{order.folder}</td>
@@ -150,11 +158,11 @@ function TestAndCorrection() {
             </tbody>
           </table>
         ) : (
-          <table className="table border table-bordered table-striped">
+          <table className="table border">
             <tbody>
               <tr key={0}>
                 <td className="align-center text-center text-wrap">
-                  No Test or Corrections To Show.
+                  No Test or Correction To Show.
                 </td>
               </tr>
             </tbody>

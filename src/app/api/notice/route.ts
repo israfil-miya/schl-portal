@@ -80,7 +80,7 @@ async function handleGetAllNotices(req: NextRequest): Promise<{
 
       if (paginated) {
         notices = (await Notice.aggregate([
-          { $match: query },
+          { $match: searchQuery },
           { $sort: sortQuery },
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
