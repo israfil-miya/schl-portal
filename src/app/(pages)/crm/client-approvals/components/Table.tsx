@@ -1,17 +1,22 @@
 'use client';
 
+import {
+  ClientDataType,
+  validationSchema,
+} from '@/app/(pages)/admin/clients/schema';
 import { fetchApi } from '@/lib/utils';
-import { ClientDataType } from '@/models/Clients';
 import { ReportDataType } from '@/models/Reports';
+import { UserDataType } from '@/models/Users';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import DeleteButton from './Delete';
+import DuplicateButton from './Duplicate';
 import FilterButton from './Filter';
 import NewClient from './New';
+import RejectButton from './Reject';
 
 type ReportsState = {
   pagination: {
@@ -41,14 +46,15 @@ const Table = () => {
 
   const { data: session } = useSession();
 
+  const [marketerNames, setMarketerNames] = useState<string[]>([]);
+
   const [filters, setFilters] = useState({
     country: '',
     companyName: '',
     category: '',
     fromDate: '',
     toDate: '',
-    test: false,
-    permanentClient: false,
+    marketerName: '',
     generalSearchString: '',
     show: 'all',
   });
@@ -129,59 +135,95 @@ const Table = () => {
     return;
   }
 
-  async function deleteReport(reportId: string, reqBy: string) {
+  // reject the approval of the report to be converted to regular client
+  async function rejectClient(reportId: string) {
     try {
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
+        process.env.NEXT_PUBLIC_BASE_URL +
+        '/api/report?action=reject-regular-client-request';
       let options: {} = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          req_type: 'Report Delete',
-          req_by: reqBy,
-          id: reportId,
-        }),
+        body: JSON.stringify({ id: reportId }),
       };
 
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        toast.success('Request sent for approval');
+        toast.success('Rejected the request to convert to regular client');
+
+        if (!isFiltered) getAllReports();
+        else getAllReportsFiltered();
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while sending request for approval');
+      toast.error('An error occurred while rejecting the request');
     }
     return;
   }
 
-  async function convertToClient(
-    editedData: Partial<ClientDataType>,
-    setEditedData: React.Dispatch<
-      React.SetStateAction<Partial<ClientDataType>>
-    >,
-  ) {
+  // mark the request as duplicate as the client already exists
+  async function markDuplicate(reportId: string) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/client?action=convert-to-permanent';
+        '/api/report?action=mark-duplicate-client';
       let options: {} = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...editedData, marketer: editedData.marketer }),
+        body: JSON.stringify({ id: reportId }),
+      };
+
+      let response = await fetchApi(url, options);
+
+      if (response.ok) {
+        toast.success('Marked the request as duplicate client');
+
+        if (!isFiltered) getAllReports();
+        else getAllReportsFiltered();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while marking the request as duplicate');
+    }
+    return;
+  }
+
+  async function convertToClient(editedClientData: Partial<ClientDataType>) {
+    try {
+      setLoading(true);
+      const parsed = validationSchema.safeParse(editedClientData);
+
+      if (!parsed.success) {
+        console.error(parsed.error.issues.map(issue => issue.message));
+        toast.error('Invalid form data');
+        return;
+      }
+
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL +
+        '/api/report?action=convert-to-permanent';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedClientData),
       };
 
       let response = await fetchApi(url, options);
 
       if (response.ok) {
         toast.success('Successfully created new client');
-        setEditedData({});
+
         if (!isFiltered) getAllReports();
         else getAllReportsFiltered();
       } else {
@@ -193,8 +235,35 @@ const Table = () => {
     }
   }
 
+  async function getAllMarketers() {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      let response = await fetchApi(url, options);
+
+      if (response.ok) {
+        let marketers = response.data as UserDataType[];
+        let marketerNames = marketers.map(marketer => marketer.provided_name!);
+        setMarketerNames(marketerNames);
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving marketers data');
+    }
+  }
+
   useEffect(() => {
     getAllReports();
+    getAllMarketers();
   }, []);
 
   function handlePrevious() {
@@ -292,6 +361,7 @@ const Table = () => {
             submitHandler={getAllReportsFiltered}
             setFilters={setFilters}
             filters={filters}
+            marketerNames={marketerNames}
             className="w-full justify-between sm:w-auto"
           />
         </div>
@@ -306,7 +376,7 @@ const Table = () => {
               <thead className="table-dark">
                 <tr>
                   <th>#</th>
-                  <th>Onboard Date</th>
+                  <th>Marketer Name</th>
                   <th>Country</th>
                   <th>Company Name</th>
                   <th>Contact Person</th>
@@ -319,9 +389,7 @@ const Table = () => {
                   return (
                     <tr key={String(report._id)}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      <td>
-                        {report.onboard_date && formatDate(report.onboard_date)}
-                      </td>
+                      <td>{report.marketer_name}</td>
                       <td>{report.country}</td>
                       <td className="text-wrap">{report.company_name}</td>
                       <td className="text-wrap">{report.contact_person}</td>
@@ -345,6 +413,14 @@ const Table = () => {
                                 marketer: report.marketer_name,
                               }}
                               submitHandler={convertToClient}
+                            />
+                            <RejectButton
+                              reportData={report}
+                              submitHandler={rejectClient}
+                            />
+                            <DuplicateButton
+                              reportData={report}
+                              submitHandler={markDuplicate}
                             />
                           </div>
                         </div>

@@ -1,301 +1,333 @@
-import React, { useEffect, useRef, useState } from 'react';
+'use client';
 
-import { ClientDataType, ClientType } from '@/models/Clients';
+import { currencyOptions } from '@/app/(pages)/admin/clients/create-client/components/Form';
+import {
+  ClientDataType,
+  validationSchema,
+} from '@/app/(pages)/admin/clients/schema';
+import { cn } from '@/lib/utils';
+import {
+  setCalculatedZIndex,
+  setClassNameAndIsDisabled,
+  setMenuPortalTarget,
+} from '@/utility/selectHelpers';
+import { zodResolver } from '@hookform/resolvers/zod';
+import 'flowbite';
+import { initFlowbite } from 'flowbite';
 import { UserRoundPlus, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import Select from 'react-select';
+
+const baseZIndex = 50; // 52
 
 interface PropsType {
-  clientData: Partial<ClientDataType>;
   loading: boolean;
-  submitHandler: (
-    editedData: Partial<ClientDataType>,
-    setEditedData: React.Dispatch<
-      React.SetStateAction<Partial<ClientDataType>>
-    >,
-  ) => Promise<void>;
+  clientData: Partial<ClientDataType>;
+  submitHandler: (editedClientData: Partial<ClientDataType>) => Promise<void>;
 }
 
-const CreateButton: React.FC<PropsType> = props => {
+const EditButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { data: session } = useSession();
-  const [editedBy, setEditedBy] = useState<string>('');
   const popupRef = useRef<HTMLElement>(null);
-
-  console;
-
-  const [editedData, setEditedData] = useState<Partial<ClientDataType>>({
-    ...props.clientData,
-    updated_by: session?.user.real_name || '',
-  });
-
-  console.log('editedData category', editedData);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setEditedData({
-        ...props.clientData,
-        updated_by: session?.user.real_name || '',
-      });
-    }
-  }, [isOpen, props.clientData, session?.user.real_name]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ): void => {
-    const { name, value } = e.target;
-
-    setEditedData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  const formRef = useRef<HTMLFormElement>(null);
+  const { data: session } = useSession();
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     if (
       popupRef.current &&
       !popupRef.current.contains(e.target as Node) &&
-      !popupRef.current.querySelector('input:focus, textarea:focus')
+      !popupRef.current.querySelector('input:focus, textarea:focus') &&
+      !popupRef.current.querySelector('button:focus')
     ) {
       setIsOpen(false);
     }
   };
 
+  const {
+    watch,
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<Partial<ClientDataType>>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
+      ...props.clientData,
+      updated_by: session?.user.real_name || '',
+    },
+  });
+
+  useEffect(() => {
+    initFlowbite();
+  }, []);
+
+  const onSubmit = async (data: Partial<ClientDataType>) => {
+    await props.submitHandler(data);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      reset(props.clientData);
+    }
+    console.log(props.clientData);
+  }, [isOpen, props.clientData, reset]);
+
   return (
     <>
       <button
-        disabled={props.loading}
         onClick={() => {
           setIsOpen(true);
-          setEditedBy(props.clientData.updated_by || '');
         }}
-        className="items-center gap-2 rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2"
+        className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
       >
         <UserRoundPlus size={18} />
       </button>
 
       <section
         onClick={handleClickOutside}
-        className={`fixed z-50 inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
+        className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
       >
         <article
           ref={popupRef}
           onClick={e => e.stopPropagation()}
-          className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-lg shadow relative md:w-[60vw] lg:w-[40vw]  text-wrap`}
+          className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-sm shadow relative md:w-[60vw] lg:w-[40vw]  text-wrap`}
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
-            <h3 className="text-gray-900 text-lg lg:text-xl font-semibold uppercase">
+            <h3 className="text-gray-900 text-base lg:text-lg font-semibold uppercase">
               Create Client
             </h3>
             <button
               onClick={() => setIsOpen(false)}
               type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-50 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center "
             >
               <X size={18} />
             </button>
           </header>
-          <div className="overflow-x-hidden overflow-y-scroll max-h-[70vh] p-4 text-start">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-4">
+
+          <form
+            ref={formRef}
+            className="overflow-x-hidden overflow-y-scroll max-h-[70vh] p-4 text-start"
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
               <div>
-                <label
-                  className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
-                  htmlFor="grid-password"
-                >
-                  Client Code*
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Client Code*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.client_code && errors.client_code.message}
+                  </span>
                 </label>
                 <input
+                  {...register('client_code')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="client_code"
-                  value={editedData.client_code || ''}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
-                  htmlFor="grid-password"
-                >
-                  Country
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Client Name*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.client_name && errors.client_name.message}
+                  </span>
                 </label>
                 <input
+                  {...register('client_name')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="country"
-                  value={editedData.country}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Client Name*
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Marketer</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.marketer && errors.marketer.message}
+                  </span>
                 </label>
                 <input
+                  {...register('marketer')}
+                  className="appearance-none block w-full bg-gray-100 cursor-not-allowed text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="text"
+                  disabled={true}
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Category</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.category && errors.category.message}
+                  </span>
+                </label>
+                <input
+                  {...register('category')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="client_name"
-                  value={editedData.client_name}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Category
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Contact Person</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.contact_person && errors.contact_person.message}
+                  </span>
                 </label>
                 <input
+                  {...register('contact_person')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="category"
-                  value={editedData.category}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Contact Person
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Designation</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.designation && errors.designation.message}
+                  </span>
                 </label>
                 <input
+                  {...register('designation')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="contact_person"
-                  value={editedData.contact_person}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Contact Number
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Contact Number</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.contact_number && errors.contact_number.message}
+                  </span>
                 </label>
                 <input
+                  {...register('contact_number')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="contact_number"
-                  value={editedData.contact_number}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Designation
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Email</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.email && errors.email.message}
+                  </span>
                 </label>
                 <input
+                  {...register('email')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="designation"
-                  value={editedData.designation}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Email address
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Address</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.address && errors.address.message}
+                  </span>
                 </label>
                 <input
+                  {...register('address')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="email_address"
-                  value={editedData.email}
-                  onChange={handleChange}
                   type="text"
                 />
               </div>
-
               <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Currency
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Country</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.country && errors.country.message}
+                  </span>
                 </label>
                 <input
+                  {...register('country')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="text"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">Currency</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.currency && errors.currency?.message}
+                  </span>
+                </label>
+
+                <Controller
                   name="currency"
-                  value={editedData.currency}
-                  onChange={handleChange}
-                  type="text"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...setClassNameAndIsDisabled(isOpen)}
+                      options={currencyOptions}
+                      closeMenuOnSelect={true}
+                      placeholder="Select currency"
+                      classNamePrefix="react-select"
+                      menuPortalTarget={setMenuPortalTarget}
+                      menuPlacement="auto"
+                      menuPosition="fixed"
+                      styles={setCalculatedZIndex(baseZIndex)}
+                      value={
+                        currencyOptions.find(
+                          option => option.value === field.value,
+                        ) || null
+                      }
+                      onChange={option =>
+                        field.onChange(option ? option.value : '')
+                      }
+                    />
+                  )}
                 />
               </div>
+            </div>
+            <div>
+              <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                <span className="uppercase">Prices</span>
+                <span className="text-red-700 text-wrap block text-xs">
+                  {errors.prices && errors.prices?.message}
+                </span>
+              </label>
+              <textarea
+                {...register('prices')}
+                rows={5}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                placeholder="List cost of services pitched to client"
+              />
+            </div>
+          </form>
 
-              <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Address
-                </label>
-                <textarea
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="address"
-                  value={editedData.address || ''}
-                  onChange={handleChange}
-                />
+          <footer
+            className={cn(
+              'flex items-center px-4 py-2 border-t justify-between gap-6 border-gray-200 rounded-b',
+              !watch('updated_by') && 'justify-end',
+            )}
+          >
+            {watch('updated_by') && (
+              <div className="flex justify-start items-center me-auto text-gray-400">
+                <span className="me-1">Last updated by </span>
+
+                <span className="font-semibold">{watch('updated_by')}</span>
               </div>
-              <div>
-                <label
-                  className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="grid-password"
-                >
-                  Prices
-                </label>
-                <textarea
-                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  name="prices"
-                  value={editedData.prices || ''}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-          <footer className="flex items-center px-4 py-2 border-t justify-between gap-6 border-gray-200 rounded-b">
-            <div className="text-md">
-              {editedBy && (
-                <p>
-                  <span className="underline">Last updated by:</span>{' '}
-                  <span className="">{editedBy}</span>
-                </p>
-              )}
-            </div>
-            <div className="buttons space-x-2 ">
+            )}
+            <div className="space-x-2 justify-end">
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
+                className="rounded-md bg-gray-600 text-white hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
+                disabled={props.loading}
               >
                 Close
               </button>
               <button
+                disabled={props.loading}
                 onClick={() => {
-                  props.submitHandler(editedData, setEditedData);
-                  setIsOpen(false);
+                  formRef.current?.requestSubmit();
                 }}
                 className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
-                Submit
+                {props.loading ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </footer>
@@ -305,4 +337,4 @@ const CreateButton: React.FC<PropsType> = props => {
   );
 };
 
-export default CreateButton;
+export default EditButton;

@@ -1,24 +1,23 @@
 'use client';
 
-import { Trash2, X } from 'lucide-react';
+import { CopyMinus, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
   reportData: { [key: string]: any };
-  submitHandler: (reportId: string, reqBy: string) => Promise<void>;
+  submitHandler: (reportId: string) => Promise<void>;
 }
-const DeleteButton: React.FC<PropsType> = props => {
+const DuplicateButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { data: session } = useSession();
 
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
+        className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
       >
-        <Trash2 size={18} />
+        <CopyMinus size={18} />
       </button>
 
       <section
@@ -31,7 +30,7 @@ const DeleteButton: React.FC<PropsType> = props => {
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
             <h3 className="text-gray-900 text-lg lg:text-xl font-semibold uppercase">
-              Delete Report
+              Mark Duplicate
             </h3>
             <button
               onClick={() => setIsOpen(false)}
@@ -43,7 +42,7 @@ const DeleteButton: React.FC<PropsType> = props => {
           </header>
           <div className="overflow-hidden max-h-[70vh] p-4">
             <p className="text-base">
-              Are you sure, you want to delete this report?
+              Are you sure, you want to mark this request as duplicate?
             </p>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">
@@ -56,13 +55,10 @@ const DeleteButton: React.FC<PropsType> = props => {
             </button>
             <button
               onClick={() => {
-                props.submitHandler(
-                  props.reportData?._id,
-                  session?.user.real_name || '',
-                );
+                props.submitHandler(props.reportData?._id);
                 setIsOpen(false);
               }}
-              className="rounded-md bg-red-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
+              className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
               type="button"
             >
               Yes
@@ -74,4 +70,4 @@ const DeleteButton: React.FC<PropsType> = props => {
   );
 };
 
-export default DeleteButton;
+export default DuplicateButton;

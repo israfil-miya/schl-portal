@@ -1,11 +1,19 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import {
+  setCalculatedZIndex,
+  setClassNameAndIsDisabled,
+  setMenuPortalTarget,
+} from '@/utility/selectHelpers';
 import { Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
+const baseZIndex = 50; // 52
+
 interface PropsType {
   className?: string;
+  marketerNames: string[];
   submitHandler: () => void;
   filters: {
     country: string;
@@ -13,8 +21,7 @@ interface PropsType {
     category: string;
     fromDate: string;
     toDate: string;
-    test: boolean;
-    permanentClient: boolean;
+    marketerName: string;
     generalSearchString: string;
     show: string;
   };
@@ -22,10 +29,17 @@ interface PropsType {
   loading: boolean;
 }
 
+import Select from 'react-select';
+
 const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { filters, setFilters } = props;
   const popupRef = useRef<HTMLElement>(null);
+
+  const marketerOptions = (props.marketerNames || []).map(name => ({
+    label: name,
+    value: name,
+  }));
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -54,8 +68,7 @@ const FilterButton: React.FC<PropsType> = props => {
       category: '',
       fromDate: '',
       toDate: '',
-      test: false,
-      permanentClient: false,
+      marketerName: '',
       generalSearchString: '',
       show: 'all',
     });
@@ -86,7 +99,7 @@ const FilterButton: React.FC<PropsType> = props => {
 
       <section
         onClick={handleClickOutside}
-        className={`fixed z-50 inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
+        className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
       >
         <article
           ref={popupRef}
@@ -108,7 +121,7 @@ const FilterButton: React.FC<PropsType> = props => {
           <div className="overflow-y-scroll max-h-[70vh] p-4">
             <div className="regular-search">
               <div className="grid grid-cols-1 gap-x-3 gap-y-4">
-                <div className="">
+                <div>
                   <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
                     Date Picker
                   </label>
@@ -133,8 +146,34 @@ const FilterButton: React.FC<PropsType> = props => {
                     />
                   </div>
                 </div>
-
-                <div className="">
+                <div>
+                  <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                    Marketer
+                  </label>
+                  <Select
+                    {...setClassNameAndIsDisabled(isOpen)}
+                    options={marketerOptions}
+                    closeMenuOnSelect={true}
+                    classNamePrefix="react-select"
+                    menuPortalTarget={setMenuPortalTarget}
+                    menuPlacement="auto"
+                    menuPosition="fixed" // Prevent clipping by parent containers
+                    styles={setCalculatedZIndex(baseZIndex)}
+                    value={
+                      marketerOptions.find(
+                        option => option.value === filters.marketerName,
+                      ) || null
+                    }
+                    onChange={selectedOption =>
+                      setFilters((prevFilters: PropsType['filters']) => ({
+                        ...prevFilters,
+                        marketerName: selectedOption?.value || '',
+                      }))
+                    }
+                    placeholder="Select marketer"
+                  />
+                </div>
+                <div>
                   <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
                     Country Name
                   </label>
@@ -146,7 +185,7 @@ const FilterButton: React.FC<PropsType> = props => {
                     type="text"
                   />
                 </div>
-                <div className="">
+                <div>
                   <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
                     Category
                   </label>
@@ -158,7 +197,7 @@ const FilterButton: React.FC<PropsType> = props => {
                     type="text"
                   />
                 </div>
-                <div className="">
+                <div>
                   <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
                     Company Name
                   </label>
@@ -171,39 +210,8 @@ const FilterButton: React.FC<PropsType> = props => {
                   />
                 </div>
               </div>
-              <div className="checkboxes flex flex-col sm:flex-row gap-4 my-4">
-                <div className="flex gap-2 items-center">
-                  <input
-                    name="test"
-                    checked={filters.test}
-                    onChange={handleChange}
-                    id="test-checkbox"
-                    type="checkbox"
-                    className="w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label htmlFor="test-checkbox" className="uppercase ">
-                    Test Job
-                  </label>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <input
-                    name="permanentClient"
-                    checked={filters.permanentClient}
-                    onChange={handleChange}
-                    id="permanent-client-checkbox"
-                    type="checkbox"
-                    className="w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label
-                    htmlFor="permanent-client-checkbox"
-                    className="uppercase "
-                  >
-                    Permanent
-                  </label>
-                </div>
-              </div>
 
-              <div className="w-full">
+              <div className="w-full mt-4">
                 <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
                   String Search
                 </label>

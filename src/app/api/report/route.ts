@@ -10,6 +10,10 @@ import {
 import moment from 'moment-timezone';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+
+import Client, { ClientDataType } from '@/models/Clients';
+import { startSession } from 'mongoose';
+
 dbConnect();
 
 interface ReportCount {
@@ -556,6 +560,117 @@ async function handleGetAllReports(req: NextRequest): Promise<{
   }
 }
 
+async function handleConvertToPermanent(req: NextRequest): Promise<{
+  data: string | Record<string, number>;
+  status: number;
+}> {
+  const session = await startSession();
+  session.startTransaction();
+
+  try {
+    const data: ClientDataType = await req.json();
+    console.log('Received data:', data);
+
+    const existingClientCount = await Client.countDocuments(
+      { client_code: data.client_code },
+      { session },
+    );
+
+    if (existingClientCount > 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return { data: 'Client with the same code already exists', status: 400 };
+    }
+
+    const clientData = await Client.create([data], { session });
+
+    if (clientData) {
+      const reportData = await Report.findOneAndUpdate(
+        { company_name: data.client_name, is_lead: false },
+        { client_status: 'approved' },
+        { new: true, upsert: true, session },
+      );
+
+      if (reportData) {
+        await session.commitTransaction();
+        session.endSession();
+        console.log('Added the client successfully', reportData);
+        return { data: 'Added the client successfully', status: 200 };
+      } else {
+        await session.abortTransaction();
+        session.endSession();
+        return {
+          data: 'Unable to change the status of the report',
+          status: 400,
+        };
+      }
+    } else {
+      await session.abortTransaction();
+      session.endSession();
+      return { data: 'Unable to add new client', status: 400 };
+    }
+  } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+async function handleRejectClient(req: NextRequest): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  try {
+    let { id } = await req.json();
+
+    const resData = await Report.findByIdAndUpdate(
+      id,
+      { client_status: 'none' },
+      {
+        new: true,
+      },
+    );
+
+    if (resData) {
+      return { data: 'Rejected regular client request', status: 200 };
+    } else {
+      return { data: 'Unable reject regular client request', status: 400 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
+async function handleMarkDuplicateClient(req: NextRequest): Promise<{
+  data: string | Object;
+  status: number;
+}> {
+  try {
+    let { id } = await req.json();
+
+    const resData = await Report.findByIdAndUpdate(
+      id,
+      {
+        client_status: 'approved',
+      },
+      {
+        new: true,
+      },
+    );
+
+    if (resData) {
+      return { data: 'Marked the request as duplicate client', status: 200 };
+    } else {
+      return { data: 'Unable mark the request as duplicate', status: 400 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
 export async function POST(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 
@@ -565,6 +680,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(res.data, { status: res.status });
     case 'get-all-reports':
       res = await handleGetAllReports(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'convert-to-permanent':
+      res = await handleConvertToPermanent(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'reject-regular-client-request':
+      res = await handleRejectClient(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'mark-duplicate-client':
+      res = await handleMarkDuplicateClient(req);
       return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });

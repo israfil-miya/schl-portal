@@ -4,7 +4,7 @@ import React from 'react';
 
 import Card from './Card';
 
-import { BadgeCheck, CirclePause, FlaskConical, Lightbulb } from 'lucide-react';
+import { CirclePause, FlaskConical, Lightbulb, Signature } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 
 const Cards = () => {
@@ -47,7 +47,7 @@ const Cards = () => {
             process.env.NEXT_PUBLIC_BASE_URL + '/crm/client-approvals',
           )
         }
-        icon={<BadgeCheck size={32} className="stroke-primary" />}
+        icon={<Signature size={32} className="stroke-primary" />}
       />
     </div>
   );
