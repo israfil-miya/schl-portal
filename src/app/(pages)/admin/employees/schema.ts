@@ -62,10 +62,10 @@ export const validationSchema = z
       let pfStartDate = moment(data.pf_start_date, 'YYYY-MM-DD');
       const currentDate = moment().format('YYYY-MM-DD');
 
-      if (!pfStartDate.isSameOrBefore(currentDate)) {
-        return false;
+      if (pfStartDate.isSameOrBefore(currentDate)) {
+        return true;
       }
-      return true;
+      return false;
     },
     {
       message: "PF Start Date must be today's date or before",
@@ -79,9 +79,9 @@ export const validationSchema = z
         (data.company_provided_name?.length ||
           data.company_provided_name == null)
       ) {
-        return false;
+        return true;
       }
-      return true;
+      return false;
     },
     {
       message: 'Company Provided Name is required for Marketing Department',
