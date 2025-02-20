@@ -51,12 +51,6 @@ const options: HTMLReactParserOptions = {
         );
       }
 
-      if (name === 'li') {
-        // return <li>{domToReact(children as DOMNode[], options)}</li>;
-
-        console.log(children as DOMNode[]);
-      }
-
       if (name === 'p') {
         // Check if the parent exists, is an instance of Element, and its name is 'li'
         const parentIsLi =
@@ -65,7 +59,7 @@ const options: HTMLReactParserOptions = {
           (domNode.parent as Element).name === 'li';
 
         return (
-          <p className={parentIsLi ? '' : ''}>
+          <p className={parentIsLi ? '' : 'mb-4'}>
             {domToReact(children as DOMNode[], options)}
           </p>
         );
