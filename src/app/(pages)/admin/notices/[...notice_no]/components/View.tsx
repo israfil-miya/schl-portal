@@ -8,8 +8,12 @@ import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import 'react-quill/dist/quill.snow.css';
-
+import parse, {
+  DOMNode,
+  domToReact,
+  Element,
+  HTMLReactParserOptions,
+} from 'html-react-parser';
 interface ViewNoticeProps {
   notice_no: string;
 }
@@ -24,6 +28,66 @@ interface Notice {
   createdAt: string;
   [key: string]: any;
 }
+
+const options: HTMLReactParserOptions = {
+  replace(domNode) {
+    // Check if domNode is an instance of Element and has attribs
+    if (domNode instanceof Element && domNode.attribs) {
+      const { name, children } = domNode;
+
+      if (name === 'ul') {
+        return (
+          <ul className="list-disc ml-5">
+            {domToReact(children as DOMNode[], options)}
+          </ul>
+        );
+      }
+
+      if (name === 'ol') {
+        return (
+          <ol className="list-decimal ml-5">
+            {domToReact(children as DOMNode[], options)}
+          </ol>
+        );
+      }
+
+      if (name === 'li') {
+        // return <li>{domToReact(children as DOMNode[], options)}</li>;
+
+        console.log(children as DOMNode[]);
+      }
+
+      if (name === 'p') {
+        // Check if the parent exists, is an instance of Element, and its name is 'li'
+        const parentIsLi =
+          domNode.parent &&
+          (domNode.parent instanceof Element || (domNode.parent as any).name) &&
+          (domNode.parent as Element).name === 'li';
+
+        return (
+          <p className={parentIsLi ? '' : ''}>
+            {domToReact(children as DOMNode[], options)}
+          </p>
+        );
+      }
+
+      if (name === 'a') {
+        return (
+          <a
+            href={domNode.attribs.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            {domToReact(children as DOMNode[], options)}
+          </a>
+        );
+      }
+
+      // Add more custom replacements as needed
+    }
+  },
+};
 
 const ViewNotice: React.FC<ViewNoticeProps> = props => {
   const notice_no = decodeURIComponent(props.notice_no);
@@ -144,10 +208,8 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
               {notice.createdAt ? formatDate(notice?.createdAt) : null}
             </p>
           </div>
-          <div
-            className="ql-editor" // Quill's default class for editor content
-            dangerouslySetInnerHTML={{ __html: notice.description }}
-          />
+
+          {parse(notice.description, options)}
 
           {notice.file_name && (
             <div className="file-download text-lg font-semibold font-sans">

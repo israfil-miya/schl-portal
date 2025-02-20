@@ -1,6 +1,5 @@
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
-import { escapeRegExp } from 'lodash';
 import moment from 'moment-timezone';
 import mongoose from 'mongoose';
 import { isRedirectError } from 'next/dist/client/components/redirect';

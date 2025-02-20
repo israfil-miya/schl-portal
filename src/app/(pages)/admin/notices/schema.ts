@@ -3,9 +3,9 @@ import { z } from 'zod';
 
 export const validationSchema = z.object({
   channel: z.enum(['production', 'marketers']),
-  notice_no: z.string({ invalid_type_error: 'Notice no. is required' }),
-  title: z.string({ invalid_type_error: 'Title is required' }),
-  description: z.string({ invalid_type_error: 'Description is required' }),
+  notice_no: z.string().min(1, 'Notice number is required'),
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().min(1, 'Description is required'),
   file_name: z.optional(z.string()).default(''),
   updated_by: z.optional(z.string()).nullable().default(null),
   _id: z.optional(

@@ -15,24 +15,16 @@
 
 @tailwind utilities;
 
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: 'Andika', sans-serif;
-  font-size: 0.904rem;
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
-/* For titles and headings */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+html,
+body {
   font-family: 'Andika', sans-serif;
-  text-transform: capitalize;
-  font-size: 1.1rem;
+  @apply bg-background text-foreground p-0 m-0 text-[14.464px];
 }
 
 :root:has(.disable-page-scroll) {
@@ -65,4 +57,26 @@ h6 {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.ProseMirror ul {
+  @apply list-disc pl-4;
+}
+.ProseMirror ol {
+  @apply list-decimal pl-4;
+}
+
+.ProseMirror a {
+  @apply text-blue-500 hover:underline underline-offset-2;
+}
+
+.ProseMirror u {
+  @apply underline-offset-2;
+}
+
+h2 {
+  @apply text-3xl;
+}
+h3 {
+  @apply text-2xl;
 }

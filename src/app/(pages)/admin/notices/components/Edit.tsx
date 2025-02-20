@@ -1,5 +1,6 @@
 'use client';
 
+import NoticeBodyEditor from '@/components/RichText/RichTextEditor';
 import { cn } from '@/lib/utils';
 import {
   setCalculatedZIndex,
@@ -16,20 +17,6 @@ import Select from 'react-select';
 import { toast } from 'sonner';
 import { channelOptions } from '../create-notice/components/Form';
 import { NoticeDataType, validationSchema } from '../schema';
-
-import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-
-const modules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }], // Dropdown for H1–H6 and normal text
-    ['link', 'image', 'video'], // Link, image, and video
-    ['bold', 'italic', 'underline'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    ['clean'],
-  ],
-};
 
 const baseZIndex = 50; // 52
 
@@ -219,13 +206,9 @@ const EditButton: React.FC<PropsType> = props => {
                 name="description"
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <ReactQuill
-                    theme="snow"
-                    value={value}
+                  <NoticeBodyEditor
                     onChange={onChange}
-                    onBlur={onBlur}
-                    modules={modules}
-                    placeholder="Type notice body here"
+                    initialContent={value}
                   />
                 )}
               />

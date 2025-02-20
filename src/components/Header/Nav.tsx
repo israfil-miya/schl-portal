@@ -136,17 +136,17 @@ const Nav: React.FC<PropsType> = props => {
                   <li>
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/roles'}
+                      href={'/admin/users'}
                     >
-                      Manage Roles
+                      Users
                     </Link>
                   </li>
                   <li>
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/users'}
+                      href={'/admin/roles'}
                     >
-                      Manage Users
+                      Roles
                     </Link>
                   </li>
                 </ul>
