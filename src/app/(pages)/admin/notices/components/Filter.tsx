@@ -1,8 +1,17 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import {
+  setCalculatedZIndex,
+  setClassNameAndIsDisabled,
+  setMenuPortalTarget,
+} from '@/utility/selectHelpers';
 import { Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import Select from 'react-select';
+import { channelOptions } from '../create-notice/components/Form';
+
+const baseZIndex = 50; // 52
 
 interface PropsType {
   className?: string;
@@ -12,6 +21,7 @@ interface PropsType {
     toDate: string;
     noticeNo: string;
     title: string;
+    channel: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   isLoading: boolean;
@@ -48,6 +58,7 @@ const FilterButton: React.FC<PropsType> = props => {
       toDate: '',
       noticeNo: '',
       title: '',
+      channel: '',
     });
   };
 
@@ -77,7 +88,7 @@ const FilterButton: React.FC<PropsType> = props => {
 
       <section
         onClick={handleClickOutside}
-        className={`fixed inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
+        className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
       >
         <article
           ref={popupRef}
@@ -99,7 +110,35 @@ const FilterButton: React.FC<PropsType> = props => {
           </header>
           <div className="overflow-y-scroll max-h-[70vh] p-4">
             <div className="grid grid-cols-1 gap-x-3 gap-y-4">
-              <div className="">
+              <div>
+                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                  Channel
+                </label>
+                <Select
+                  {...setClassNameAndIsDisabled(isOpen)}
+                  options={channelOptions}
+                  closeMenuOnSelect={true}
+                  classNamePrefix="react-select"
+                  menuPortalTarget={setMenuPortalTarget}
+                  menuPlacement="auto"
+                  menuPosition="fixed" // Prevent clipping by parent containers
+                  styles={setCalculatedZIndex(baseZIndex)}
+                  value={
+                    channelOptions.find(
+                      option => option.value === filters.channel,
+                    ) || null
+                  }
+                  onChange={selectedOption =>
+                    setFilters((prevFilters: PropsType['filters']) => ({
+                      ...prevFilters,
+                      channel: selectedOption?.value || '',
+                    }))
+                  }
+                  placeholder="Select channel"
+                />
+              </div>
+
+              <div>
                 <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
                   Title
                 </label>
@@ -111,7 +150,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   type="text"
                 />
               </div>
-              <div className="">
+              <div>
                 <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
                   Date Picker
                 </label>
@@ -136,8 +175,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   />
                 </div>
               </div>
-
-              <div className="">
+              <div>
                 <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
                   Notice Number
                 </label>

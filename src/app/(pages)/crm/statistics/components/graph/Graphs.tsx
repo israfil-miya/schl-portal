@@ -126,8 +126,8 @@ const Graphs = () => {
   }, []);
 
   return (
-    <div className="px-2">
-      <div className="mb-4 p-2 bg-gray-50 border-2">
+    <div className="px-2 space-y-4">
+      <div className="p-2 bg-gray-50 border-2">
         <p className="text-center mt-4 text-lg underline font-semibold uppercase">
           Reports Count (last 12 month)
         </p>
@@ -137,7 +137,7 @@ const Graphs = () => {
           className="h-80"
         />
       </div>
-      <div className="mb-4 p-2 bg-gray-50 border-2">
+      <div className="p-2 bg-gray-50 border-2">
         <p className="text-center mt-4 text-lg underline font-semibold uppercase">
           Clients Onboard (last 12 month)
         </p>
@@ -148,7 +148,7 @@ const Graphs = () => {
           className="h-80"
         />
       </div>
-      <div className="mb-4 p-2 bg-gray-50 border-2">
+      <div className="p-2 bg-gray-50 border-2">
         <p className="text-center mt-4 text-lg underline font-semibold uppercase">
           Test Orders Trend (last 12 month)
         </p>

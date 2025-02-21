@@ -1,7 +1,7 @@
 import { dbConnect, getQuery } from '@/lib/utils';
 import Notice, { NoticeDataType } from '@/models/Notices';
 import { toISODate } from '@/utility/date';
-import { addRegexField } from '@/utility/filterHelpers';
+import { addRegexField, createRegexQuery } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 dbConnect();

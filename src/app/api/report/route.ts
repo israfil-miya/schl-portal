@@ -403,7 +403,6 @@ async function handleGetAllReports(req: NextRequest): Promise<{
       fromDate,
       toDate,
       test,
-      permanentClient,
       prospect,
       onlyLead,
       followupDone,

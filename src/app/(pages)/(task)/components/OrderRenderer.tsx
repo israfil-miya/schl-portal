@@ -113,6 +113,17 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
           <Badge value={timeRemaining} className={statusColor} />
         </td>
 
+        <td className="uppercase text-wrap" style={{ verticalAlign: 'middle' }}>
+          {props.order.task?.split('+').map((task, index) => {
+            return <Badge key={index} value={task} />;
+          })}
+        </td>
+        <td>{props.order.et}</td>
+        <td>{props.order.production}</td>
+        <td>{props.order.qc1}</td>
+        <td>
+          <ClickToCopy text={props.order.folder_path} />
+        </td>
         <td
           className="uppercase text-nowrap"
           style={{ verticalAlign: 'middle' }}
@@ -130,21 +141,10 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
             />
           )}
         </td>
-
-        <td className="uppercase text-wrap" style={{ verticalAlign: 'middle' }}>
-          {props.order.task?.split('+').map((task, index) => {
-            return <Badge key={index} value={task} />;
-          })}
-        </td>
-        <td>{props.order.et}</td>
-        <td>{props.order.production}</td>
-        <td>{props.order.qc1}</td>
-        <td>
-          <ClickToCopy text={props.order.folder_path} />
-        </td>
         <td className="uppercase text-wrap" style={{ verticalAlign: 'middle' }}>
           <Badge value={props.order.type} />
         </td>
+
         <ExtendableTd data={props.order.comment} />
       </tr>
 

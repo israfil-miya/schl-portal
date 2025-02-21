@@ -50,6 +50,7 @@ const Table = () => {
     contactPerson: '',
     countryName: '',
     category: '',
+    generalSearchString: '',
   });
 
   const [marketerNames, setMarketerNames] = useState<string[]>([]);

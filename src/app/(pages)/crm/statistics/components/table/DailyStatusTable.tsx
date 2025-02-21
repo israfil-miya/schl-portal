@@ -24,8 +24,8 @@ const DailyStatusTable = () => {
   const [leadsTarget, setLeadsTarget] = useState<number>(leadsTargetConst);
 
   return (
-    <>
-      <div className="flex flex-col sm:flex-row justify-center gap-1 mb-2 sm:gap-4 sm:mb-0 items-center px-2">
+    <div className="space-y-2">
+      <div className="flex flex-col sm:flex-row justify-center gap-1 sm:gap-4 sm:mb-0 items-center px-2">
         <p className="font-mono inline-block text-destructive font-extrabold text-lg sm:text-xl md:text-2xl text-center uppercase">
           <span className="underline">DAILY TARGET:</span> {callsTargetConst}{' '}
           CALLS (20 NORMAL, 40 RECALL), {leadsTargetConst} LEADS, 5 TESTS/MONTH
@@ -40,7 +40,7 @@ const DailyStatusTable = () => {
         />
       </div>
 
-      <div className="table-responsive text-center text-lg px-2 mt-1">
+      <div className="table-responsive-sm text-center text-lg px-2 mt-1">
         <table className="table table-bordered border">
           <thead>
             <tr className="bg-gray-50">
@@ -189,7 +189,7 @@ const DailyStatusTable = () => {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 };
 

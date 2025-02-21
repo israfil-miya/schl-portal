@@ -55,6 +55,7 @@ const Table = () => {
     toDate: '',
     noticeNo: '',
     title: '',
+    channel: '',
   });
 
   async function getAllNotices() {
@@ -110,7 +111,7 @@ const Table = () => {
           page: !isFiltered ? 1 : page,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...filters, channel: 'marketers' }),
+        body: JSON.stringify(filters),
       };
 
       let response = await fetchApi(url, options);
@@ -363,9 +364,9 @@ const Table = () => {
 
       {isLoading ? <p className="text-center">Loading...</p> : <></>}
 
-      {!isLoading &&
-        (notices?.items?.length !== 0 ? (
-          <div className="table-responsive text-nowrap text-md">
+      <div className="table-responsive text-nowrap text-base">
+        {!isLoading &&
+          (notices?.items?.length !== 0 ? (
             <table className="table table-bordered table-striped">
               <thead className="table-dark">
                 <tr>
@@ -437,14 +438,18 @@ const Table = () => {
                 })}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <tr key={0}>
-            <td colSpan={5} className=" align-center text-center">
-              No Notices To Show.
-            </td>
-          </tr>
-        ))}
+          ) : (
+            <table className="table border table-bordered table-striped">
+              <tbody>
+                <tr key={0}>
+                  <td className="align-center text-center text-wrap">
+                    No Notices To Show.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          ))}
+      </div>
       <style jsx>
         {`
           th,

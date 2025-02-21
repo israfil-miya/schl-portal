@@ -21,6 +21,7 @@ interface PropsType {
     contactPerson: string;
     countryName: string;
     category: string;
+    generalSearchString: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   loading: boolean;
@@ -65,6 +66,7 @@ const FilterButton: React.FC<PropsType> = props => {
       contactPerson: '',
       countryName: '',
       category: '',
+      generalSearchString: '',
     });
   };
 
@@ -190,6 +192,19 @@ const FilterButton: React.FC<PropsType> = props => {
                   type="text"
                 />
               </div>
+            </div>
+            <div className="w-full">
+              <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
+                String Search
+              </label>
+
+              <input
+                placeholder="Search for any text"
+                name="generalSearchString"
+                value={filters.generalSearchString}
+                onChange={handleChange}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              />
             </div>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">

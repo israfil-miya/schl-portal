@@ -69,12 +69,12 @@ function RunningTasks() {
                 <th>Download</th>
                 <th>Delivery</th>
                 <th>Remaining</th>
-                <th>Priority</th>
                 <th>Task</th>
                 <th>E.T</th>
                 <th>Production</th>
                 <th>QC1</th>
                 <th>Folder Location</th>
+                <th>Priority</th>
                 <th>Type</th>
                 <th>Comments</th>
               </tr>

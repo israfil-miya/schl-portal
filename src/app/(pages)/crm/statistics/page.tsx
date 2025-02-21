@@ -11,7 +11,7 @@ const Statistics = async () => {
   const session = await auth();
   return (
     <>
-      <div className="container mx-auto space-y-2 my-8">
+      <div className="container mx-auto space-y-6 my-8">
         <MarketersTable />
         <DailyStatusTable />
         <Cards />

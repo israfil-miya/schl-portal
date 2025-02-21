@@ -78,6 +78,7 @@ function TestAndCorrection() {
                 <th>Production</th>
                 <th>QC1</th>
                 <th>Folder Location</th>
+                <th>Priority</th>
                 <th>Type</th>
                 <th>Status</th>
                 <th>Comments</th>
@@ -136,6 +137,25 @@ function TestAndCorrection() {
                     <td>
                       <ClickToCopy text={order.folder_path} />
                     </td>
+
+                    <td
+                      className="uppercase text-nowrap"
+                      style={{ verticalAlign: 'middle' }}
+                    >
+                      {order.priority != '' && (
+                        <Badge
+                          value={order.priority}
+                          className={
+                            order.priority == 'High'
+                              ? 'bg-orange-600 text-white border-orange-600'
+                              : order.priority == 'Medium'
+                                ? 'bg-yellow-600 text-white border-yellow-600'
+                                : 'bg-green-600 text-white border-green-600'
+                          }
+                        />
+                      )}
+                    </td>
+
                     <td
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}

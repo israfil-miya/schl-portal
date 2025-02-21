@@ -24,6 +24,7 @@ export interface Query {
   contact_person?: RegexQuery;
   marketer?: RegexQuery;
   category?: RegexQuery;
+  $or?: { [key: string]: RegexQuery }[];
 }
 
 export type RegexFields = Extract<
@@ -75,8 +76,14 @@ async function handleGetAllClients(req: NextRequest): Promise<{
 
     const filters = await req.json();
 
-    const { countryName, clientCode, contactPerson, marketerName, category } =
-      filters;
+    const {
+      countryName,
+      clientCode,
+      contactPerson,
+      marketerName,
+      category,
+      generalSearchString,
+    } = filters;
 
     let query: Query = {};
 
@@ -90,10 +97,25 @@ async function handleGetAllClients(req: NextRequest): Promise<{
 
     const searchQuery: Query = { ...query };
 
-    if (!query && isFilter == true) {
+    if (!query && isFilter == true && !generalSearchString) {
       return { data: 'No filter applied', status: 400 };
     } else {
       const skip = (page - 1) * ITEMS_PER_PAGE;
+
+      if (generalSearchString) {
+        const searchPattern = createRegexQuery(generalSearchString);
+
+        searchQuery['$or'] = [
+          { client_code: searchPattern! },
+          { country: searchPattern! },
+          { marketer: searchPattern! },
+          { category: searchPattern! },
+          { client_name: searchPattern! },
+          { contact_person: searchPattern! },
+          { email: searchPattern! },
+        ];
+      }
+
       const count: number = await Client.countDocuments(searchQuery);
       let clients: any[];
 
