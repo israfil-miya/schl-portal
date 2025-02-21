@@ -78,7 +78,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
             <Link
               className="hover:underline cursor-pointer"
               href={
-                '/browse/single-order?id=' +
+                '/browse/single-task?id=' +
                 encodeURIComponent(String(props.order._id))
               }
             >
@@ -111,6 +111,24 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
           style={{ verticalAlign: 'middle' }}
         >
           <Badge value={timeRemaining} className={statusColor} />
+        </td>
+
+        <td
+          className="uppercase text-nowrap"
+          style={{ verticalAlign: 'middle' }}
+        >
+          {props.order.priority != '' && (
+            <Badge
+              value={props.order.priority}
+              className={
+                props.order.priority == 'High'
+                  ? 'bg-orange-600 text-white border-orange-600'
+                  : props.order.priority == 'Medium'
+                    ? 'bg-yellow-600 text-white border-yellow-600'
+                    : 'bg-green-600 text-white border-green-600'
+              }
+            />
+          )}
         </td>
 
         <td className="uppercase text-wrap" style={{ verticalAlign: 'middle' }}>

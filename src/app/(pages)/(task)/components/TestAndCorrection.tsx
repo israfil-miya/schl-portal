@@ -94,7 +94,7 @@ function TestAndCorrection() {
                         <Link
                           className="hover:underline cursor-pointer"
                           href={
-                            '/browse/single-order?id=' +
+                            '/browse/single-task?id=' +
                             encodeURIComponent(String(order._id))
                           }
                         >
