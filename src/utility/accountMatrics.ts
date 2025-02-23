@@ -1,3 +1,5 @@
+import { EmployeeDataType } from '@/models/Employees';
+
 export interface SalaryStructureType {
   base: number;
   houseRent: number;
@@ -44,7 +46,7 @@ const calculateSalaryComponents = (
 
 const getPFMoneyAmount = (
   salaryComponents: SalaryStructureType,
-  employeeData: any,
+  employeeData: EmployeeDataType,
 ): number => {
   let totalSavedAmount = 0;
 
@@ -55,8 +57,10 @@ const getPFMoneyAmount = (
   if (employeeData.pf_history && employeeData.pf_history.length) {
     // console.log("EMPLOYEEDATA (IF): ", employeeData);
 
-    totalSavedAmount =
-      employeeData.pf_history[employeeData.pf_history.length - 1].saved_amount;
+    for (const record of employeeData.pf_history) {
+      totalSavedAmount += record.saved_amount;
+    }
+
     const prevDate =
       employeeData.pf_history[employeeData.pf_history.length - 1].date;
 
@@ -84,4 +88,4 @@ const getPFMoneyAmount = (
   return totalSavedAmount;
 };
 
-export { getMonthsTillNow, calculateSalaryComponents, getPFMoneyAmount };
+export { calculateSalaryComponents, getMonthsTillNow, getPFMoneyAmount };
