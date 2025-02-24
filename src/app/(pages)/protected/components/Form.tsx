@@ -63,8 +63,8 @@ const Form: React.FC<PropsType> = props => {
         console.log('redirecting to:', redirect_path);
         router.replace(redirect_path);
       } else {
-        console.error('verification failed:', response.data);
-        toast.error(response.data as string);
+        console.error('verification failed:', response.data.message);
+        toast.error(response.data.message as string);
       }
     } catch (error) {
       console.log(error);
