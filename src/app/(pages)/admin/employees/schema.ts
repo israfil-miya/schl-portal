@@ -58,15 +58,9 @@ export const validationSchema = z
     __v: z.optional(z.number()),
   })
   .refine(
-    data => {
-      let pfStartDate = moment(data.pf_start_date, 'YYYY-MM-DD');
-      const currentDate = moment().format('YYYY-MM-DD');
-
-      if (pfStartDate.isSameOrBefore(currentDate)) {
-        return true;
-      }
-      return false;
-    },
+    data =>
+      // Parse the PF start date and check if it's same or before today (by day)
+      moment(data.pf_start_date, 'YYYY-MM-DD').isSameOrBefore(moment(), 'day'),
     {
       message: "PF Start Date must be today's date or before",
       path: ['pf_start_date'],
@@ -74,14 +68,12 @@ export const validationSchema = z
   )
   .refine(
     data => {
-      if (
-        data.department == 'Marketing' &&
-        (data.company_provided_name?.length ||
-          data.company_provided_name == null)
-      ) {
-        return true;
+      // If department is Marketing, company_provided_name must be provided
+      if (data.department === 'Marketing') {
+        return Boolean(data.company_provided_name?.trim().length);
       }
-      return false;
+      // Otherwise, no requirement
+      return true;
     },
     {
       message: 'Company Provided Name is required for Marketing Department',

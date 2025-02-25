@@ -185,7 +185,9 @@ const Table = () => {
 
   async function editEmployee(editedEmployeeData: EmployeeDataType) {
     try {
-      // setLoading(true);
+      console.log('EMPLOYEE DATA: ', editedEmployeeData);
+
+      setLoading(true);
       const parsed = validationSchema.safeParse(editedEmployeeData);
 
       if (!parsed.success) {
@@ -324,9 +326,9 @@ const Table = () => {
                           />
 
                           <EditButton
+                            loading={loading}
                             employeeData={employee}
                             submitHandler={editEmployee}
-                            loading={loading}
                           />
                         </div>
                       </div>

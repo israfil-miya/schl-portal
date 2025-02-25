@@ -31,7 +31,7 @@ const DeleteButton: React.FC<PropsType> = props => {
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
             <h3 className="text-gray-900 text-base lg:text-lg font-semibold  uppercase">
-              Delete Report
+              Delete User
             </h3>
             <button
               onClick={() => setIsOpen(false)}
@@ -43,7 +43,7 @@ const DeleteButton: React.FC<PropsType> = props => {
           </header>
           <div className="overflow-hidden max-h-[70vh] p-4">
             <p className="text-base">
-              Are you sure, you want to delete this report?
+              Are you sure, you want to delete this user?
             </p>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">

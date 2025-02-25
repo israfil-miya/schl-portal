@@ -103,7 +103,7 @@ const Nav: React.FC<PropsType> = props => {
                 Clients
               </Link>
             </li>
-            <li>
+            <li className={cn(!['super'].includes(userRole || '') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/approvals'}
@@ -205,7 +205,7 @@ const Nav: React.FC<PropsType> = props => {
             pathname.includes('/accountancy/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+            !['super'].includes(userRole || '') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -290,7 +290,7 @@ const Nav: React.FC<PropsType> = props => {
           className={cn(
             'py-3 px-5 select-none',
             pathname.includes('/crm/') ? 'bg-primary' : 'hover:opacity-90',
-            userRole !== 'super' && 'hidden',
+            !['super', 'admin'].includes(userRole || '') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">

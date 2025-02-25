@@ -620,9 +620,7 @@ const EditButton: React.FC<PropsType> = props => {
               </button>
               <button
                 disabled={props.loading}
-                onClick={() => {
-                  formRef.current?.requestSubmit();
-                }}
+                onClick={handleSubmit(onSubmit)}
                 className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
