@@ -5,6 +5,7 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 
+import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
   ChevronRight,
@@ -339,7 +340,14 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
               </thead>
               <tbody>
                 {users?.items?.map((user, index) => (
-                  <tr key={String(user._id)}>
+                  <tr
+                    key={String(user._id)}
+                    className={cn(
+                      session?.user.role === 'admin' &&
+                        (user.role === 'admin' || user.role === 'super') &&
+                        'hidden',
+                    )}
+                  >
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
                     <td className="text-wrap">{user.real_name}</td>
                     <td className="text-wrap">{user.name}</td>
@@ -378,7 +386,13 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                                 position: 'bottom-right',
                               });
                             }}
-                            className="rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                            className={cn(
+                              'rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
+                              session?.user.role === 'admin' &&
+                                (user.role === 'admin' ||
+                                  user.role === 'super') &&
+                                'hidden',
+                            )}
                           >
                             <ClipboardCopy size={18} />
                           </button>

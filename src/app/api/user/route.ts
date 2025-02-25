@@ -155,11 +155,6 @@ async function handleGetAllUsers(req: NextRequest): Promise<{
           { $sort: sortQuery },
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
-          {
-            $project: {
-              hasFollowupDate: 0, // Remove the added field from the final output
-            },
-          },
         ]);
       } else {
         users = await User.find(searchQuery).lean();

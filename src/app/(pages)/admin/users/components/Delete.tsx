@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import { Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
@@ -16,7 +17,13 @@ const DeleteButton: React.FC<PropsType> = props => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
+        className={cn(
+          'rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center',
+          session?.user.role === 'admin' &&
+            (props.userData.role === 'admin' ||
+              props.userData.role === 'super') &&
+            'hidden',
+        )}
       >
         <Trash2 size={18} />
       </button>

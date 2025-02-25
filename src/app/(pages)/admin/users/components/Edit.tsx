@@ -11,19 +11,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { KeySquare, SquarePen, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
+import { roleOptions } from '../create-user/components/Form';
 import { UserDataType, validationSchema } from '../schema';
-
-export const roleOptions = [
-  { value: 'super', label: 'Super' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'marketer', label: 'Marketer' },
-];
 
 const baseZIndex = 50; // 52
 
@@ -38,6 +32,16 @@ const EditButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const { data: session } = useSession();
+
+  const filteredRoleOptions = useMemo(() => {
+    if (session?.user.role === 'admin') {
+      return roleOptions.filter(
+        option => option.value !== 'admin' && option.value !== 'super',
+      );
+    }
+    return roleOptions;
+  }, [session?.user.role]);
 
   const employeeIds = props.employeesData?.map(employee => employee.e_id);
 
@@ -143,7 +147,13 @@ const EditButton: React.FC<PropsType> = props => {
         onClick={() => {
           setIsOpen(true);
         }}
-        className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+        className={cn(
+          'rounded-md disabled:cursor-not-allowed bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
+          session?.user.role === 'admin' &&
+            (props.userData.role === 'admin' ||
+              props.userData.role === 'super') &&
+            'hidden',
+        )}
       >
         <SquarePen size={18} />
       </button>
@@ -271,14 +281,14 @@ const EditButton: React.FC<PropsType> = props => {
                       <Select
                         {...field}
                         {...setClassNameAndIsDisabled(isOpen)}
-                        options={roleOptions}
+                        options={filteredRoleOptions}
                         closeMenuOnSelect={true}
                         placeholder="Select role"
                         classNamePrefix="react-select"
                         menuPortalTarget={setMenuPortalTarget}
                         styles={setCalculatedZIndex(baseZIndex)}
                         value={
-                          roleOptions.find(
+                          filteredRoleOptions.find(
                             option => option.value === field.value,
                           ) || null
                         }

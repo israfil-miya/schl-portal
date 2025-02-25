@@ -16,12 +16,20 @@ import { UserDataType, validationSchema } from '../../schema';
 import { generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { KeySquare } from 'lucide-react';
+import { useMemo } from 'react';
 import { toast } from 'sonner';
-import { roleOptions } from '../../components/Edit';
 
 interface PropsType {
   employeesData: EmployeeDataType[];
 }
+
+export let roleOptions = [
+  { value: 'super', label: 'Super' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'user', label: 'User' },
+  { value: 'marketer', label: 'Marketer' },
+];
 
 const Form: React.FC<PropsType> = props => {
   const [loading, setLoading] = useState(false);
@@ -52,6 +60,15 @@ const Form: React.FC<PropsType> = props => {
       comment: '',
     },
   });
+
+  const filteredRoleOptions = useMemo(() => {
+    if (session?.user.role === 'admin') {
+      return roleOptions.filter(
+        option => option.value !== 'admin' && option.value !== 'super',
+      );
+    }
+    return roleOptions;
+  }, [session?.user.role]);
 
   const [employeeId, setEmployeeId] = useState<string>('');
 
@@ -263,34 +280,28 @@ const Form: React.FC<PropsType> = props => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-x-3 gap-y-4 mb-4">
-          <div>
-            <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-              Role
-            </label>
-            <Controller
-              name="role"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  options={roleOptions}
-                  closeMenuOnSelect={true}
-                  placeholder="Select role"
-                  classNamePrefix="react-select"
-                  menuPortalTarget={setMenuPortalTarget}
-                  value={
-                    roleOptions.find(option => option.value === field.value) ||
-                    null
-                  }
-                  onChange={option =>
-                    field.onChange(option ? option.value : '')
-                  }
-                />
-              )}
-            />
-          </div>
-        </div>
+        <Controller
+          name="role"
+          control={control}
+          render={({ field }) => {
+            return (
+              <Select
+                {...field}
+                options={filteredRoleOptions}
+                closeMenuOnSelect={true}
+                placeholder="Select role"
+                classNamePrefix="react-select"
+                menuPortalTarget={setMenuPortalTarget}
+                value={
+                  filteredRoleOptions.find(
+                    option => option.value === field.value,
+                  ) || null
+                }
+                onChange={option => field.onChange(option ? option.value : '')}
+              />
+            );
+          }}
+        />
 
         {watch('role') === 'marketer' && (
           <div>
