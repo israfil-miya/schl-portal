@@ -148,6 +148,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.title}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by title"
                 />
               </div>
               <div>
@@ -185,6 +186,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.noticeNo}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by notice number"
                 />
               </div>
             </div>

@@ -183,6 +183,7 @@ const FilterButton: React.FC<PropsType> = props => {
                     value={filters.country}
                     onChange={handleChange}
                     type="text"
+                    placeholder="Search by country name"
                   />
                 </div>
                 <div>
@@ -195,6 +196,7 @@ const FilterButton: React.FC<PropsType> = props => {
                     value={filters.category}
                     onChange={handleChange}
                     type="text"
+                    placeholder="Search by category"
                   />
                 </div>
                 <div>
@@ -207,6 +209,7 @@ const FilterButton: React.FC<PropsType> = props => {
                     value={filters.companyName}
                     onChange={handleChange}
                     type="text"
+                    placeholder="Search by company name"
                   />
                 </div>
               </div>

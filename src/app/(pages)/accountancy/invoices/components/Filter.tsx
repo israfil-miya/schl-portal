@@ -142,6 +142,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.clientCode}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by client code"
                 />
               </div>
               <div>
@@ -154,6 +155,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.invoiceNumber}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by invoice number"
                 />
               </div>
             </div>

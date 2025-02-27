@@ -12,6 +12,7 @@ import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 import Client, { ClientDataType } from '@/models/Clients';
+import { getTodayDate } from '@/utility/date';
 import { startSession } from 'mongoose';
 
 dbConnect();
@@ -586,7 +587,7 @@ async function handleConvertToPermanent(req: NextRequest): Promise<{
     if (clientData) {
       const reportData = await Report.findOneAndUpdate(
         { company_name: data.client_name, is_lead: false },
-        { client_status: 'approved' },
+        { client_status: 'approved', onboard_date: getTodayDate() },
         { new: true, upsert: true, session },
       );
 

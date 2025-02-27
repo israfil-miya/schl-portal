@@ -312,6 +312,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('folder')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter folder name"
                 />
               </div>
               <div>
@@ -325,6 +326,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('quantity', { valueAsNumber: true })}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
+                  placeholder="Enter number of files"
                 />
               </div>
 
@@ -342,6 +344,7 @@ const EditButton: React.FC<PropsType> = props => {
                     className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     type="number"
                     step="0.01"
+                    placeholder="Enter rate"
                   />
                 </div>
               )}
@@ -464,6 +467,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('et')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
+                  placeholder="Enter estimated time in minutes"
                 />
               </div>
               <div>
@@ -477,6 +481,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('production')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
+                  placeholder="Enter the number of completed files"
                 />
               </div>
               <div>
@@ -490,6 +495,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('qc1')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
+                  placeholder="Enter QC count"
                 />
               </div>
               <div>
@@ -503,6 +509,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('folder_path')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder='Enter folder path e.g. "P:\SCHL Production\.."'
                 />
               </div>
               <div>

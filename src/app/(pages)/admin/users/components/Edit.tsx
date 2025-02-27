@@ -221,6 +221,7 @@ const EditButton: React.FC<PropsType> = props => {
                   onFocus={getEmployeeNameOnFocus}
                   {...register('real_name')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  placeholder="Enter employee real name"
                 />
               </div>
 
@@ -234,6 +235,7 @@ const EditButton: React.FC<PropsType> = props => {
                 <input
                   {...register('name')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  placeholder="Enter username"
                 />
               </div>
 
@@ -248,6 +250,8 @@ const EditButton: React.FC<PropsType> = props => {
                   <input
                     {...register('password')}
                     className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    placeholder="Enter password"
+                    type="text"
                   />
                   <button
                     onClick={() => {
@@ -313,6 +317,7 @@ const EditButton: React.FC<PropsType> = props => {
                     onFocus={getEmployeeProvidedNameOnFocus}
                     {...register('provided_name')}
                     className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    placeholder="Enter employee provided name"
                   />
                 </div>
               )}

@@ -149,6 +149,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.clientCode}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by client code"
                 />
               </div>
               <div>
@@ -161,6 +162,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.folder}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by folder name"
                 />
               </div>
               <div>

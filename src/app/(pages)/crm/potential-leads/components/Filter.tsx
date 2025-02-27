@@ -107,7 +107,7 @@ const FilterButton: React.FC<PropsType> = props => {
           <div className="overflow-y-scroll max-h-[70vh] p-4">
             <div className="regular-search">
               <div className="grid grid-cols-1 gap-x-3 gap-y-4">
-                <div className="">
+                <div>
                   <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
                     Date Picker
                   </label>
@@ -133,7 +133,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   </div>
                 </div>
 
-                <div className="">
+                <div>
                   <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
                     Country Name
                   </label>
@@ -143,9 +143,10 @@ const FilterButton: React.FC<PropsType> = props => {
                     value={filters.country}
                     onChange={handleChange}
                     type="text"
+                    placeholder="Search by country name"
                   />
                 </div>
-                <div className="">
+                <div>
                   <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
                     Category
                   </label>
@@ -155,9 +156,10 @@ const FilterButton: React.FC<PropsType> = props => {
                     value={filters.category}
                     onChange={handleChange}
                     type="text"
+                    placeholder="Search by category"
                   />
                 </div>
-                <div className="">
+                <div>
                   <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
                     Company Name
                   </label>
@@ -167,9 +169,10 @@ const FilterButton: React.FC<PropsType> = props => {
                     value={filters.companyName}
                     onChange={handleChange}
                     type="text"
+                    placeholder="Search by company name"
                   />
                 </div>
-                <div className="">
+                <div>
                   <label
                     className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2"
                     htmlFor="grid-last-name"

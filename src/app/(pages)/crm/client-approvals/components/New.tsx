@@ -126,6 +126,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('client_code')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client code"
                 />
               </div>
               <div>
@@ -139,6 +140,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('client_name')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's name"
                 />
               </div>
               <div>
@@ -153,6 +155,7 @@ const EditButton: React.FC<PropsType> = props => {
                   className="appearance-none block w-full bg-gray-100 cursor-not-allowed text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
                   disabled={true}
+                  placeholder="Enter marketer name"
                 />
               </div>
               <div>
@@ -166,6 +169,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('category')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client category"
                 />
               </div>
               <div>
@@ -179,6 +183,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('contact_person')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's contact person"
                 />
               </div>
               <div>
@@ -192,6 +197,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('designation')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's contact person's designation"
                 />
               </div>
               <div>
@@ -205,6 +211,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('contact_number')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's contact number"
                 />
               </div>
               <div>
@@ -218,6 +225,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('email')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's email"
                 />
               </div>
               <div>
@@ -231,6 +239,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('address')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's address"
                 />
               </div>
               <div>
@@ -244,6 +253,7 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('country')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="text"
+                  placeholder="Enter client's country name"
                 />
               </div>
               <div>

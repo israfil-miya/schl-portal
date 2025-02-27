@@ -183,6 +183,7 @@ const FilterButton: React.FC<PropsType> = props => {
                   value={filters.reqBy}
                   onChange={handleChange}
                   type="text"
+                  placeholder="Search by requester (real name)"
                 />
               </div>
             </div>

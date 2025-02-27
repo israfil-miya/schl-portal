@@ -165,11 +165,11 @@ const FilterButton: React.FC<PropsType> = props => {
               </label>
 
               <input
-                placeholder="Search for any text"
                 name="generalSearchString"
                 value={filters.generalSearchString}
                 onChange={handleChange}
                 className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                placeholder="Search for any text"
               />
             </div>
           </div>

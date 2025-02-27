@@ -136,6 +136,7 @@ const Form: React.FC = () => {
             {...register('e_id')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+            placeholder='Enter employee ID e.g. "0001"'
           />
         </div>
         <div>
@@ -149,6 +150,7 @@ const Form: React.FC = () => {
             {...register('real_name')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+            placeholder="Enter employee full name"
           />
         </div>
         <div>
@@ -175,6 +177,7 @@ const Form: React.FC = () => {
             {...register('phone')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+            placeholder="Enter employee phone number"
           />
         </div>
         <div>
@@ -188,6 +191,7 @@ const Form: React.FC = () => {
             {...register('email')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="email"
+            placeholder="Enter employee email"
           />
         </div>
         <div>
@@ -201,6 +205,7 @@ const Form: React.FC = () => {
             {...register('nid')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="string"
+            placeholder="Enter employee NID number"
           />
         </div>
         <div>
@@ -227,6 +232,7 @@ const Form: React.FC = () => {
             {...register('designation')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+            placeholder="Enter employee designation"
           />
         </div>
         <div>
@@ -240,6 +246,7 @@ const Form: React.FC = () => {
             {...register('branch')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+            placeholder="Enter employee branch"
           />
         </div>
         <div>
@@ -253,6 +260,7 @@ const Form: React.FC = () => {
             {...register('division')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="text"
+            placeholder="Enter employee division"
           />
         </div>
         <div>
@@ -266,6 +274,7 @@ const Form: React.FC = () => {
             {...register('gross_salary', { valueAsNumber: true })}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="number"
+            placeholder="Enter employee gross salary"
           />
         </div>
         <div>
@@ -280,6 +289,7 @@ const Form: React.FC = () => {
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             type="number"
             step="0.1"
+            placeholder="Enter employee PF percentage"
           />
         </div>
         <div>
@@ -328,7 +338,7 @@ const Form: React.FC = () => {
 
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Bonus (Eid-ul-Fitr)</span>
+            <span className="uppercase">Bonus - 1</span>
             <span className="text-red-700 text-wrap block text-xs">
               {errors.bonus_eid_ul_fitr && errors.bonus_eid_ul_fitr.message}
             </span>
@@ -342,11 +352,12 @@ const Form: React.FC = () => {
               setValue('bonus_eid_ul_fitr', watch('gross_salary') * 0.5)
             }
             step={0.1}
+            placeholder="Enter employee Eid-ul-Fitr bonus"
           />
         </div>
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Bonus (Eid-ul-Adha)</span>
+            <span className="uppercase">Bonus - 2</span>
             <span className="text-red-700 text-wrap block text-xs">
               {errors.bonus_eid_ul_adha && errors.bonus_eid_ul_adha.message}
             </span>
@@ -360,6 +371,7 @@ const Form: React.FC = () => {
               setValue('bonus_eid_ul_adha', watch('gross_salary') * 0.5)
             }
             step={0.1}
+            placeholder="Enter employee Eid-ul-Adha bonus"
           />
         </div>
         <div>
@@ -426,7 +438,7 @@ const Form: React.FC = () => {
         {watch('department') === 'Marketing' && (
           <div>
             <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-              <span className="uppercase">Company Provided Name</span>
+              <span className="uppercase">Company Provided Name*</span>
               <span className="text-red-700 text-wrap block text-xs">
                 {errors.company_provided_name &&
                   errors.company_provided_name?.message}
@@ -436,6 +448,7 @@ const Form: React.FC = () => {
               {...register('company_provided_name')}
               className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
               type="text"
+              placeholder="Enter employee company provided name"
             />
           </div>
         )}
