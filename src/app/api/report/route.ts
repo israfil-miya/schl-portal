@@ -284,9 +284,9 @@ async function handleGetReportsStatus(req: NextRequest): Promise<{
     const { fromDate, toDate } = await req.json();
 
     // Fetch all marketer names in one go
-    const marketerNames = await User.find({ role: 'marketer' })
+    const marketerNames = (await User.find({ role: 'marketer' })
       .distinct('provided_name')
-      .exec();
+      .exec()) as string[]; // Cast to string[] as provided_name is always present for marketers
 
     // Create a range query for the dates
     const dateRangeQuery = {
