@@ -55,7 +55,7 @@ const Form: React.FC<PropsType> = props => {
     defaultValues: {
       name: '',
       real_name: '',
-      provided_name: '',
+      provided_name: null,
       password: '',
       comment: '',
     },

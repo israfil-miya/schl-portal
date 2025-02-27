@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export interface UserType {
   real_name: string;
-  provided_name?: string;
+  provided_name: string | null;
   name: string;
   password: string;
   role: string;
@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema<UserDocType>({
     unique: true,
   },
   real_name: { type: String, required: [true, 'Real name is not given'] },
-  provided_name: { type: String },
+  provided_name: { type: String, default: null },
   password: { type: String, required: [true, 'Password is not given'] },
   role: { type: String, required: [true, 'Role is not given'] },
   comment: { type: String },
