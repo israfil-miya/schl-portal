@@ -38,6 +38,6 @@ export const config = {
     // - _next/static (static files)
     // - _next/image (image optimization files)
     // - icon.ico, sitemap.xml, robots.txt (metadata files)
-    '/((?!api|_next/static|_next/image|icon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!api|_next/static|_next/image|icon.ico|sitemap.xml|robots.txt|studio_click_house_ltd.svg).*)',
   ],
 };
