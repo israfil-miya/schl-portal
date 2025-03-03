@@ -1,4 +1,4 @@
-import { Menu } from 'lucide-react';
+import { X } from 'lucide-react';
 import React from 'react';
 
 interface PropsType {
@@ -39,7 +39,7 @@ const Drawer: React.FC<PropsType> = ({
                 type="button"
                 className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
               >
-                <Menu size={18} />
+                <X size={18} />
               </button>
             </div>
           </header>

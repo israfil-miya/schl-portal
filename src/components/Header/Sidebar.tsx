@@ -1,6 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { FolderTree, LayoutList, Menu } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { useState } from 'react';
@@ -12,6 +14,10 @@ interface PropsType {
 }
 const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const { data: session } = useSession();
+
+  const userRole = session?.user.role;
   let pathname = usePathname();
 
   return (
@@ -20,22 +26,7 @@ const FilterButton: React.FC<PropsType> = props => {
         className="font-bold cursor-pointer relative top-1"
         onClick={() => setIsOpen(true)}
       >
-        <svg
-          className="w-12"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g clipPath="url(#clip0_429_11066)">
-            <path
-              d="M3 6.00092H21M3 12.0009H21M3 18.0009H21"
-              stroke="#292929"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </g>
-        </svg>
+        <Menu size={40} />
       </label>
 
       <Drawer title="Menu" isOpen={isOpen} setIsOpen={setIsOpen}>
@@ -47,38 +38,21 @@ const FilterButton: React.FC<PropsType> = props => {
               pathname == '/' ? 'bg-primary text-white' : 'hover:bg-gray-100',
             )}
           >
-            <svg
-              className="w-6 h-6 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1zm1 12h2V2h-2zm-3 0V7H7v7zm-5 0v-3H2v3z" />
-            </svg>
-            Statistics
+            <LayoutList className="mr-2 w-6 h-6" />
+            Tasks
           </Link>
           <Link
-            href="/call-reports"
+            href="/browse"
             className={cn(
               'p-4 flex items-center',
-              pathname == '/call-reports'
+              pathname == '/browse'
                 ? 'bg-primary text-white'
-                : 'hover:bg-gray-100 ',
+                : 'hover:bg-gray-100',
+              userRole === 'user' && 'hidden',
             )}
           >
-            <svg
-              className="w-6 h-6 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.6 17.6 0 0 0 4.168 6.608 17.6 17.6 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.68.68 0 0 0-.58-.122l-2.19.547a1.75 1.75 0 0 1-1.657-.459L5.482 8.062a1.75 1.75 0 0 1-.46-1.657l.548-2.19a.68.68 0 0 0-.122-.58zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.68.68 0 0 0 .178.643l2.457 2.457a.68.68 0 0 0 .644.178l2.189-.547a1.75 1.75 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.6 18.6 0 0 1-7.01-4.42 18.6 18.6 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877z" />
-            </svg>
-            Call Reports
+            <FolderTree className="w-6 h-6 mr-2" />
+            Browse
           </Link>
           <Link
             href="/lead-records"
