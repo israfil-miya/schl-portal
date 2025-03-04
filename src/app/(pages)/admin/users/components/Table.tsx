@@ -68,7 +68,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           filtered: false,
           paginated: true,
           items_per_page: itemPerPage,
-          page,
+          page: !isFiltered ? 1 : page,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({}),
@@ -101,7 +101,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           filtered: true,
           paginated: true,
           items_per_page: itemPerPage,
-          page,
+          page: !isFiltered ? 1 : page,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

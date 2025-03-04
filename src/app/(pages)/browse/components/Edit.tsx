@@ -330,8 +330,7 @@ const EditButton: React.FC<PropsType> = props => {
                 />
               </div>
 
-              {(session?.user?.role === 'admin' ||
-                session?.user?.role === 'super') && (
+              {['super', 'admin'].includes(session?.user.role || '') && (
                 <div>
                   <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                     <span className="uppercase">Rate</span>

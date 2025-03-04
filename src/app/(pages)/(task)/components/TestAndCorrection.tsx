@@ -90,8 +90,9 @@ function TestAndCorrection() {
                   <tr key={String(order._id)}>
                     <td>{index + 1}</td>
                     <td>
-                      {session?.user?.role === 'admin' ||
-                      session?.user?.role === 'super' ? (
+                      {['super', 'admin', 'manager'].includes(
+                        session?.user.role || '',
+                      ) ? (
                         <Link
                           className="hover:underline cursor-pointer"
                           href={

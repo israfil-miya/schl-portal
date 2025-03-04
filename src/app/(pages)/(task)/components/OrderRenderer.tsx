@@ -25,7 +25,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
 
   useEffect(() => {
     // console.log('>>> ' + diff + ' <<<');
-    if (diff <= 0) setStatusColor('bg-gray-800 text-white');
+    if (diff <= 0) setStatusColor('bg-gray-800 border-gray-800 text-white');
     else if (diff <= 30 * 60 * 1000)
       setStatusColor('bg-orange-600 text-white border-orange-600');
     else if (diff <= 60 * 60 * 1000)
@@ -73,8 +73,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
       <tr key={props.key}>
         <td>{props.index + 1}</td>
         <td>
-          {session?.user?.role === 'admin' ||
-          session?.user?.role === 'super' ? (
+          {['super', 'admin', 'manager'].includes(session?.user.role || '') ? (
             <Link
               className="hover:underline cursor-pointer"
               href={

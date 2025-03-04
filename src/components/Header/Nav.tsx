@@ -348,9 +348,7 @@ const Nav: React.FC<PropsType> = props => {
         <Link
           className={cn(
             'py-3 px-5',
-            pathname.includes('/file-flow/')
-              ? 'bg-primary'
-              : 'hover:opacity-90',
+            pathname.includes('/file-flow') ? 'bg-primary' : 'hover:opacity-90',
             ['user', 'manager'].includes(userRole || '') && 'hidden',
           )}
           href={'/file-flow'}

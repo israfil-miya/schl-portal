@@ -1,7 +1,14 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { FolderTree, LayoutList, Menu } from 'lucide-react';
+import {
+  ChartNoAxesCombined,
+  ChevronDown,
+  FileSliders,
+  FolderTree,
+  LayoutList,
+  Menu,
+} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -54,69 +61,65 @@ const FilterButton: React.FC<PropsType> = props => {
             <FolderTree className="w-6 h-6 mr-2" />
             Browse
           </Link>
+
           <Link
-            href="/lead-records"
+            href="/file-flow"
             className={cn(
               'p-4 flex items-center',
-              pathname == '/lead-records'
+              pathname == '/file-flow'
                 ? 'bg-primary text-white'
                 : 'hover:bg-gray-100',
+              ['user', 'manager'].includes(userRole || '') && 'hidden',
             )}
           >
-            <svg
-              className="w-6 h-6 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v.64c.57.265.94.876.856 1.546l-.64 5.124A2.5 2.5 0 0 1 12.733 15H3.266a2.5 2.5 0 0 1-2.481-2.19l-.64-5.124A1.5 1.5 0 0 1 1 6.14zM2 6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5a.5.5 0 0 0-.5.5zm-.367 1a.5.5 0 0 0-.496.562l.64 5.124A1.5 1.5 0 0 0 3.266 14h9.468a1.5 1.5 0 0 0 1.489-1.314l.64-5.124A.5.5 0 0 0 14.367 7z" />
-            </svg>
-            Lead Records
+            <ChartNoAxesCombined className="w-6 h-6 mr-2" />
+            File Flow
           </Link>
-          <Link
-            href="/pending-followups"
+
+          <span
             className={cn(
-              'p-4 flex items-center',
-              pathname == '/pending-followups'
+              'p-4 flex items-center justify-between',
+              pathname.includes('/admin/')
                 ? 'bg-primary text-white'
                 : 'hover:bg-gray-100',
+              !['super', 'admin'].includes(userRole || '') && 'hidden',
             )}
+            aria-controls="dropdown-example"
+            data-collapse-toggle="dropdown-example"
           >
-            <svg
-              className="w-6 h-6 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path d="M2.5 15a.5.5 0 1 1 0-1h1v-1a4.5 4.5 0 0 1 2.557-4.06c.29-.139.443-.377.443-.59v-.7c0-.213-.154-.451-.443-.59A4.5 4.5 0 0 1 3.5 3V2h-1a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-1v1a4.5 4.5 0 0 1-2.557 4.06c-.29.139-.443.377-.443.59v.7c0 .213.154.451.443.59A4.5 4.5 0 0 1 12.5 13v1h1a.5.5 0 0 1 0 1zm2-13v1c0 .537.12 1.045.337 1.5h6.326c.216-.455.337-.963.337-1.5V2zm3 6.35c0 .701-.478 1.236-1.011 1.492A3.5 3.5 0 0 0 4.5 13s.866-1.299 3-1.48zm1 0v3.17c2.134.181 3 1.48 3 1.48a3.5 3.5 0 0 0-1.989-3.158C8.978 9.586 8.5 9.052 8.5 8.351z" />
-            </svg>
-            Pending Followups
-          </Link>
-          <Link
-            href="/notices"
-            className={cn(
-              'p-4 flex items-center',
-              pathname.includes('/notices')
-                ? 'bg-primary text-white'
-                : 'hover:bg-gray-100',
-            )}
-          >
-            <svg
-              className="w-6 h-6 mr-2"
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path d="M13 2.5a1.5 1.5 0 0 1 3 0v11a1.5 1.5 0 0 1-3 0v-.214c-2.162-1.241-4.49-1.843-6.912-2.083l.405 2.712A1 1 0 0 1 5.51 15.1h-.548a1 1 0 0 1-.916-.599l-1.85-3.49-.202-.003A2.014 2.014 0 0 1 0 9V7a2.02 2.02 0 0 1 1.992-2.013 75 75 0 0 0 2.483-.075c3.043-.154 6.148-.849 8.525-2.199zm1 0v11a.5.5 0 0 0 1 0v-11a.5.5 0 0 0-1 0m-1 1.35c-2.344 1.205-5.209 1.842-8 2.033v4.233q.27.015.537.036c2.568.189 5.093.744 7.463 1.993zm-9 6.215v-4.13a95 95 0 0 1-1.992.052A1.02 1.02 0 0 0 1 7v2c0 .55.448 1.002 1.006 1.009A61 61 0 0 1 4 10.065m-.657.975 1.609 3.037.01.024h.548l-.002-.014-.443-2.966a68 68 0 0 0-1.722-.082z" />
-            </svg>
-            Notices
-          </Link>
+            <span className="flex items-center">
+              <FileSliders className="w-6 h-6 mr-2" />
+              <span>Admin</span>
+            </span>
+            <ChevronDown size={17} />
+          </span>
+          <ul id="dropdown-example" className="hidden pb-2 space-y-1">
+            <li>
+              <Link
+                href="#"
+                className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white"
+              >
+                Products
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="#"
+                className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white"
+              >
+                Billing
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="#"
+                className="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white"
+              >
+                Invoice
+              </Link>
+            </li>
+          </ul>
+
           <Link
             href="/rules-and-regulations"
             className={cn(

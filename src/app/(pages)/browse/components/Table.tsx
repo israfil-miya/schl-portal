@@ -75,7 +75,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           filtered: false,
           paginated: true,
           items_per_page: itemPerPage,
-          page,
+          page: !isFiltered ? 1 : page,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -112,7 +112,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           filtered: true,
           paginated: true,
           items_per_page: itemPerPage,
-          page,
+          page: !isFiltered ? 1 : page,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

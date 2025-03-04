@@ -227,21 +227,25 @@ const Form: React.FC<PropsType> = props => {
               placeholder="Enter number of files"
             />
           </div>
-          <div>
-            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-              <span className="uppercase">Rate</span>
-              <span className="text-red-700 text-wrap block text-xs">
-                {errors.rate && errors.rate.message}
-              </span>
-            </label>
-            <input
-              {...register('rate', { valueAsNumber: true })}
-              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              type="number"
-              step="0.01"
-              placeholder="Enter rate"
-            />
-          </div>
+
+          {['super', 'admin'].includes(session?.user.role || '') && (
+            <div>
+              <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                <span className="uppercase">Rate</span>
+                <span className="text-red-700 text-wrap block text-xs">
+                  {errors.rate && errors.rate.message}
+                </span>
+              </label>
+              <input
+                {...register('rate', { valueAsNumber: true })}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                type="number"
+                step="0.01"
+                placeholder="Enter rate"
+              />
+            </div>
+          )}
+
           <div>
             <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
               <span className="uppercase">Download Date*</span>
