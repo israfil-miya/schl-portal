@@ -84,7 +84,7 @@ const Nav: React.FC<PropsType> = props => {
                 href={'/admin/employees'}
               >
                 {/* without salary*/}
-                Employees
+                Employee
               </Link>
             </li>
             <li>
@@ -92,7 +92,7 @@ const Nav: React.FC<PropsType> = props => {
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/tasks'}
               >
-                Tasks
+                Task
               </Link>
             </li>
             <li>

@@ -33,7 +33,7 @@
     "html-react-parser": "^5.2.2",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
-    "lucide-react": "^0.441.0",
+    "lucide-react": "^0.477.0",
     "moment-timezone": "^0.5.46",
     "mongoose": "^8.9.5",
     "next": "14.2.21",
@@ -71,6 +71,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "sharp"
-    ]
+    ],
+    "overrides": {
+      "cookie@<0.7.0": ">=0.7.0"
+    }
   }
 }

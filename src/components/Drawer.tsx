@@ -25,6 +25,7 @@ const Drawer: React.FC<PropsType> = ({
       }
     >
       <section
+        onClick={e => e.stopPropagation()}
         className={
           'w-56 right-0 absolute bg-white h-full shadow-2xl delay-400 duration-500 ease-in-out transition-all transform  ' +
           (isOpen ? ' translate-x-0 ' : ' translate-x-full ')
