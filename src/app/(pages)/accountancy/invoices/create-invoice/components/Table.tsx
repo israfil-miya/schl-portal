@@ -178,6 +178,17 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           Client selected:
           <span className="px-1.5 font-semibold">{selectedClient}</span>
         </p>
+        {/* Details button - below client selected on mobile, in the controls group on desktop */}
+        {orders?.items?.length !== 0 && (
+          <div className="sm:hidden w-full mb-2">
+            <Details
+              clientCode={selectedClient}
+              className="w-full"
+              filters={filters}
+            />
+          </div>
+        )}
+
         <div className="items-center flex gap-2">
           <div className="inline-flex rounded-md" role="group">
             <button
@@ -231,7 +242,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           {orders?.items?.length !== 0 && (
             <Details
               clientCode={selectedClient}
-              className="w-full justify-between sm:w-auto"
+              className="hidden sm:inline-flex"
               filters={filters}
             />
           )}

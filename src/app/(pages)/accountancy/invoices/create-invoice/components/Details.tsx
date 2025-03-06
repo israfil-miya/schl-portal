@@ -378,11 +378,11 @@ const Details: React.FC<DetailsProps> = props => {
         onClick={() => setIsOpen(true)}
         type="button"
         className={cn(
-          `flex items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
+          `flex flex-row gap-2 items-center rounded-md bg-primary justify-between hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
           props.className,
         )}
       >
-        {loading ? 'Loading...' : 'Invoice'}
+        <span>{loading ? 'Loading...' : 'Create Invoice'}</span>
         <PlusCircleIcon size={18} />
       </button>
 
