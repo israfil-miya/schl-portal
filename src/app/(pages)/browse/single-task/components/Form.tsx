@@ -489,7 +489,7 @@ const Form: React.FC<PropsType> = props => {
           />
         </div>
       </div>
-      <div className="flex space-x-2 mt-4">
+      <div className="flex gap-2 my-2 mx-1">
         <button
           onClick={() => editOrder(getValues())}
           disabled={loading}
@@ -498,35 +498,40 @@ const Form: React.FC<PropsType> = props => {
         >
           {loading ? 'Updating...' : 'Update'}
         </button>
-        <button
-          onClick={() =>
-            deleteOrder(watch('_id') || '', session?.user.real_name || '')
-          }
-          disabled={loading}
-          className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
-          type="button"
-        >
-          {loading ? 'Deleting...' : 'Delete'}
-        </button>
 
-        {watch('status')?.trim().toLocaleLowerCase() == 'finished' ? (
-          <button
-            onClick={() => redoOrder(getValues())}
-            disabled={loading}
-            className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-            type="button"
-          >
-            {loading ? 'Redoing...' : 'Redo'}
-          </button>
-        ) : (
-          <button
-            onClick={() => finishOrder(getValues())}
-            disabled={loading}
-            className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-            type="button"
-          >
-            {loading ? 'Finishing...' : 'Finish'}
-          </button>
+        {['super', 'admin'].includes(session?.user.role || '') && (
+          <>
+            <button
+              onClick={() =>
+                deleteOrder(watch('_id') || '', session?.user.real_name || '')
+              }
+              disabled={loading}
+              className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
+              type="button"
+            >
+              {loading ? 'Deleting...' : 'Delete'}
+            </button>
+
+            {watch('status')?.trim().toLocaleLowerCase() === 'finished' ? (
+              <button
+                onClick={() => redoOrder(getValues())}
+                disabled={loading}
+                className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                type="button"
+              >
+                {loading ? 'Redoing...' : 'Redo'}
+              </button>
+            ) : (
+              <button
+                onClick={() => finishOrder(getValues())}
+                disabled={loading}
+                className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                type="button"
+              >
+                {loading ? 'Finishing...' : 'Finish'}
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

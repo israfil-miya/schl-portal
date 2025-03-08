@@ -202,7 +202,7 @@ export default function TextEditorMenuBar({
   ];
 
   return (
-    <div className="mb-2 flex space-x-2">
+    <div className="mb-2 flex flex-wrap gap-2">
       {buttons.map(({ icon, onClick, isActive, disabled }, index) => (
         <Button
           key={index}
