@@ -65,7 +65,7 @@ const Table = () => {
           filtered: false,
           paginated: true,
           items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
+          page: page,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
