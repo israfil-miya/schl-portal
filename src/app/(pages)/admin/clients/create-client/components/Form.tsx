@@ -30,7 +30,7 @@ export const currencyOptions = [
   { value: '£', label: 'Pound (£)' },
   { value: 'A$', label: 'Australian Dollar (A$)' },
   { value: 'C$', label: 'Canadian Dollar (C$)' },
-  { value: 'Nkr', label: 'Norwegian krone (Nkr)' },
+  { value: 'Nkr', label: 'Norwegian Krone (Nkr)' },
   { value: 'Dkr', label: 'Danish Krone (Dkr)' },
   { value: 'Skr', label: 'Swedish Krona (Skr)' },
 ];
