@@ -14,7 +14,7 @@ export interface ReportsStatusState {
 }
 
 export const callsTargetConst = 60;
-export const leadsTargetConst = 20;
+export const leadsTargetConst = 10;
 
 const DailyStatusTable = () => {
   const [reportsStatus, setReportsStatus] = useState<ReportsStatusState>({});
