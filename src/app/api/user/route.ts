@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { dbConnect, getQuery } from '@/lib/utils';
 import User, { UserDataType } from '@/models/Users';
 import { addIfDefined } from '@/utility/filterHelpers';
@@ -256,6 +257,9 @@ async function handleVerifyUser(req: NextRequest): Promise<{
   const { name, password } = await req.json();
   const headersList = await headers();
   const redirect_path = headersList.get('redirect_path') || '/';
+  const session = await auth();
+
+  console.log(session);
 
   try {
     const userData = await User.findOne({
@@ -264,15 +268,16 @@ async function handleVerifyUser(req: NextRequest): Promise<{
     });
 
     if (userData) {
-      const token = jwt.sign(
-        { userId: userData._id, exp: Date.now() + 10 * 1000 },
-        process.env.AUTH_SECRET as string,
-      );
+      if (userData.name === session?.user?.cred_name) {
+        const token = jwt.sign(
+          { userId: userData._id, exp: Date.now() + 10 * 1000 },
+          process.env.AUTH_SECRET as string,
+        );
 
-      return { data: { token, redirect_path }, status: 200 };
-    } else {
-      return { data: 'Invalid username or password', status: 400 };
+        return { data: { token, redirect_path }, status: 200 };
+      }
     }
+    return { data: 'Invalid username or password', status: 400 };
   } catch (e) {
     console.error(e);
     return { data: 'An error occurred', status: 500 };
