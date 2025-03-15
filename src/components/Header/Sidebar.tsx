@@ -380,7 +380,7 @@ const FilterButton: React.FC<PropsType> = props => {
           </Link>
           <hr />
           <Link
-            href="/my-account"
+            href="/protected?redirect=/my-account"
             className={cn(
               'p-4 flex items-center',
               pathname == '/my-account'
