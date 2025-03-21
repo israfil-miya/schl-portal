@@ -4,6 +4,7 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 
+import Pagination from '@/components/Pagination';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
@@ -232,20 +233,6 @@ const Table = () => {
     getAllMarketers();
   }, []);
 
-  function handlePrevious() {
-    setPage(p => {
-      if (p === 1) return p;
-      return p - 1;
-    });
-  }
-
-  function handleNext() {
-    setPage(p => {
-      if (p === pageCount) return p;
-      return p + 1;
-    });
-  }
-
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
       if (clients?.pagination?.pageCount == 1) return;
@@ -292,35 +279,12 @@ const Table = () => {
           <CirclePlus size={18} />
         </button>
         <div className="items-center flex gap-2">
-          <div className="inline-flex rounded-md" role="group">
-            <button
-              onClick={handlePrevious}
-              disabled={page === 1 || pageCount === 0 || loading}
-              type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-s-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={18} className="stroke-gray-500" />
-              Prev
-            </button>
-            <button
-              disabled={true}
-              className="hidden sm:visible sm:inline-flex items-center px-4 py-2 text-sm font-medium border"
-            >
-              <label>
-                Page <b>{clients?.items?.length !== 0 ? page : 0}</b> of{' '}
-                <b>{pageCount}</b>
-              </label>
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={page === pageCount || pageCount === 0 || loading}
-              type="button"
-              className="inline-flex items-center px-4 py-2 text-sm bg-gray-50 text-gray-700 border border-gray-200 rounded-e-md leading-tight focus:outline-none focus:bg-white focus:border-gray-500 disabled:cursor-not-allowed"
-            >
-              Next
-              <ChevronRight size={18} className="stroke-gray-500" />
-            </button>
-          </div>
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            setPage={setPage}
+            isLoading={loading}
+          />
 
           <select
             value={itemPerPage}

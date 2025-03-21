@@ -21,7 +21,7 @@ import { NoticeDataType, validationSchema } from '../schema';
 const baseZIndex = 50; // 52
 
 interface PropsType {
-  loading: boolean;
+  isLoading: boolean;
   noticeData: NoticeDataType;
   submitHandler: (editedNoticeData: NoticeDataType) => Promise<void>;
 }
@@ -233,19 +233,19 @@ const EditButton: React.FC<PropsType> = props => {
                 onClick={() => setIsOpen(false)}
                 className="rounded-md bg-gray-600 text-white hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
-                disabled={props.loading}
+                disabled={props.isLoading}
               >
                 Close
               </button>
               <button
-                disabled={props.loading}
+                disabled={props.isLoading}
                 onClick={() => {
                   formRef.current?.requestSubmit();
                 }}
                 className="rounded-md bg-blue-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
                 type="button"
               >
-                {props.loading ? 'Submitting...' : 'Submit'}
+                {props.isLoading ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </footer>

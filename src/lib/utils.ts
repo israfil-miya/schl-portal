@@ -223,3 +223,17 @@ export const constructFileName = (
   let new_file_name = `${file_name_without_ext}_${notice_no}.${file_ext}`;
   return new_file_name;
 };
+
+export function getInlinePages(current: number, total: number): number[] {
+  if (total <= 3) {
+    // If there are 3 or fewer pages, show them all.
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 2) {
+    return [1, 2, 3];
+  }
+  if (current >= total - 1) {
+    return [total - 2, total - 1, total];
+  }
+  return [current - 1, current, current + 1];
+}

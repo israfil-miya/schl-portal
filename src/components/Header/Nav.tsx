@@ -114,24 +114,24 @@ const Nav: React.FC<PropsType> = props => {
             <li>
               <span
                 role="button"
-                id="adminAccountsDropdownButton"
-                data-dropdown-toggle="adminAccountsDropdown"
+                id="adminAccessDropdownButton"
+                data-dropdown-toggle="adminAccessDropdown"
                 data-dropdown-trigger="hover"
                 data-dropdown-placement="right-start"
                 className="block px-4 py-2 hover:bg-primary"
               >
-                <span className="flex gap-1 items-end align-bottom justify-between">
-                  <span>Accounts</span>
+                <span className="flex gap-1 items-end text-wrap align-bottom justify-between">
+                  <span>Access & Permissions</span>
                   <ChevronRight size={17} />
                 </span>
               </span>
               <div
-                id="adminAccountsDropdown"
+                id="adminAccessDropdown"
                 className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
               >
                 <ul
                   className="py-2 text-white"
-                  aria-labelledby="adminAccountsDropdownButton"
+                  aria-labelledby="adminAccessDropdownButton"
                 >
                   <li>
                     <Link
