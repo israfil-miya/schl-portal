@@ -3,7 +3,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ChevronsUp,
-} from 'lucide-react'; // or your icon library
+} from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { cn, getInlinePages } from '../lib/utils';
 
@@ -108,7 +108,6 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className="inline-flex items-center" role="group">
-      {/* First button */}
       <button
         onClick={() => setPage(1)}
         disabled={page === 1 || pageCount === 0 || isLoading}
@@ -123,7 +122,6 @@ const Pagination: React.FC<PaginationProps> = ({
       {/* Inline pagination and ellipsis dropdown */}
       {renderCompactPagination()}
 
-      {/* Last button */}
       <button
         onClick={() => setPage(pageCount)}
         disabled={page === pageCount || pageCount === 0 || isLoading}

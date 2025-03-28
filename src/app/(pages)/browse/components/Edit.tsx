@@ -62,6 +62,7 @@ export const taskOptions = [
   { value: 'Resize', label: 'Resize' },
   { value: 'Masking', label: 'Masking' },
   { value: 'Dusting', label: 'Dusting' },
+  { value: 'Cropping', label: 'Cropping' },
 ];
 
 export const typeOptions = [

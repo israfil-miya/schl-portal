@@ -30,29 +30,40 @@ const ExtendableTd: React.FC<PropsType> = ({
   if (data === undefined) return null;
 
   return (
-    <td
-      className="text-wrap"
-      style={{ padding: '2.5px 10px', minWidth: '250px' }}
-    >
-      {showFullText ? (
-        <span
-          dangerouslySetInnerHTML={{ __html: replaceNewlineWithBr(data) }}
-        />
-      ) : (
-        <span className="text-nowrap">
-          {data?.length <= len ? data : data?.substring(0, len).trim() + '...'}
-        </span>
-      )}
-      {data?.length > len && (
-        <small
-          className="opacity-80 hover:cursor-pointer hover:underline hover:opacity-100 pl-1"
-          onClick={toggleText}
-        >
-          {/* <br /> */}
-          {showFullText ? 'Show Less' : 'Show More'}
-        </small>
-      )}
-    </td>
+    <>
+      <td
+        className="text-wrap"
+        style={{ padding: '2.5px 10px', minWidth: '250px' }}
+      >
+        {showFullText ? (
+          <span
+            dangerouslySetInnerHTML={{ __html: replaceNewlineWithBr(data) }}
+          />
+        ) : (
+          <span className="text-nowrap">
+            {data?.length <= len
+              ? data
+              : data?.substring(0, len).trim() + '...'}
+          </span>
+        )}
+        {data?.length > len && (
+          <small
+            className="opacity-80 hover:cursor-pointer hover:underline hover:opacity-100 pl-1"
+            onClick={toggleText}
+          >
+            {/* <br /> */}
+            {showFullText ? 'Show Less' : 'Show More'}
+          </small>
+        )}
+      </td>
+
+      <style jsx>{`
+        td {
+          padding: 3px 6px;
+          border: 1px solid #9ca3af;
+        }
+      `}</style>
+    </>
   );
 };
 

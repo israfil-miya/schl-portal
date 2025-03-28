@@ -71,7 +71,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
   return (
     <>
       <tr key={props.key}>
-        <td>{props.index + 1}</td>
+        <td className="text-center">{props.index + 1}</td>
         <td>
           {['super', 'admin', 'manager'].includes(session?.user.role || '') ? (
             <Link
@@ -156,6 +156,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
           th,
           td {
             padding: 8px 6px;
+            border: 1px solid #9ca3af;
           }
         `}
       </style>

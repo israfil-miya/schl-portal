@@ -40,21 +40,6 @@ export type RegexFields = Extract<
   'type' | 'task' | 'folder' | 'client_code' | 'status'
 >;
 
-const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
 const countriesList = ['Australia', 'Denmark', 'Finland', 'Norway', 'Sweden'];
 
 export interface OrderData {

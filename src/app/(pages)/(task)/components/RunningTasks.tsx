@@ -59,7 +59,7 @@ function RunningTasks() {
     <>
       <div className="table-responsive text-md">
         {orders?.length !== 0 ? (
-          <table className="table border table-bordered">
+          <table className="table border-black table-bordered">
             <thead>
               <tr className="bg-gray-50 text-nowrap">
                 <th>S/N</th>
@@ -93,7 +93,7 @@ function RunningTasks() {
           <table className="table border">
             <tbody>
               <tr key={0}>
-                <td className="align-center text-center text-wrap">
+                <td className="align-center text-center text-wrap text-gray-400">
                   No Running Tasks To Show.
                 </td>
               </tr>
@@ -110,6 +110,12 @@ function RunningTasks() {
           th,
           td {
             padding: 3px 6px;
+            border: 1px solid #9ca3af;
+          }
+
+          .table-bordered td,
+          .table-bordered th {
+            border: 1px solid #9ca3af;
           }
         `}
       </style>

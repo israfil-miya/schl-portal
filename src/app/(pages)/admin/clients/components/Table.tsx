@@ -132,7 +132,7 @@ const Table = () => {
     return;
   }
 
-  async function deleteClient(clientId: string, reqBy: string) {
+  async function deleteClient(clientId: string) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -142,9 +142,10 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Client Delete',
-          req_by: reqBy,
-          id: clientId,
+          target_model: 'Client',
+          action: 'delete',
+          req_by: session?.user.db_id,
+          object_id: clientId,
         }),
       };
 
@@ -153,7 +154,7 @@ const Table = () => {
       if (response.ok) {
         toast.success('Request sent for approval');
       } else {
-        toast.error(response.data.message);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
