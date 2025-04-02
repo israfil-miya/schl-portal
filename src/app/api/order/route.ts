@@ -31,7 +31,7 @@ export interface Query {
   status?: RegexQuery;
   folder?: RegexQuery;
   client_code?: RegexQuery;
-  createdAt?: { $gte?: string; $lte?: string };
+  download_date?: { $gte?: string; $lte?: string };
   $or?: { [key: string]: RegexQuery }[];
 }
 
@@ -165,15 +165,15 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     let query: Query = {};
 
     if (fromDate || toDate) {
-      query.createdAt = {};
-      query.createdAt = {
-        ...(fromDate && { $gte: toISODate(fromDate) }),
-        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
+      query.download_date = {};
+      query.download_date = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
       };
     }
 
     if (!fromDate && !toDate) {
-      delete query.createdAt;
+      delete query.download_date;
     }
 
     addRegexField(query, 'folder', folder);
@@ -188,7 +188,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
 
     let sortQuery: Record<string, 1 | -1> = {
       customSortField: 1,
-      createdAt: -1,
+      download_date: -1,
     };
 
     if (!query && isFilter == true && !generalSearchString) {
