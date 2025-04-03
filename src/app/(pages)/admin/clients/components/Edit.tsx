@@ -22,7 +22,10 @@ interface PropsType {
   loading: boolean;
   clientData: ClientDataType;
   marketerNames: string[];
-  submitHandler: (editedClientData: ClientDataType) => Promise<void>;
+  submitHandler: (
+    editedClientData: ClientDataType,
+    previousClientData: ClientDataType,
+  ) => Promise<void>;
 }
 
 const EditButton: React.FC<PropsType> = props => {
@@ -66,7 +69,7 @@ const EditButton: React.FC<PropsType> = props => {
   }, []);
 
   const onSubmit = async (data: ClientDataType) => {
-    await props.submitHandler(data);
+    await props.submitHandler(data, props.clientData);
   };
 
   useEffect(() => {

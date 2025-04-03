@@ -28,7 +28,10 @@ const baseZIndex = 50; // 52
 interface PropsType {
   loading: boolean;
   employeeData: EmployeeDataType;
-  submitHandler: (editedClientData: EmployeeDataType) => Promise<void>;
+  submitHandler: (
+    editedEmployeeData: EmployeeDataType,
+    previousEmployeeData: EmployeeDataType,
+  ) => Promise<void>;
 }
 
 const EditButton: React.FC<PropsType> = props => {
@@ -67,8 +70,7 @@ const EditButton: React.FC<PropsType> = props => {
   }, []);
 
   const onSubmit = async (data: EmployeeDataType) => {
-    console.log('On submit triggered: ', data);
-    await props.submitHandler(data);
+    await props.submitHandler(data, props.employeeData);
   };
 
   useEffect(() => {

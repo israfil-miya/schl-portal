@@ -24,7 +24,10 @@ interface PropsType {
   clientsData: ClientDataType[];
   loading: boolean;
   orderData: OrderDataType;
-  submitHandler: (editedOrderData: OrderDataType) => Promise<void>;
+  submitHandler: (
+    editedOrderData: OrderDataType,
+    previousOrderData: OrderDataType,
+  ) => Promise<void>;
 }
 
 export const statusOptions = [
@@ -125,7 +128,7 @@ const EditButton: React.FC<PropsType> = props => {
   }, []);
 
   const onSubmit = async (data: OrderDataType) => {
-    await props.submitHandler(data);
+    await props.submitHandler(data, props.orderData);
   };
 
   useEffect(() => {

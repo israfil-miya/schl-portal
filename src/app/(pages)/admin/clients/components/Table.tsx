@@ -5,12 +5,16 @@ import { fetchApi } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 
 import Pagination from '@/components/Pagination';
+import { ClientDataType } from '@/models/Clients';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ClientDataType, validationSchema } from '../schema';
+import {
+  validationSchema,
+  ClientDataType as zod_ClientDataType,
+} from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
@@ -29,7 +33,7 @@ const Table = () => {
       count: 0,
       pageCount: 0,
     },
-    items: [],
+    items: [] as ClientDataType[],
   });
 
   const router = useRouter();
@@ -132,7 +136,7 @@ const Table = () => {
     return;
   }
 
-  async function deleteClient(clientId: string) {
+  async function deleteClient(clientData: ClientDataType) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -144,8 +148,9 @@ const Table = () => {
         body: JSON.stringify({
           target_model: 'Client',
           action: 'delete',
+          object_id: clientData._id,
+          deleted_data: clientData,
           req_by: session?.user.db_id,
-          object_id: clientId,
         }),
       };
 
@@ -189,7 +194,10 @@ const Table = () => {
     }
   }
 
-  async function editClient(editedClientData: ClientDataType) {
+  async function editClient(
+    editedClientData: zod_ClientDataType,
+    previousClientData: zod_ClientDataType,
+  ) {
     try {
       setLoading(true);
       const parsed = validationSchema.safeParse(editedClientData);
@@ -355,7 +363,7 @@ const Table = () => {
                           />
 
                           <EditButton
-                            clientData={client}
+                            clientData={client as unknown as zod_ClientDataType}
                             marketerNames={marketerNames}
                             submitHandler={editClient}
                             loading={loading}

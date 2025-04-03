@@ -7,6 +7,7 @@ import { EmployeeDataType } from '@/models/Employees';
 
 import Pagination from '@/components/Pagination';
 import { cn } from '@/lib/utils';
+import { UserDataType } from '@/models/Users';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,9 +16,9 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { UserDataType, validationSchema } from '../schema';
+import { validationSchema, UserDataType as zod_UserDataType } from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
@@ -36,7 +37,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
       count: 0,
       pageCount: 0,
     },
-    items: [],
+    items: [] as UserDataType[],
   });
 
   const router = useRouter();
@@ -127,7 +128,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
     return;
   }
 
-  async function deleteUser(userId: string, reqBy: string) {
+  async function deleteUser(userData: UserDataType) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -137,10 +138,11 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'User Delete',
-          req_by: reqBy,
-          id: userId,
-          // for view action you have to pass the user data as well to show in the modal
+          target_model: 'User',
+          action: 'delete',
+          object_id: userData._id,
+          deleted_data: userData,
+          req_by: session?.user.db_id,
         }),
       };
 
@@ -158,7 +160,10 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
     return;
   }
 
-  async function editUser(editedUserData: UserDataType) {
+  async function editUser(
+    editedUserData: zod_UserDataType,
+    previousUserData: zod_UserDataType,
+  ) {
     try {
       const parsed = validationSchema.safeParse(editedUserData);
 
@@ -335,7 +340,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                           />
 
                           <EditButton
-                            userData={user}
+                            userData={user as unknown as zod_UserDataType}
                             employeesData={props.employeesData}
                             submitHandler={editUser}
                             loading={loading}

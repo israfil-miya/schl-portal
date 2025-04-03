@@ -47,7 +47,7 @@ const Form: React.FC<PropsType> = props => {
     },
   });
 
-  async function deleteOrder(orderId: string, reqBy: string) {
+  async function deleteOrder(orderData: OrderDataType) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -57,9 +57,11 @@ const Form: React.FC<PropsType> = props => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Task Delete',
-          req_by: reqBy,
-          id: orderId,
+          target_model: 'Order',
+          action: 'delete',
+          object_id: orderData._id,
+          deleted_data: orderData,
+          req_by: session?.user.db_id,
         }),
       };
 
@@ -502,9 +504,7 @@ const Form: React.FC<PropsType> = props => {
         {['super', 'admin'].includes(session?.user.role || '') && (
           <>
             <button
-              onClick={() =>
-                deleteOrder(watch('_id') || '', session?.user.real_name || '')
-              }
+              onClick={() => deleteOrder(props.orderData)}
               disabled={loading}
               className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
               type="button"

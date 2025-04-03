@@ -237,3 +237,42 @@ export function getInlinePages(current: number, total: number): number[] {
   }
   return [current - 1, current, current + 1];
 }
+
+export type Change =
+  | { field: string; oldValue: any; newValue: any } // Non-array case
+  | {
+      field: string;
+      oldValue: any[];
+      newValue: any[];
+      arrayChanges: { added: any[]; removed: any[] };
+    }; // Array case
+
+export function getObjectChanges(
+  oldObj: Record<string, any>,
+  newObj: Record<string, any>,
+): Change[] {
+  const changes: Change[] = [];
+  Object.keys(oldObj).forEach(key => {
+    const oldValue = oldObj[key];
+    const newValue = newObj[key];
+    if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+      const oldSet = new Set(oldValue.map(item => JSON.stringify(item)));
+      const newSet = new Set(newValue.map(item => JSON.stringify(item)));
+      const added = newValue.filter(item => !oldSet.has(JSON.stringify(item)));
+      const removed = oldValue.filter(
+        item => !newSet.has(JSON.stringify(item)),
+      );
+      if (added.length > 0 || removed.length > 0) {
+        changes.push({
+          field: key,
+          oldValue,
+          newValue,
+          arrayChanges: { added, removed },
+        });
+      }
+    } else if (oldValue !== newValue) {
+      changes.push({ field: key, oldValue, newValue });
+    }
+  });
+  return changes;
+}

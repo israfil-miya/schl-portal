@@ -1,12 +1,13 @@
 'use client';
 
+import { EmployeeDataType } from '@/models/Employees';
 import { Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
-  employeeData: { [key: string]: any };
-  submitHandler: (clientId: string, reqBy: string) => Promise<void>;
+  employeeData: EmployeeDataType;
+  submitHandler: (employeeData: EmployeeDataType) => Promise<void>;
 }
 const DeleteButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -56,10 +57,7 @@ const DeleteButton: React.FC<PropsType> = props => {
             </button>
             <button
               onClick={() => {
-                props.submitHandler(
-                  props.employeeData?._id,
-                  session?.user.real_name || '',
-                );
+                props.submitHandler(props.employeeData);
                 setIsOpen(false);
               }}
               className="rounded-md bg-red-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"

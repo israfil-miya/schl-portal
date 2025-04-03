@@ -25,7 +25,10 @@ interface PropsType {
   loading: boolean;
   userData: UserDataType;
   employeesData: EmployeeDataType[];
-  submitHandler: (editedOrderData: UserDataType) => Promise<void>;
+  submitHandler: (
+    editedUserData: UserDataType,
+    previousUserData: UserDataType,
+  ) => Promise<void>;
 }
 
 const EditButton: React.FC<PropsType> = props => {
@@ -131,7 +134,7 @@ const EditButton: React.FC<PropsType> = props => {
   }, []);
 
   const onSubmit = async (data: UserDataType) => {
-    await props.submitHandler(data);
+    await props.submitHandler(data, props.userData);
   };
 
   useEffect(() => {

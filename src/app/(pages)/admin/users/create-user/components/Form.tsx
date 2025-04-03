@@ -169,9 +169,10 @@ const Form: React.FC<PropsType> = props => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            req_type: 'User Create',
-            req_by: session?.user.real_name,
-            ...parsed.data,
+            target_model: 'User',
+            action: 'create',
+            new_data: parsed.data,
+            req_by: session?.user.db_id,
           }),
         };
 

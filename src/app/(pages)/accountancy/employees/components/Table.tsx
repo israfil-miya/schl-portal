@@ -1,15 +1,16 @@
 'use client';
 
 import ExtendableTd from '@/components/ExtendableTd';
-import { cn, fetchApi } from '@/lib/utils';
+import { cn, fetchApi, getObjectChanges } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 
 import {
-  EmployeeDataType,
   validationSchema,
+  EmployeeDataType as zod_EmployeeDataType,
 } from '@/app/(pages)/admin/employees/schema';
 import Badge from '@/components/Badge';
 import HiddenText from '@/components/HiddenText';
+import { EmployeeDataType } from '@/models/Employees';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -35,7 +36,7 @@ const Table = () => {
       count: 0,
       pageCount: 0,
     },
-    items: [],
+    items: [] as EmployeeDataType[],
   });
 
   const { data: session } = useSession();
@@ -153,7 +154,7 @@ const Table = () => {
     return;
   }
 
-  async function deleteEmployee(employeeId: string, reqBy: string) {
+  async function deleteEmployee(employeeData: EmployeeDataType) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -163,9 +164,11 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Employee Delete',
-          req_by: reqBy,
-          id: employeeId,
+          target_model: 'Employee',
+          action: 'delete',
+          object_id: employeeData._id,
+          deleted_data: employeeData,
+          req_by: session?.user.db_id,
         }),
       };
 
@@ -183,7 +186,10 @@ const Table = () => {
     return;
   }
 
-  async function editEmployee(editedEmployeeData: EmployeeDataType) {
+  async function editEmployee(
+    editedEmployeeData: zod_EmployeeDataType,
+    previousEmployeeData: zod_EmployeeDataType,
+  ) {
     try {
       console.log('EMPLOYEE DATA: ', editedEmployeeData);
 
@@ -327,7 +333,9 @@ const Table = () => {
 
                           <EditButton
                             loading={loading}
-                            employeeData={employee}
+                            employeeData={
+                              employee as unknown as zod_EmployeeDataType
+                            }
                             submitHandler={editEmployee}
                           />
                         </div>

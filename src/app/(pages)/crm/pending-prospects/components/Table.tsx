@@ -28,7 +28,7 @@ const Table = () => {
       count: 0,
       pageCount: 0,
     },
-    items: [],
+    items: [] as ReportDataType[],
   });
 
   const router = useRouter();
@@ -131,7 +131,7 @@ const Table = () => {
     return;
   }
 
-  async function deleteReport(reportId: string, reqBy: string) {
+  async function deleteReport(reportData: ReportDataType) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -141,9 +141,11 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Report Delete',
-          req_by: reqBy,
-          id: reportId,
+          target_model: 'Report',
+          action: 'delete',
+          object_id: reportData._id,
+          deleted_data: reportData,
+          req_by: session?.user.db_id,
         }),
       };
 

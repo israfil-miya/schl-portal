@@ -1,11 +1,13 @@
+import { Change } from '@/lib/utils';
 import mongoose from 'mongoose';
 
 export interface ApprovalType {
   target_model: 'User' | 'Report' | 'Employee' | 'Order' | 'Client';
   action: 'create' | 'update' | 'delete';
   object_id?: mongoose.Types.ObjectId; // Not required for create requests
-  changes?: Record<string, any>; // Only needed for update and create
-  prev_data?: Record<string, any>; // Only needed for update and delete
+  changes?: Change[]; // Only needed for update operations
+  new_data?: Record<string, any>; // Only needed for create operations
+  deleted_data?: Record<string, any>; // Only needed for delete operations
   status: 'pending' | 'approved' | 'rejected';
   req_by: mongoose.Types.ObjectId;
   rev_by?: mongoose.Types.ObjectId | null;
@@ -39,13 +41,12 @@ const ApprovalSchema = new mongoose.Schema<ApprovalDocType>(
     },
     changes: {
       type: Object,
-      description:
-        'The updated fields and their new values (or new document data for create)',
     },
-    prev_data: {
+    new_data: {
       type: Object,
-      description:
-        'The current values before the change was requested (or may be null for create)',
+    },
+    deleted_data: {
+      type: Object,
     },
     status: {
       type: String,

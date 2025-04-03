@@ -5,6 +5,7 @@ import ClickToCopy from '@/components/CopyText';
 import Pagination from '@/components/Pagination';
 import { cn, fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
+import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import {
   BookCheck,
@@ -18,7 +19,10 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { OrderDataType, validationSchema } from '../schema';
+import {
+  validationSchema,
+  OrderDataType as zod_OrderDataType,
+} from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
@@ -138,7 +142,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     return;
   }
 
-  async function deleteOrder(orderId: string, reqBy: string) {
+  async function deleteOrder(orderData: OrderDataType) {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -148,9 +152,11 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Task Delete',
-          req_by: reqBy,
-          id: orderId,
+          target_model: 'Order',
+          action: 'delete',
+          object_id: orderData._id,
+          deleted_data: orderData,
+          req_by: session?.user.db_id,
         }),
       };
 
@@ -241,7 +247,10 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     return;
   };
 
-  async function editOrder(editedOrderData: OrderDataType) {
+  async function editOrder(
+    editedOrderData: zod_OrderDataType,
+    previousOrderData: zod_OrderDataType,
+  ) {
     try {
       setLoading(true);
       const parsed = validationSchema.safeParse(editedOrderData);
@@ -488,7 +497,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                           )}
 
                           <EditButton
-                            orderData={order}
+                            orderData={order as unknown as zod_OrderDataType}
                             submitHandler={editOrder}
                             loading={loading}
                             clientsData={props.clientsData}

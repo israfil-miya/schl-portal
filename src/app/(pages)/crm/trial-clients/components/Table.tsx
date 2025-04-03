@@ -4,6 +4,7 @@ import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import Pagination from '@/components/Pagination';
 import { fetchApi } from '@/lib/utils';
+import { ReportDataType } from '@/models/Reports';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment-timezone';
@@ -19,7 +20,7 @@ type ReportsState = {
     count: number;
     pageCount: number;
   };
-  items: { [key: string]: any }[];
+  items: ReportDataType[];
 };
 
 const Table = () => {
@@ -28,7 +29,7 @@ const Table = () => {
       count: 0,
       pageCount: 0,
     },
-    items: [],
+    items: [] as ReportDataType[],
   });
 
   const router = useRouter();
@@ -131,18 +132,8 @@ const Table = () => {
     return;
   }
 
-  async function deleteReport(
-    originalReportData: { [key: string]: any },
-    reportId: string,
-    reqBy: string,
-  ) {
+  async function deleteReport(reportData: ReportDataType) {
     try {
-      // block delete action if the report is others and the user is not the one who created the report
-      // if (originalReportData.marketer_name !== reqBy) {
-      //   toast.error('You are not allowed to delete this report');
-      //   return;
-      // }
-
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
       let options: {} = {
@@ -151,9 +142,11 @@ const Table = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          req_type: 'Report Delete',
-          req_by: reqBy,
-          id: reportId,
+          target_model: 'Report',
+          action: 'delete',
+          object_id: reportData._id,
+          deleted_data: reportData,
+          req_by: session?.user.db_id,
         }),
       };
 
@@ -280,7 +273,7 @@ const Table = () => {
 
                   return (
                     <tr
-                      key={item._id}
+                      key={String(item._id)}
                       className={tableRowColor ? tableRowColor : ''}
                     >
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
