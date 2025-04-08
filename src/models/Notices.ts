@@ -16,7 +16,11 @@ export type NoticeDataType = NoticeType & {
   readonly __v: number;
 };
 
-type NoticeDocType = mongoose.Document & NoticeType;
+type NoticeDocType = mongoose.Document &
+  NoticeType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 const NoticeSchema = new mongoose.Schema<NoticeDocType>(
   {

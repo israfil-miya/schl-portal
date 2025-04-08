@@ -264,7 +264,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
       } else {
         orders = await Order.find(searchQuery)
           .sort({
-            createdAt: 1,
+            download_date: 1,
           })
           .lean();
       }
@@ -473,9 +473,9 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
     let query: any = {};
 
     if (fromDate || toDate) {
-      query.createdAt = {
-        ...(fromDate && { $gte: toISODate(fromDate) }),
-        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
+      query.download_date = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
       };
     }
 
@@ -505,7 +505,8 @@ async function handleGetOrdersQP(req: NextRequest): Promise<{
 
     // Update mergedOrders with actual data
     orders.forEach((order: any) => {
-      const date = order.createdAt.toISOString().split('T')[0];
+      // const date = order.createdAt.toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const date = order.download_date;
       // const [year, month, day] = date.split('-');
       // const formattedDate = `${monthNames[parseInt(month) - 1]} ${day}`;
 
@@ -541,9 +542,9 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     const query: any = {};
 
     if (fromDate || toDate) {
-      query.createdAt = {
-        ...(fromDate && { $gte: toISODate(fromDate) }),
-        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
+      query.download_date = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
       };
     }
 
@@ -568,7 +569,7 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     // Retrieve all orders
     const ordersAll = await Order.find(query, {
       client_code: 1,
-      createdAt: 1,
+      download_date: 1,
       quantity: 1,
     });
 
@@ -596,7 +597,8 @@ async function handleGetOrdersCD(req: NextRequest): Promise<{
     Object.entries(ordersDetails).forEach(([country, ordersArr]) => {
       const sortedDates = ordersArr.reduce<Record<string, CountryOrderData>>(
         (merged, order) => {
-          const date = order.createdAt.toISOString().split('T')[0]; // "YYYY-MM-DD"
+          // const date = order.createdAt.toISOString().split('T')[0]; // "YYYY-MM-DD"
+          const date = order.download_date; // "YYYY-MM-DD"
 
           if (!merged[date]) {
             merged[date] = {
@@ -652,15 +654,14 @@ async function handleGetOrdersByCountry(req: NextRequest): Promise<{
     let query: any = {};
 
     if (fromDate || toDate) {
-      query.createdAt = {};
-      query.createdAt = {
-        ...(fromDate && { $gte: toISODate(fromDate) }),
-        ...(toDate && { $lte: toISODate(toDate, 23, 59, 59, 999) }),
+      query.download_date = {
+        ...(fromDate && { $gte: fromDate }),
+        ...(toDate && { $lte: toDate }),
       };
     }
 
     if (!fromDate && !toDate) {
-      delete query.createdAt;
+      delete query.download_date;
     }
 
     const countryFilter =
@@ -736,15 +737,20 @@ async function handleGetOrdersByMonth(req: NextRequest): Promise<{
     }
 
     // Prepare date range and client codes
-    const endDate = moment().endOf('month').toDate();
-    const startDate = moment().subtract(11, 'months').startOf('month').toDate();
+    const endDate = moment().endOf('month').format('YYYY-MM-DD');
+    const startDate = moment()
+      .subtract(11, 'months')
+      .startOf('month')
+      .format('YYYY-MM-DD');
     const clientCodes = clients.map(client => client.client_code);
 
     // Fetch all relevant orders in a single query
     const orders = (await Order.find({
       client_code: { $in: clientCodes },
-      createdAt: { $gte: startDate, $lte: endDate },
+      download_date: { $gte: startDate, $lte: endDate },
     }).lean()) as unknown as OrderDataType[];
+
+    console.log('Orders:', orders, clientCodes, startDate, endDate);
 
     // Initialize result structure with all months
     const last12Months = Array.from({ length: 12 }, (_, i) =>
@@ -762,7 +768,7 @@ async function handleGetOrdersByMonth(req: NextRequest): Promise<{
         >,
         order,
       ) => {
-        const monthYear = moment(order.createdAt).format(
+        const monthYear = moment(order.download_date).format(
           DATE_FORMAT.MONTH_YEAR,
         );
 

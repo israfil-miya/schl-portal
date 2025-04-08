@@ -39,7 +39,11 @@ export type EmployeeDataType = EmployeeType & {
   readonly __v: number;
 };
 
-type EmployeeDocType = mongoose.Document & EmployeeType;
+type EmployeeDocType = mongoose.Document &
+  EmployeeType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 const ProvidentFundHistorySchema = new mongoose.Schema<ProvidentFundHistory>(
   {

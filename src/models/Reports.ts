@@ -38,7 +38,11 @@ export type ReportDataType = ReportType & {
   readonly __v: number;
 };
 
-export type ReportDocType = mongoose.Document & ReportType;
+export type ReportDocType = mongoose.Document &
+  ReportType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 // Create Report schema with type annotations for properties
 const ReportSchema = new mongoose.Schema<ReportDocType>(

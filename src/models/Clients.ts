@@ -24,7 +24,11 @@ export type ClientDataType = ClientType & {
   readonly __v: number;
 };
 
-type ClientDocType = mongoose.Document & ClientType;
+type ClientDocType = mongoose.Document &
+  ClientType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 const ClientSchema = new mongoose.Schema<ClientDocType>(
   {

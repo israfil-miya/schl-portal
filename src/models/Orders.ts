@@ -28,7 +28,11 @@ export type OrderDataType = OrderType & {
   readonly __v?: number;
 };
 
-type OrderDocType = mongoose.Document & OrderType;
+type OrderDocType = mongoose.Document &
+  OrderType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 const OrderSchema = new mongoose.Schema<OrderDocType>(
   {

@@ -268,13 +268,21 @@ const Table = () => {
             </table>
           ))}
       </div>
-      <style jsx>{`
-        .table td.fit,
-        .table th.fit {
-          white-space: nowrap;
-          width: 1%;
-        }
-      `}</style>
+      <style jsx>{``}</style>
+
+      <style jsx>
+        {`
+          .table td.fit,
+          .table th.fit {
+            white-space: nowrap;
+            width: 1%;
+          }
+          th,
+          td {
+            border: 1px solid #9ca3af;
+          }
+        `}
+      </style>
     </>
   );
 };

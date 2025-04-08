@@ -387,7 +387,7 @@ async function handleApproveResponse(data: {
         switch (approvalData.target_model) {
           case 'User':
             if (approvalData.action === 'create') {
-              resData = await User.create(approvalData.changes);
+              resData = await User.create(approvalData.new_data);
             } else if (approvalData.action === 'delete') {
               resData = await User.findByIdAndDelete(approvalData.object_id);
             }
@@ -408,7 +408,13 @@ async function handleApproveResponse(data: {
             } else if (approvalData.action === 'update') {
               resData = await Report.findByIdAndUpdate(
                 approvalData.object_id,
-                approvalData.changes,
+                approvalData.changes?.reduce<Record<string, any>>(
+                  (acc, change) => {
+                    acc[change.field] = change.newValue;
+                    return acc;
+                  },
+                  {},
+                ),
                 {
                   new: true,
                 },

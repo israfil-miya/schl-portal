@@ -6,6 +6,7 @@ export interface ApprovalType {
   action: 'create' | 'update' | 'delete';
   object_id?: mongoose.Types.ObjectId; // Not required for create requests
   changes?: Change[]; // Only needed for update operations
+  prev_data?: Record<string, any>; // Only needed for update operations
   new_data?: Record<string, any>; // Only needed for create operations
   deleted_data?: Record<string, any>; // Only needed for delete operations
   status: 'pending' | 'approved' | 'rejected';
@@ -20,7 +21,11 @@ export type ApprovalDataType = ApprovalType & {
   readonly __v: number;
 };
 
-type ApprovalDocType = mongoose.Document & ApprovalType;
+type ApprovalDocType = mongoose.Document &
+  ApprovalType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 const ApprovalSchema = new mongoose.Schema<ApprovalDocType>(
   {
@@ -40,6 +45,9 @@ const ApprovalSchema = new mongoose.Schema<ApprovalDocType>(
       refPath: 'target_model',
     },
     changes: {
+      type: Object,
+    },
+    prev_data: {
       type: Object,
     },
     new_data: {

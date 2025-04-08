@@ -15,7 +15,11 @@ export type InvoiceDataType = InvoiceType & {
   readonly __v: number;
 };
 
-type InvoiceDocType = mongoose.Document & InvoiceType;
+type InvoiceDocType = mongoose.Document &
+  InvoiceType & {
+    createdAt: mongoose.Date;
+    updatedAt: mongoose.Date;
+  };
 
 const InvoiceSchema = new mongoose.Schema<InvoiceDocType>(
   {

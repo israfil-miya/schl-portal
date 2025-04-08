@@ -390,11 +390,13 @@ const Table = () => {
             </table>
           ))}
       </div>
+
       <style jsx>
         {`
           th,
           td {
             padding: 2.5px 10px;
+            border: 1px solid #9ca3af;
           }
         `}
       </style>
