@@ -78,7 +78,7 @@ const options: HTMLReactParserOptions = {
         );
       }
 
-      // Add more custom replacements as needed
+      // we can add more custom replacements here as needed
     }
   },
 };
