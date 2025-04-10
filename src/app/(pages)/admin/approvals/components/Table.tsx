@@ -2,25 +2,38 @@
 
 import { fetchApi } from '@/lib/utils';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-// import { ApprovalDataType, validationSchema } from '../schema';
 import Badge from '@/components/Badge';
 import Pagination from '@/components/Pagination';
 import { ApprovalDataType } from '@/models/Approvals';
 import { formatTimestamp } from '@/utility/date';
-import { CircleCheckBig, CircleX } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleCheckBig,
+  CircleX,
+} from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'nextjs-toploader/app';
+import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import FilterButton from './Filter';
+
+interface PopulatedApprovalType
+  extends Omit<ApprovalDataType, 'req_by' | 'rev_by'> {
+  req_by: {
+    real_name: string;
+  };
+  rev_by: {
+    real_name: string;
+  };
+}
 
 type ApprovalsState = {
   pagination: {
     count: number;
     pageCount: number;
   };
-  items: ApprovalDataType[];
+  items: PopulatedApprovalType[];
 };
 
 const Table: React.FC = props => {
@@ -79,6 +92,7 @@ const Table: React.FC = props => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
+        console.log('response', response.data);
         setApprovals(response.data as ApprovalsState);
       } else {
         toast.error(response.data as string);
@@ -207,7 +221,7 @@ const Table: React.FC = props => {
     if (e.target.checked) {
       // If "Select All" is checked, select all rows
       const allIds = approvals?.items
-        ?.filter(item => item.checked_by === 'None')
+        ?.filter(item => item.status === 'pending')
         .map(item => String(item._id));
       setApprovalIds(allIds);
     } else {
@@ -351,16 +365,16 @@ const Table: React.FC = props => {
                         disabled={
                           approvals?.items?.length === 0 ||
                           approvals?.items?.filter(
-                            item => item.checked_by === 'None',
+                            item => item.status === 'pending',
                           ).length === 0
                         }
                         checked={
                           approvalIds.length ===
                             approvals?.items?.filter(
-                              item => item.checked_by === 'None',
+                              item => item.status === 'pending',
                             ).length &&
                           approvals?.items?.filter(
-                            item => item.checked_by === 'None',
+                            item => item.status === 'pending',
                           ).length !== 0
                         }
                         className="disabled:cursor-default w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded-md cursor-pointer"
@@ -384,7 +398,7 @@ const Table: React.FC = props => {
                     >
                       <div className="flex justify-center items-center h-full py-1">
                         <input
-                          disabled={approval.checked_by !== 'None'}
+                          disabled={approval.status !== 'pending'}
                           type="checkbox"
                           id={`checkbox_${String(approval._id)}`}
                           className="disabled:cursor-default w-5 h-5 text-blue-600 bg-gray-50 border-gray-300 rounded-md cursor-pointer"
@@ -395,13 +409,14 @@ const Table: React.FC = props => {
                         />
                       </div>
                     </td>
-                    <td className="text-wrap">{approval.req_by}</td>
+                    <td className="text-wrap">{approval.req_by.real_name}</td>
                     <td
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}
                     >
-                      {approval.checked_by && approval.checked_by !== 'None' ? (
-                        approval.is_rejected ? (
+                      {approval.status == 'approved' ||
+                      approval.status == 'rejected' ? (
+                        approval.status == 'rejected' ? (
                           <Badge
                             value={'Rejected'}
                             className="bg-red-600 text-white border-red-600"
@@ -423,7 +438,10 @@ const Table: React.FC = props => {
                       className="text-center"
                       style={{ verticalAlign: 'middle' }}
                     >
-                      <Badge value={approval.req_type} className="uppercase" />
+                      <Badge
+                        value={`${approval.target_model} ${approval.action}`}
+                        className="uppercase"
+                      />
                     </td>
                     <td className="text-wrap">
                       {formatTimestamp(approval.createdAt!).date}
@@ -436,7 +454,7 @@ const Table: React.FC = props => {
                     >
                       <div className="flex justify-center items-center h-full py-1">
                         <div className="flex gap-2">
-                          {approval.checked_by == 'None' ? (
+                          {approval.status == 'pending' ? (
                             <>
                               <button
                                 onClick={() =>
@@ -463,7 +481,7 @@ const Table: React.FC = props => {
                             <>
                               Checked by{' '}
                               <span className="font-semibold">
-                                {approval.checked_by}
+                                {approval.rev_by.real_name}
                               </span>{' '}
                               on{' '}
                               <span className="font-semibold">

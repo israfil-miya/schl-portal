@@ -11,7 +11,7 @@ export interface ApprovalType {
   deleted_data?: Record<string, any>; // Only needed for delete operations
   status: 'pending' | 'approved' | 'rejected';
   req_by: mongoose.Types.ObjectId;
-  rev_by?: mongoose.Types.ObjectId | null;
+  rev_by?: mongoose.Types.ObjectId | null; // The user who approved or rejected the request
 }
 
 export type ApprovalDataType = ApprovalType & {
