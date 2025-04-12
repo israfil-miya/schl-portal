@@ -156,8 +156,8 @@ const Table: React.FC = props => {
         },
         body: JSON.stringify({
           response: res,
-          checked_by: session?.user?.real_name,
-          id: req_id,
+          rev_by: session?.user?.db_id,
+          _id: req_id,
         }),
       };
 
@@ -192,8 +192,8 @@ const Table: React.FC = props => {
         },
         body: JSON.stringify({
           response: res,
-          checked_by: session?.user?.real_name,
-          approval_ids: approvalIds,
+          rev_by: session?.user?.db_id,
+          _ids: approvalIds,
         }),
       };
 
