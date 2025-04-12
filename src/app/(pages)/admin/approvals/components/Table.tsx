@@ -5,7 +5,7 @@ import { fetchApi } from '@/lib/utils';
 import Badge from '@/components/Badge';
 import Pagination from '@/components/Pagination';
 import { ApprovalDataType } from '@/models/Approvals';
-import { formatTimestamp } from '@/utility/date';
+import { formatDate, formatTime, formatTimestamp } from '@/utility/date';
 import {
   ChevronLeft,
   ChevronRight,
@@ -443,9 +443,9 @@ const Table: React.FC = props => {
                       />
                     </td>
                     <td className="text-wrap">
-                      {formatTimestamp(approval.createdAt!).date}
+                      {formatDate(approval.createdAt)}
                       {' | '}
-                      {formatTimestamp(approval.createdAt!).time}
+                      {formatTime(formatTimestamp(approval.createdAt!).time)}
                     </td>
                     <td
                       className="text-center"
@@ -453,7 +453,7 @@ const Table: React.FC = props => {
                     >
                       <div className="flex justify-center items-center h-full py-1">
                         <div className="flex gap-2">
-                          {approval.status == 'pending' ? (
+                          {approval.status == 'pending' && (
                             <>
                               <button
                                 onClick={() =>
@@ -475,31 +475,12 @@ const Table: React.FC = props => {
                               >
                                 <CircleX size={18} />
                               </button>
-                              <ViewButton
-                                approvalData={approval}
-                                loading={loading}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <ViewButton
-                                approvalData={approval}
-                                loading={loading}
-                              />
-                              Checked by{' '}
-                              <span className="font-semibold">
-                                {approval.rev_by.real_name}
-                              </span>{' '}
-                              on{' '}
-                              <span className="font-semibold">
-                                {formatTimestamp(approval.createdAt!).date}{' '}
-                              </span>{' '}
-                              at{' '}
-                              <span className="font-semibold">
-                                {formatTimestamp(approval.createdAt!).time}
-                              </span>
                             </>
                           )}
+                          <ViewButton
+                            approvalData={approval}
+                            loading={loading}
+                          />
                         </div>
                       </div>
                     </td>

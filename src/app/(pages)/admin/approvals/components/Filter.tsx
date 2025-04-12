@@ -32,7 +32,7 @@ import Select from 'react-select';
 export const reqTypeOptions = [
   { value: 'User Delete', label: 'User Delete' },
   { value: 'User Create', label: 'User Create' },
-  { value: 'Task Delete', label: 'Task Delete' },
+  { value: 'Order Delete', label: 'Task Delete' },
   { value: 'Client Delete', label: 'Client Delete' },
   { value: 'Report Delete', label: 'Report Delete' },
   { value: 'Employee Delete', label: 'Employee Delete' },

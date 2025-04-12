@@ -1,25 +1,16 @@
 'use client';
 
-import { Change } from '@/lib/utils';
+import Badge from '@/components/Badge';
+import { Change, cn } from '@/lib/utils';
+import { formatDate, formatTime, formatTimestamp } from '@/utility/date';
 import { initFlowbite } from 'flowbite';
-import {
-  AlertCircle,
-  Briefcase,
-  Building2,
-  ClipboardList,
-  Eye,
-  FileText,
-  Minus,
-  Plus,
-  User,
-  X,
-} from 'lucide-react';
+import { AlertCircle, Eye, InfoIcon, Minus, Plus, X } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { PopulatedApprovalType } from './Table';
 
 // Helper function to get entity name from target model
-function getEntityName(targetModel: string): string {
+function getModelName(targetModel: string): string {
   switch (targetModel) {
     case 'User':
       return 'User';
@@ -33,24 +24,6 @@ function getEntityName(targetModel: string): string {
       return 'Client';
     default:
       return 'Entity';
-  }
-}
-
-// Helper function to get entity icon from target model
-function getEntityIcon(targetModel: string) {
-  switch (targetModel) {
-    case 'User':
-      return <User className="h-5 w-5" />;
-    case 'Report':
-      return <FileText className="h-5 w-5" />;
-    case 'Employee':
-      return <Briefcase className="h-5 w-5" />;
-    case 'Order':
-      return <ClipboardList className="h-5 w-5" />;
-    case 'Client':
-      return <Building2 className="h-5 w-5" />;
-    default:
-      return <FileText className="h-5 w-5" />;
   }
 }
 
@@ -68,33 +41,33 @@ function getActionName(action: string): string {
   }
 }
 
-// Helper function to get action color from action type
-function getActionColor(action: string): string {
-  switch (action) {
-    case 'create':
-      return 'bg-green-50 text-green-700 border-green-200';
-    case 'delete':
-      return 'bg-red-50 text-red-700 border-red-200';
-    case 'update':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
-    default:
-      return '';
-  }
-}
-
 // Helper function to check if a value is an array
 function isArray(value: any): boolean {
   return Array.isArray(value);
 }
 
+// Helper function to get action color from action type
+function getActionColor(action: string): string {
+  switch (action) {
+    case 'create':
+      return 'bg-green-200 text-green-700 border-green-400';
+    case 'delete':
+      return 'bg-red-200 text-red-700 border-red-400';
+    case 'update':
+      return 'bg-blue-200 text-blue-700 border-blue-400';
+    default:
+      return '';
+  }
+}
+
 // Helper function to format field values for display
 function formatValue(value: any): string | React.ReactNode {
-  if (value === null || value === undefined) return '—';
+  if (value === null || value === undefined) return '-';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'number') return value.toString();
-  if (value === '') return '—';
+  if (value === '') return '-';
   if (Array.isArray(value)) {
-    if (value.length === 0) return 'Empty array';
+    if (value.length === 0) return '[]';
     return value.join(', ');
   }
   return value;
@@ -103,7 +76,7 @@ function formatValue(value: any): string | React.ReactNode {
 // Helper function to render array values
 function renderArrayValue(array: any[]): React.ReactNode {
   if (!array || array.length === 0)
-    return <span className="text-gray-500 italic">Empty array</span>;
+    return <span className="text-gray-500 italic">empty array</span>;
 
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -119,42 +92,18 @@ function renderArrayValue(array: any[]): React.ReactNode {
   );
 }
 
-// Helper function to render array changes
-function renderArrayChanges(change: Change) {
-  if (!('arrayChanges' in change)) return null;
+const baseZIndex = 50;
 
-  return (
-    <div className="mt-4 space-y-2">
-      {change.arrayChanges.added.length > 0 && (
-        <div className="flex items-center gap-1 text-sm text-green-600">
-          <Plus className="h-4 w-4" />
-          <span>{change.arrayChanges.added.length} item(s) added</span>
-        </div>
-      )}
-      {change.arrayChanges.removed.length > 0 && (
-        <div className="flex items-center gap-1 text-sm text-red-600">
-          <Minus className="h-4 w-4" />
-          <span>{change.arrayChanges.removed.length} item(s) removed</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface ApprovalRequestViewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface PropsType {
+  loading: boolean;
   approvalData: PopulatedApprovalType;
-  loading?: boolean;
+  className?: string;
 }
 
-export function ApprovalRequestViewModal({
-  isOpen,
-  onClose,
-  approvalData,
-  loading = false,
-}: ApprovalRequestViewModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
+const ViewButton: React.FC<PropsType> = props => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const popupRef = useRef<HTMLElement>(null);
+  const { approvalData } = props;
 
   // Determine if this is a create, edit, or delete operation
   const isCreate = approvalData.action === 'create';
@@ -162,76 +111,76 @@ export function ApprovalRequestViewModal({
   const isDelete = approvalData.action === 'delete';
 
   // Get entity name and action for display
-  const entityName = getEntityName(approvalData.target_model);
+  const modelName = getModelName(approvalData.target_model);
   const actionName = getActionName(approvalData.action);
-  const actionColor = getActionColor(approvalData.action);
-  const entityIcon = getEntityIcon(approvalData.target_model);
+
+  const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (
+      popupRef.current &&
+      !popupRef.current.contains(e.target as Node) &&
+      !popupRef.current.querySelector('input:focus, textarea:focus')
+    ) {
+      setIsOpen(false);
+    }
+  };
 
   useEffect(() => {
     initFlowbite();
   }, []);
 
-  const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (
-      modalRef.current &&
-      !modalRef.current.contains(e.target as Node) &&
-      !modalRef.current.querySelector('input:focus, textarea:focus') &&
-      !modalRef.current.querySelector('button:focus')
-    ) {
-      onClose();
-    }
-  };
-
   return (
-    <section
-      onClick={handleClickOutside}
-      className={`fixed z-50 inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'}`}
-    >
-      <div
-        ref={modalRef}
-        onClick={e => e.stopPropagation()}
-        className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-sm shadow relative md:w-[80vw] lg:w-[70vw] max-h-[90vh] transition-all duration-300`}
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        type="button"
+        className={cn(
+          `rounded-md bg-yellow-600 hover:opacity-90 hover:ring-2 hover:ring-yellow-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center`,
+          props.className,
+        )}
       >
-        {/* Modal Header */}
-        <div
-          className={`flex items-center justify-between px-6 py-4 border-b ${actionColor}`}
+        <Eye size={18} />
+      </button>
+
+      <section
+        onClick={handleClickOutside}
+        className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
+      >
+        <article
+          ref={popupRef}
+          onClick={e => e.stopPropagation()}
+          className={`${isOpen ? 'scale-100 opacity-100' : 'scale-125 opacity-0'} bg-white rounded-lg lg:w-[35vw] md:w-[70vw] sm:w-[80vw] shadow relative`}
         >
-          <div className="flex items-center gap-3">
-            {entityIcon}
-            <div>
-              <h3 className="text-lg font-semibold">
-                {actionName} {entityName} Request
-              </h3>
-              <p className="text-sm text-gray-600">
+          <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
+            <h3 className="text-gray-900 text-base flex-col text-left flex lg:text-lg font-semibold">
+              <p className="font-semibold uppercase">
+                {modelName} {actionName} Request
+              </p>
+              <p className="text-xs text-gray-400">
                 Requested by{' '}
-                <span className="font-medium">
+                <span className="font-bold">
                   {approvalData.req_by.real_name}
                 </span>{' '}
-                • {new Date(approvalData.createdAt).toLocaleString()}
+                • {formatDate(approvalData.createdAt)}
               </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            type="button"
-            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
-          >
-            <X size={18} />
-          </button>
-        </div>
+            </h3>
 
-        {/* Modal Body */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-130px)]">
-          <div className="space-y-6">
-            {/* Request Details */}
+            <button
+              onClick={() => setIsOpen(false)}
+              type="button"
+              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center "
+            >
+              <X size={18} />
+            </button>
+          </header>
+          <div className="overflow-y-scroll max-h-[70vh] p-4">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-              <div>
+              <div className="flex flex-col items-start">
                 <h4 className="text-xs uppercase font-medium text-gray-500 mb-1">
                   Request ID
                 </h4>
                 <p className="text-sm">{approvalData._id.toString()}</p>
               </div>
-              <div>
+              <div className="flex flex-col items-start">
                 <h4 className="text-xs uppercase font-medium text-gray-500 mb-1">
                   Entity ID
                 </h4>
@@ -239,32 +188,56 @@ export function ApprovalRequestViewModal({
                   {approvalData.object_id?.toString() || 'New Entity'}
                 </p>
               </div>
-              <div>
+              <div className="flex flex-col items-start">
                 <h4 className="text-xs uppercase font-medium text-gray-500 mb-1">
                   Status
                 </h4>
-                <span
-                  className={
-                    approvalData.status === 'pending'
-                      ? 'bg-amber-100 text-amber-700 border border-amber-200 px-2 py-1 rounded-md text-xs font-medium'
-                      : approvalData.status === 'approved'
-                        ? 'bg-green-100 text-green-700 border border-green-200 px-2 py-1 rounded-md text-xs font-medium'
-                        : 'bg-red-100 text-red-700 border border-red-200 px-2 py-1 rounded-md text-xs font-medium'
-                  }
-                >
-                  {approvalData.status.toUpperCase()}
-                </span>
+                <>
+                  {approvalData.status === 'pending' ? (
+                    <Badge
+                      value={approvalData.status.toUpperCase()}
+                      className={`uppercase bg-amber-600 text-white border-amber-600`}
+                    />
+                  ) : approvalData.status === 'approved' ? (
+                    <Badge
+                      value={approvalData.status.toUpperCase()}
+                      className={`uppercase bg-green-600 text-white border-green-600`}
+                    />
+                  ) : (
+                    <Badge
+                      value={approvalData.status.toUpperCase()}
+                      className={`uppercase bg-red-600 text-white border-red-600`}
+                    />
+                  )}
+                </>
               </div>
-              <div>
+              <div className="flex flex-col items-start">
                 <h4 className="text-xs uppercase font-medium text-gray-500 mb-1">
                   Request Type
                 </h4>
-                <span
-                  className={`px-2 py-1 rounded-md text-xs font-medium ${actionColor}`}
-                >
-                  {approvalData.target_model}{' '}
-                  {approvalData.action.toUpperCase()}
-                </span>
+                <>
+                  {isUpdate ? (
+                    <Badge
+                      value={`${approvalData.target_model} ${approvalData.action}`}
+                      className={`uppercase bg-blue-600 text-white border-blue-600`}
+                    />
+                  ) : isCreate ? (
+                    <Badge
+                      value={`${approvalData.target_model} ${approvalData.action}`}
+                      className={`uppercase bg-green-600 text-gray-900 border-green-600`}
+                    />
+                  ) : isDelete ? (
+                    <Badge
+                      value={`${approvalData.target_model} ${approvalData.action}`}
+                      className={`uppercase bg-red-600 text-white border-red-600`}
+                    />
+                  ) : (
+                    <Badge
+                      value={`${approvalData.target_model} ${approvalData.action}`}
+                      className={`uppercase bg-amber-600 text-white border-amber-600`}
+                    />
+                  )}
+                </>
               </div>
             </div>
 
@@ -273,12 +246,17 @@ export function ApprovalRequestViewModal({
             {/* Update Request Content */}
             {isUpdate && approvalData.changes && (
               <div className="space-y-4">
-                <h3 className="text-base font-medium">Changes Requested</h3>
+                <div className="flex items-center gap-2">
+                  <InfoIcon className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-base font-medium">
+                    Changes requested in {modelName}
+                  </h3>
+                </div>
 
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-                  <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                      <tr>
+                <div className="table-responsive text-md">
+                  <table className="table table-bordered text-left">
+                    <thead>
+                      <tr className="bg-gray-50 text-nowrap">
                         <th scope="col" className="px-6 py-3 w-1/3">
                           Field
                         </th>
@@ -292,10 +270,7 @@ export function ApprovalRequestViewModal({
                     </thead>
                     <tbody>
                       {approvalData.changes.map((change, index) => (
-                        <tr
-                          key={index}
-                          className="bg-white border-b hover:bg-gray-50"
-                        >
+                        <tr key={index}>
                           <td className="px-6 py-4 font-medium text-gray-900">
                             <div className="flex items-center gap-2">
                               {change.field}
@@ -328,7 +303,7 @@ export function ApprovalRequestViewModal({
                           <td className="px-6 py-4">
                             {isArray(change.newValue) ? (
                               <div className="space-y-2">
-                                {renderArrayValue(change.newValue)}
+                                {renderArrayValue(change.newValue as any[])}
                                 {'arrayChanges' in change &&
                                   change.arrayChanges.added.length > 0 && (
                                     <div className="mt-2 text-xs text-green-600 flex items-center gap-1">
@@ -358,7 +333,7 @@ export function ApprovalRequestViewModal({
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-blue-500" />
                   <h3 className="text-base font-medium">
-                    New {entityName} Details
+                    New {modelName} details
                   </h3>
                 </div>
 
@@ -408,7 +383,7 @@ export function ApprovalRequestViewModal({
                 <div className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-red-500" />
                   <h3 className="text-base font-medium">
-                    {entityName} to be Deleted
+                    {modelName} to be Deleted
                   </h3>
                 </div>
 
@@ -457,48 +432,42 @@ export function ApprovalRequestViewModal({
               </div>
             )}
           </div>
-        </div>
-
-        {/* Modal Footer */}
-        <div className="flex items-center justify-end p-4 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="rounded-md bg-gray-600 text-white hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
-            type="button"
-            disabled={loading}
+          <footer
+            className={cn(
+              'flex items-center px-4 py-2 border-t justify-between gap-6 border-gray-200 rounded-b',
+              approvalData.status == 'pending' && 'justify-end',
+            )}
           >
-            Close
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export default function ViewButton({
-  loading,
-  approvalData,
-}: {
-  loading: boolean;
-  approvalData: PopulatedApprovalType;
-}) {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-
-  return (
-    <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="rounded-md bg-yellow-600 hover:opacity-90 hover:ring-2 hover:ring-yellow-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-      >
-        <Eye size={18} />
-      </button>
-
-      <ApprovalRequestViewModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        approvalData={approvalData}
-        loading={loading}
-      />
+            {approvalData.status !== 'pending' && (
+              <div className="flex flex-wrap justify-start items-center me-auto text-gray-400">
+                <span>Checked by </span>
+                <span className="font-semibold mx-1">
+                  {approvalData.rev_by.real_name}
+                </span>
+                <span>on </span>
+                <span className="font-semibold mx-1">
+                  {formatDate(approvalData.createdAt)}
+                </span>
+                <span>at </span>
+                <span className="font-semibold ms-1">
+                  {formatTime(formatTimestamp(approvalData.createdAt!).time)}
+                </span>
+              </div>
+            )}
+            <div className="space-x-2 justify-end">
+              <button
+                className="rounded-md bg-gray-600 text-white hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
+                type="button"
+                onClick={() => setIsOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </footer>
+        </article>
+      </section>
     </>
   );
-}
+};
+
+export default ViewButton;
