@@ -396,7 +396,7 @@ const Table = () => {
           th,
           td {
             padding: 2.5px 10px;
-            border: 1px solid #9ca3af;
+            // border: 1px solid #9ca3af;
           }
         `}
       </style>
