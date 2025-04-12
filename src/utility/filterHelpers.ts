@@ -21,12 +21,6 @@ import {
 } from '@/app/api/report/route';
 
 import {
-  Query as approval_Query,
-  RegexFields as approval_RegexFields,
-  RegexQuery as approval_RegexQuery,
-} from '@/app/api/approval/route';
-
-import {
   Query as notice_Query,
   RegexFields as notice_RegexFields,
   RegexQuery as notice_RegexQuery,
@@ -39,21 +33,18 @@ type RegexQuery =
   | client_RegexQuery
   | order_RegexQuery
   | invoice_RegexQuery
-  | approval_RegexQuery
   | notice_RegexQuery;
 type Query =
   | report_Query
   | client_Query
   | order_Query
   | invoice_Query
-  | approval_Query
   | notice_Query;
 type RegexFields =
   | report_RegexFields
   | client_RegexFields
   | order_RegexFields
   | invoice_RegexFields
-  | approval_RegexFields
   | notice_RegexFields;
 type BooleanFields = report_BooleanFields;
 

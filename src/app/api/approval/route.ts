@@ -6,7 +6,6 @@ import Order from '@/models/Orders';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
 import { toISODate } from '@/utility/date';
-import { addRegexField } from '@/utility/filterHelpers';
 import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
