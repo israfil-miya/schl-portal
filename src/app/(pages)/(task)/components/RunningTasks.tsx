@@ -110,13 +110,13 @@ function RunningTasks() {
           th,
           td {
             padding: 3px 6px;
-            border: 1px solid #9ca3af;
+            // border: 1px solid #9ca3af;
           }
 
-          .table-bordered td,
-          .table-bordered th {
-            border: 1px solid #9ca3af;
-          }
+          // .table-bordered td,
+          // .table-bordered th {
+          //   border: 1px solid #9ca3af;
+          // }
         `}
       </style>
     </>

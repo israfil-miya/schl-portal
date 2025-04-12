@@ -60,7 +60,7 @@ const ExtendableTd: React.FC<PropsType> = ({
       <style jsx>{`
         td {
           padding: 3px 6px;
-          border: 1px solid #9ca3af;
+          // border: 1px solid #9ca3af;
         }
       `}</style>
     </>
