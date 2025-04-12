@@ -1,7 +1,6 @@
 'use client';
 
 import { Change } from '@/lib/utils';
-import type { ApprovalDataType } from '@/models/Approvals';
 import { initFlowbite } from 'flowbite';
 import {
   AlertCircle,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import type { PopulatedApprovalType } from './Table';
 
 // Helper function to get entity name from target model
 function getEntityName(targetModel: string): string {
@@ -144,7 +144,7 @@ function renderArrayChanges(change: Change) {
 interface ApprovalRequestViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  approvalData: ApprovalDataType;
+  approvalData: PopulatedApprovalType;
   loading?: boolean;
 }
 
@@ -205,7 +205,7 @@ export function ApprovalRequestViewModal({
               <p className="text-sm text-gray-600">
                 Requested by{' '}
                 <span className="font-medium">
-                  {approvalData.req_by.toString()}
+                  {approvalData.req_by.real_name}
                 </span>{' '}
                 • {new Date(approvalData.createdAt).toLocaleString()}
               </p>
@@ -480,7 +480,7 @@ export default function ViewButton({
   approvalData,
 }: {
   loading: boolean;
-  approvalData: ApprovalDataType;
+  approvalData: PopulatedApprovalType;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 

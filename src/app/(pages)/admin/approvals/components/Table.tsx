@@ -17,8 +17,9 @@ import { useRouter } from 'nextjs-toploader/app';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import FilterButton from './Filter';
+import ViewButton from './View';
 
-interface PopulatedApprovalType
+export interface PopulatedApprovalType
   extends Omit<ApprovalDataType, 'req_by' | 'rev_by'> {
   req_by: {
     real_name: string;
@@ -121,9 +122,7 @@ const Table: React.FC = props => {
           page: !isFiltered ? 1 : page,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...filters,
-        }),
+        body: JSON.stringify(filters),
       };
 
       let response = await fetchApi(url, options);
@@ -476,9 +475,17 @@ const Table: React.FC = props => {
                               >
                                 <CircleX size={18} />
                               </button>
+                              <ViewButton
+                                approvalData={approval}
+                                loading={loading}
+                              />
                             </>
                           ) : (
                             <>
+                              <ViewButton
+                                approvalData={approval}
+                                loading={loading}
+                              />
                               Checked by{' '}
                               <span className="font-semibold">
                                 {approval.rev_by.real_name}

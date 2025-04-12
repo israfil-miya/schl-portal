@@ -6,6 +6,7 @@ import Order from '@/models/Orders';
 import Report from '@/models/Reports';
 import User from '@/models/Users';
 import { toISODate } from '@/utility/date';
+import { createRegexQuery } from '@/utility/filterHelpers';
 import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
@@ -32,7 +33,7 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
     const filters = await req.json();
     const {
       reqBy,
-      action,
+      reqType,
       approvedCheck,
       rejectedCheck,
       waitingCheck,
@@ -43,7 +44,9 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
     // Find user ID for reqBy filter (since reqBy is always a string)
     let reqById: mongoose.Types.ObjectId | null = null;
     if (reqBy) {
-      const user = (await User.findOne({ real_name: reqBy }).select('_id')) as {
+      const user = (await User.findOne({
+        real_name: createRegexQuery(reqBy),
+      }).select('_id')) as {
         _id: mongoose.Types.ObjectId;
       } | null;
       reqById = user ? user._id : null;
@@ -78,12 +81,11 @@ async function handleGetAllApprovals(req: NextRequest): Promise<{
       query.$or = orConditions;
     }
 
-    if (action) {
-      if (Array.isArray(action)) {
-        query.action = { $in: action };
-      } else {
-        query.action = action;
-      }
+    if (reqType) {
+      const action = reqType.split(' ')[1].toLowerCase();
+      const model = reqType.split(' ')[0];
+      query.target_model = model;
+      query.action = action;
     }
 
     if (reqBy && reqById) {
