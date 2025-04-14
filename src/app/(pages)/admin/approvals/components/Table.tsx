@@ -413,23 +413,20 @@ const Table: React.FC = props => {
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}
                     >
-                      {approval.status == 'approved' ||
-                      approval.status == 'rejected' ? (
-                        approval.status == 'rejected' ? (
-                          <Badge
-                            value={'Rejected'}
-                            className="bg-red-600 text-white border-red-600"
-                          />
-                        ) : (
-                          <Badge
-                            value={'Approved'}
-                            className="bg-green-600 text-white border-green-600"
-                          />
-                        )
+                      {approval.status == 'rejected' ? (
+                        <Badge
+                          value={'Rejected'}
+                          className="bg-red-600 text-white border-red-600"
+                        />
+                      ) : approval.status == 'approved' ? (
+                        <Badge
+                          value={'Approved'}
+                          className="bg-green-600 text-white border-green-600"
+                        />
                       ) : (
                         <Badge
-                          value={'Waiting'}
-                          className="bg-gray-600 text-white border-gray-600"
+                          value={'Pending'}
+                          className="bg-amber-600 text-white border-amber-600"
                         />
                       )}
                     </td>
