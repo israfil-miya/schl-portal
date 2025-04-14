@@ -46,20 +46,6 @@ function isArray(value: any): boolean {
   return Array.isArray(value);
 }
 
-// Helper function to get action color from action type
-function getActionColor(action: string): string {
-  switch (action) {
-    case 'create':
-      return 'bg-green-200 text-green-700 border-green-400';
-    case 'delete':
-      return 'bg-red-200 text-red-700 border-red-400';
-    case 'update':
-      return 'bg-blue-200 text-blue-700 border-blue-400';
-    default:
-      return '';
-  }
-}
-
 // Helper function to format field values for display
 function formatValue(value: any): string | React.ReactNode {
   if (value === null || value === undefined) return '-';
@@ -90,6 +76,11 @@ function renderArrayValue(array: any[]): React.ReactNode {
       ))}
     </div>
   );
+}
+
+function sanitizeData(data: Record<string, any>): [string, any][] {
+  const blacklist = ['createdAt', 'updatedAt', '__v', '_id'];
+  return Object.entries(data).filter(([field]) => !blacklist.includes(field));
 }
 
 const baseZIndex = 50;
@@ -254,9 +245,9 @@ const ViewButton: React.FC<PropsType> = props => {
                 </div>
 
                 <div className="table-responsive text-md">
-                  <table className="table table-bordered text-left">
+                  <table className="table table-bordered text-left text-wrap">
                     <thead>
-                      <tr className="bg-gray-50 text-nowrap">
+                      <tr className="bg-gray-50 text-nowrap text-sm">
                         <th scope="col" className="px-6 py-3 w-1/3">
                           Field
                         </th>
@@ -270,15 +261,15 @@ const ViewButton: React.FC<PropsType> = props => {
                     </thead>
                     <tbody>
                       {approvalData.changes.map((change, index) => (
-                        <tr key={index}>
+                        <tr key={index} className="table-light">
                           <td className="px-6 py-4 font-medium text-gray-900">
                             <div className="flex items-center gap-2">
                               {change.field}
-                              {isArray(change.oldValue) && (
+                              {/* {isArray(change.oldValue) && (
                                 <span className="bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md text-xs">
                                   Array
                                 </span>
-                              )}
+                              )} */}
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -337,10 +328,10 @@ const ViewButton: React.FC<PropsType> = props => {
                   </h3>
                 </div>
 
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-                  <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                      <tr>
+                <div className="table-responsive text-md">
+                  <table className="table table-bordered text-left text-wrap">
+                    <thead>
+                      <tr className="bg-gray-50 text-nowrap text-sm">
                         <th scope="col" className="px-6 py-3 w-1/3">
                           Field
                         </th>
@@ -352,10 +343,7 @@ const ViewButton: React.FC<PropsType> = props => {
                     <tbody>
                       {Object.entries(approvalData.new_data).map(
                         ([field, value]) => (
-                          <tr
-                            key={field}
-                            className="bg-white border-b hover:bg-gray-50"
-                          >
+                          <tr key={field} className="table-light">
                             <td className="px-6 py-4 font-medium text-gray-900">
                               {field}
                             </td>
@@ -396,10 +384,10 @@ const ViewButton: React.FC<PropsType> = props => {
                   </div>
                 </div>
 
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-                  <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                      <tr>
+                <div className="table-responsive text-md">
+                  <table className="table table-bordered text-left text-wrap">
+                    <thead>
+                      <tr className="bg-gray-50 text-nowrap text-sm">
                         <th scope="col" className="px-6 py-3 w-1/3">
                           Field
                         </th>
@@ -409,12 +397,9 @@ const ViewButton: React.FC<PropsType> = props => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(approvalData.deleted_data).map(
+                      {sanitizeData(approvalData.deleted_data).map(
                         ([field, value]) => (
-                          <tr
-                            key={field}
-                            className="bg-white border-b hover:bg-gray-50"
-                          >
+                          <tr key={field} className="table-light">
                             <td className="px-6 py-4 font-medium text-gray-900">
                               {field}
                             </td>
