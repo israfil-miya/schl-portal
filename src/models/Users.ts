@@ -5,7 +5,7 @@ export interface UserType {
   provided_name: string | null;
   name: string;
   password: string;
-  role: string;
+  role_id: mongoose.Schema.Types.ObjectId;
   comment: string;
 }
 
@@ -25,7 +25,12 @@ const UserSchema = new mongoose.Schema<UserDocType>({
   real_name: { type: String, required: [true, 'Real name is not given'] },
   provided_name: { type: String, default: null },
   password: { type: String, required: [true, 'Password is not given'] },
-  role: { type: String, required: [true, 'Role is not given'] },
+  // role: { type: String, required: [true, 'Role is not given'] },
+  role_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role',
+    required: [true, 'Role has not been assigned'],
+  },
   comment: { type: String },
 });
 

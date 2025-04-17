@@ -105,10 +105,8 @@ const ReportSchema = new mongoose.Schema<ReportDocType>(
   },
 );
 
-// Define Report model based on schema, using generics for type safety
 const Report =
   (mongoose.models.Report as mongoose.Model<ReportDocType>) ||
   mongoose.model<ReportDocType>('Report', ReportSchema);
 
-// Export the Report model
 export default Report;

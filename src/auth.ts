@@ -1,14 +1,14 @@
+import mongoose from 'mongoose';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
-const BASE_URL: string =
-  process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const BASE_URL: string = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 export interface UserSessionType {
   db_id: string;
   real_name: string;
   cred_name: string;
-  role: string;
+  role_id: mongoose.Schema.Types.ObjectId;
 }
 
 async function getUser(
@@ -31,7 +31,7 @@ async function getUser(
       db_id: userData._id,
       real_name: userData.real_name,
       cred_name: userData.name,
-      role: userData.role,
+      role_id: userData.role_id,
     };
 
     console.log(user);

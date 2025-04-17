@@ -13,7 +13,7 @@ declare module 'next-auth' {
     db_id: string;
     real_name: string | null;
     cred_name: string;
-    role: string;
+    role_id: mongoose.Schema.Types.ObjectId;
   }
 }
 
@@ -23,6 +23,6 @@ declare module 'next-auth/jwt' {
     db_id: string;
     real_name: string | null;
     cred_name: string;
-    role: string;
+    role_id: mongoose.Schema.Types.ObjectId;
   }
 }
