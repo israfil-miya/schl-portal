@@ -6,9 +6,11 @@ const BASE_URL: string = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 export interface UserSessionType {
   db_id: string;
-  real_name: string;
+  real_name: string | null;
   cred_name: string;
-  role_id: mongoose.Schema.Types.ObjectId;
+  permissions: string[];
+  role: string;
+  db_role_id: string;
 }
 
 async function getUser(
@@ -31,10 +33,10 @@ async function getUser(
       db_id: userData._id,
       real_name: userData.real_name,
       cred_name: userData.name,
-      role_id: userData.role_id,
+      permissions: userData.role_id.permissions || [],
+      role: userData.role_id.name,
+      db_role_id: userData.role_id._id,
     };
-
-    console.log(user);
 
     return user;
   } catch (e) {

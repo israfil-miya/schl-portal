@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import Role from './Roles';
 
 export interface UserType {
   real_name: string;
@@ -14,7 +15,7 @@ export type UserDataType = UserType & {
   readonly __v: number;
 };
 
-type UserDocType = mongoose.Document & UserType;
+export type UserDocType = mongoose.Document & UserType;
 
 const UserSchema = new mongoose.Schema<UserDocType>({
   name: {
@@ -28,7 +29,7 @@ const UserSchema = new mongoose.Schema<UserDocType>({
   // role: { type: String, required: [true, 'Role is not given'] },
   role_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Role',
+    ref: Role.modelName,
     required: [true, 'Role has not been assigned'],
   },
   comment: { type: String },

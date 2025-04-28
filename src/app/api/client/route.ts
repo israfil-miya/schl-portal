@@ -1,14 +1,6 @@
 import { dbConnect, getQuery } from '@/lib/utils';
 import Client, { ClientDataType } from '@/models/Clients';
-import Report from '@/models/Reports';
-import {
-  addBooleanField,
-  addIfDefined,
-  addRegexField,
-  createRegexQuery,
-} from '@/utility/filterHelpers';
-import moment from 'moment-timezone';
-import mongoose from 'mongoose';
+import { addIfDefined, createRegexQuery } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 dbConnect();

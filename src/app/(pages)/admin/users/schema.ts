@@ -13,10 +13,11 @@ export const validationSchema = z
     password: z
       .string({ invalid_type_error: "Password can't be empty" })
       .min(1, "Password can't be empty"),
-    role: z.enum(['super', 'admin', 'marketer', 'manager', 'user'], {
-      message: "Role can't be empty",
-    }),
     comment: z.string().optional(),
+    role_id: z.string().refine(val => {
+      return mongoose.Types.ObjectId.isValid(val);
+    }),
+
     _id: z.optional(
       z.string().refine(val => {
         return mongoose.Types.ObjectId.isValid(val);
@@ -25,10 +26,13 @@ export const validationSchema = z
     createdAt: z.union([z.date(), z.string()]).optional(),
     updatedAt: z.union([z.date(), z.string()]).optional(),
     __v: z.number().optional(),
+
+    role: z.string().optional(),
+    permissions: z.array(z.string()).optional(),
   })
   .superRefine((data, ctx) => {
     if (
-      data.role === 'marketer' &&
+      data.permissions?.includes('login:crm') &&
       (!data.provided_name || data.provided_name.trim() === '')
     ) {
       ctx.addIssue({

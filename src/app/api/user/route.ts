@@ -1,8 +1,10 @@
 import { auth } from '@/auth';
 import { dbConnect, getQuery } from '@/lib/utils';
-import User, { UserDataType } from '@/models/Users';
+import Role from '@/models/Roles';
+import User, { UserDataType, UserDocType } from '@/models/Users';
 import { addIfDefined } from '@/utility/filterHelpers';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 dbConnect();
@@ -17,6 +19,13 @@ export interface Query {
   $or?: { [key: string]: RegexQuery }[];
 }
 
+interface PopulatedUser extends Omit<UserDocType, 'role_id'> {
+  role_id: {
+    name: string;
+    permissions: string[];
+  };
+}
+
 async function handleLogin(req: NextRequest): Promise<{
   data: string | Object;
   status: number;
@@ -26,15 +35,20 @@ async function handleLogin(req: NextRequest): Promise<{
   const password = Headers.get('password')?.trim();
 
   try {
-    const userData = await User.findOne({ name: username, password: password });
+    // find and populate role_id
+    const userData = await User.findOne({ name: username, password: password })
+      .populate('role_id', 'name permissions')
+      .lean<PopulatedUser>()
+      .exec();
 
     if (userData) {
-      if (userData.role === 'marketer') {
+      if (userData.role_id.permissions.includes('login:portal') === false) {
         return {
-          data: 'You are not authorized to login here, You may login at https://crm.studioclickhouse.com/',
+          data: 'You are not authorized to login here',
           status: 400,
         };
       }
+
       return { data: userData, status: 200 };
     } else {
       return { data: 'Invalid username or password', status: 400 };
