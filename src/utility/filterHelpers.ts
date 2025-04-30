@@ -25,6 +25,7 @@ import {
   RegexFields as notice_RegexFields,
   RegexQuery as notice_RegexQuery,
 } from '@/app/api/notice/route';
+import { Query as role_Query } from '@/app/api/roles/handlers/getAllRoles';
 
 import { escapeRegExp } from 'lodash';
 
@@ -39,7 +40,8 @@ type Query =
   | client_Query
   | order_Query
   | invoice_Query
-  | notice_Query;
+  | notice_Query
+  | role_Query;
 type RegexFields =
   | report_RegexFields
   | client_RegexFields

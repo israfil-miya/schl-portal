@@ -18,7 +18,9 @@ const Cards = () => {
         onClick={() =>
           router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/trial-clients')
         }
-        icon={<FlaskConical size={32} className="stroke-primary" />}
+        icon={
+          <FlaskConical size={32} className="text-primary stroke-primary" />
+        }
       />
       <Card
         title="Pending Prospects"
@@ -28,7 +30,7 @@ const Cards = () => {
             process.env.NEXT_PUBLIC_BASE_URL + '/crm/pending-prospects',
           )
         }
-        icon={<CirclePause size={32} className="stroke-primary" />}
+        icon={<CirclePause size={32} className="text-primary stroke-primary" />}
       />
       {/* Here leads doesn't actually mean leads, it shows call reports with high conversion potential. in short, prospects */}
       <Card
@@ -37,7 +39,7 @@ const Cards = () => {
         onClick={() =>
           router.push(process.env.NEXT_PUBLIC_BASE_URL + '/crm/potential-leads')
         }
-        icon={<Lightbulb size={32} className="stroke-primary" />}
+        icon={<Lightbulb size={32} className="text-primary stroke-primary" />}
       />
       <Card
         title="Client Approvals"
@@ -47,7 +49,7 @@ const Cards = () => {
             process.env.NEXT_PUBLIC_BASE_URL + '/crm/client-approvals',
           )
         }
-        icon={<Signature size={32} className="stroke-primary" />}
+        icon={<Signature size={32} className="text-primary stroke-primary" />}
       />
     </div>
   );
