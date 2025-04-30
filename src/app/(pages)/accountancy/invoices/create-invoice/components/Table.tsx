@@ -103,6 +103,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
         },
         body: JSON.stringify({
           ...filters,
+          type: 'general',
         }),
       };
 
