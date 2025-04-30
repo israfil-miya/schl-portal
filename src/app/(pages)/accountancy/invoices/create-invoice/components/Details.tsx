@@ -255,6 +255,7 @@ const Details: React.FC<DetailsProps> = props => {
         },
         body: JSON.stringify({
           ...props.filters,
+          type: 'general',
         }),
         cache: 'no-store',
       };
