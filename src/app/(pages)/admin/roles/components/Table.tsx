@@ -130,31 +130,29 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
   async function deleteRole(roleData: RoleDataType) {
     try {
       let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/role?action=delete-role';
       let options: {} = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          target_model: 'User',
-          action: 'delete',
-          object_id: userData._id,
-          deleted_data: userData,
-          req_by: session?.role.db_id,
+          _id: roleData._id,
         }),
       };
 
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        toast.success('Request sent for approval');
+        toast.success('Deleted the role successfully');
+        if (!isFiltered) await getAllRoles();
+        else await getAllRolesFiltered();
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error(error);
-      toast.error('An error occurred while sending request for approval');
+      toast.error('An error occurred while deleting the role');
     }
     return;
   }
@@ -213,14 +211,14 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
   // }
 
   useEffect(() => {
-    getAllRules();
+    getAllRoles();
   }, []);
 
   useEffect(() => {
     if (prevPage.current !== 1 || page > 1) {
       if (roles?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllRules();
-      else getAllRulesFiltered();
+      if (!isFiltered) getAllRoles();
+      else getAllRolesFiltered();
     }
     prevPage.current = page;
   }, [page]);
@@ -229,7 +227,7 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
     if (roles?.pagination?.pageCount !== undefined) {
       setPage(1);
       if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllRulesFiltered();
+        if (!isFiltered) getAllRolesFiltered();
       }
       if (roles) setPageCount(roles?.pagination?.pageCount);
       prevPageCount.current = roles?.pagination?.pageCount;
@@ -243,8 +241,8 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllRules();
-    else getAllRulesFiltered();
+    if (!isFiltered) getAllRoles();
+    else getAllRolesFiltered();
   }, [itemPerPage]);
 
   return (
@@ -280,13 +278,13 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
             <option value={50}>50</option>
             <option value={100}>100</option>
           </select>
-          {/* <FilterButton
+          <FilterButton
             loading={loading}
-            submitHandler={getAllRulesFiltered}
+            submitHandler={getAllRolesFiltered}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
-          /> */}
+          />
         </div>
       </div>
 
@@ -321,7 +319,7 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
                         <div className="flex gap-2">
                           <DeleteButton
                             roleData={role}
-                            submitHandler={deleteUser}
+                            submitHandler={deleteRole}
                           />
 
                           {/* <EditButton

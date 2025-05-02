@@ -61,8 +61,8 @@ const Details: React.FC<DetailsProps> = props => {
   const [vendor, setVendor] = useState({
     companyName: 'Studio Click House Ltd.',
     contactPerson: 'Raiyan Abrar',
-    streetAddress: 'Tengra Road, Ma HolyCity Tower, Level 2',
-    city: 'Demra, Dhaka-1361, Bangladesh',
+    companyAddress:
+      'Maa Holycity Tower, Tengra road, Sarulia, Demra, Dhaka-1361, Dhaka, Bangladesh',
     contactNumber: '+46855924212, +8801819727117',
     email: 'info@studioclickhouse.com',
   });
@@ -128,8 +128,7 @@ const Details: React.FC<DetailsProps> = props => {
         vendor: {
           company_name: vendor.companyName,
           contact_person: vendor.contactPerson,
-          street_address: vendor.streetAddress,
-          city: vendor.city,
+          address: vendor.companyAddress,
           contact_number: vendor.contactNumber,
           email: vendor.email,
         },
@@ -628,38 +627,21 @@ const Details: React.FC<DetailsProps> = props => {
                       placeholder="Enter contact number"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label
-                      htmlFor="vendorStreetAddress"
+                      htmlFor="companyAddress"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Street Address
+                      Company Address
                     </label>
-                    <input
-                      id="vendorStreetAddress"
-                      name="streetAddress"
+                    <textarea
+                      id="vendorCompanyAddress"
+                      rows={3}
+                      name="companyAddress"
                       onChange={handleChangeVendor}
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      value={vendor.streetAddress}
-                      type="text"
-                      placeholder="Enter street address"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="vendorCity"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      City
-                    </label>
-                    <input
-                      id="vendorCity"
-                      name="city"
-                      onChange={handleChangeVendor}
-                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      value={vendor.city}
-                      type="text"
-                      placeholder="Enter city name"
+                      value={vendor.companyAddress}
+                      placeholder="Enter company address"
                     />
                   </div>
                 </div>

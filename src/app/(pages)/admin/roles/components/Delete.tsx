@@ -1,14 +1,14 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { UserDataType } from '@/models/Users';
+import { RoleDataType } from '@/models/Roles';
 import { Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
-  userData: UserDataType;
-  submitHandler: (userData: UserDataType) => Promise<void>;
+  roleData: RoleDataType;
+  submitHandler: (roleData: RoleDataType) => Promise<void>;
 }
 const DeleteButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -20,10 +20,6 @@ const DeleteButton: React.FC<PropsType> = props => {
         onClick={() => setIsOpen(true)}
         className={cn(
           'rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center',
-          session?.user.role === 'admin' &&
-            (props.userData.role === 'admin' ||
-              props.userData.role === 'super') &&
-            'hidden',
         )}
       >
         <Trash2 size={18} />
@@ -64,7 +60,7 @@ const DeleteButton: React.FC<PropsType> = props => {
             </button>
             <button
               onClick={() => {
-                props.submitHandler(props.userData);
+                props.submitHandler(props.roleData);
                 setIsOpen(false);
               }}
               className="rounded-md bg-red-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-red-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"

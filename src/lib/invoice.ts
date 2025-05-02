@@ -22,8 +22,9 @@ export interface CustomerDataType {
 export interface VendorDataType {
   company_name: string;
   contact_person: string;
-  street_address: string;
-  city: string;
+  // street_address: string;
+  // city: string;
+  address: string;
   contact_number: string;
   email: string;
 }
@@ -131,8 +132,7 @@ export default async function generateInvoice(
       vendor: [
         invoiceData.vendor.company_name,
         invoiceData.vendor.contact_person,
-        invoiceData.vendor.street_address,
-        invoiceData.vendor.city,
+        invoiceData.vendor.address,
         invoiceData.vendor.contact_number,
         invoiceData.vendor.email,
       ],
@@ -147,8 +147,7 @@ export default async function generateInvoice(
       vendorConstants: [
         'Company Name: ',
         'Contact Person: ',
-        'Street Address: ',
-        'City: ',
+        'Address: ',
         'Phone: ',
         'Email: ',
       ],

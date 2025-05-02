@@ -15,22 +15,13 @@ interface PropsType {
   className?: string;
   submitHandler: () => void;
   filters: {
-    generalSearchString: string;
-    role: string;
+    name: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   loading: boolean;
 }
 
 import Select from 'react-select';
-
-export const roleOptions = [
-  { value: 'super', label: 'Super' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'marketer', label: 'Marketer' },
-];
 
 const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -99,7 +90,7 @@ const FilterButton: React.FC<PropsType> = props => {
         >
           <header className="flex items-center align-middle justify-between px-4 py-2 border-b rounded-t">
             <h3 className="text-gray-900 text-lg lg:text-xl font-semibold uppercase">
-              Filter Users
+              Filter Roles
             </h3>
             <button
               onClick={() => setIsOpen(false)}
@@ -112,42 +103,18 @@ const FilterButton: React.FC<PropsType> = props => {
           <div className="overflow-y-scroll max-h-[70vh] p-4">
             <div className="grid grid-cols-1 gap-x-3 gap-y-4 mb-4">
               <div>
-                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-                  Role
+                <label className="uppercase tracking-wide text-gray-700 text-sm font-bold block mb-2">
+                  Role Name
                 </label>
-                <Select
-                  {...setClassNameAndIsDisabled(isOpen)}
-                  options={roleOptions}
-                  closeMenuOnSelect={true}
-                  classNamePrefix="react-select"
-                  menuPortalTarget={setMenuPortalTarget}
-                  styles={setCalculatedZIndex(baseZIndex)}
-                  value={
-                    roleOptions.find(option => option.value === filters.role) ||
-                    null
-                  }
-                  onChange={selectedOption =>
-                    setFilters((prevFilters: PropsType['filters']) => ({
-                      ...prevFilters,
-                      role: selectedOption?.value || '',
-                    }))
-                  }
-                  placeholder="Select role"
+                <input
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  name="name"
+                  value={filters.name}
+                  onChange={handleChange}
+                  type="text"
+                  placeholder="Search by role name"
                 />
               </div>
-            </div>
-            <div className="w-full">
-              <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
-                String Search
-              </label>
-
-              <input
-                placeholder="Search for any text"
-                name="generalSearchString"
-                value={filters.generalSearchString}
-                onChange={handleChange}
-                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              />
             </div>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">
