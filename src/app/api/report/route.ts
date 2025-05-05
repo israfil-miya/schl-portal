@@ -236,10 +236,8 @@ async function handleGetClientsOnboard(req: NextRequest): Promise<{
     const reports = await Report.find({
       is_lead: false,
       regular_client: true,
-      createdAt: { $gte: startDate, $lte: endDate },
-    })
-      .select('onboard_date')
-      .exec();
+      onboard_date: { $gte: startDate, $lte: endDate },
+    }).select('onboard_date');
 
     const result: ReportCount = {};
 
@@ -599,7 +597,7 @@ async function handleConvertToPermanent(req: NextRequest): Promise<{
       const reportData = await Report.findOneAndUpdate(
         { company_name: data.client_name, is_lead: false },
         { client_status: 'approved', onboard_date: getTodayDate() },
-        { new: true, upsert: true, session },
+        { new: true, session },
       );
 
       if (reportData) {
