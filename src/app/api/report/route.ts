@@ -21,6 +21,7 @@ interface ReportCount {
   [key: string]: {
     totalCalls: number;
     totalLeads: number;
+    totalClients: number;
     totalTests: number;
     totalProspects: number;
   };
@@ -291,8 +292,8 @@ async function handleGetReportsStatus(req: NextRequest): Promise<{
 
     // Create a range query for the dates
     const dateRangeQuery = {
-      $gte: fromDate,
-      $lte: toDate,
+      ...(fromDate && { $gte: fromDate }),
+      ...(toDate && { $lte: toDate }),
     };
 
     // Create an array of promises to fetch data concurrently
@@ -320,6 +321,14 @@ async function handleGetReportsStatus(req: NextRequest): Promise<{
         marketer_name: marketerName,
         calling_date_history: { $elemMatch: dateRangeQuery },
         is_lead: true,
+      });
+
+      // Fetch total clients
+      const totalClients = await Report.countDocuments({
+        marketer_name: marketerName,
+        client_status: 'approved',
+        is_lead: false,
+        onboard_date: dateRangeQuery,
       });
 
       // Fetch test reports
@@ -353,6 +362,7 @@ async function handleGetReportsStatus(req: NextRequest): Promise<{
         marketerName,
         totalCalls,
         totalLeads,
+        totalClients,
         totalTests,
         totalProspects,
       };
@@ -367,6 +377,7 @@ async function handleGetReportsStatus(req: NextRequest): Promise<{
       data[result.marketerName] = {
         totalCalls: result.totalCalls || 0,
         totalLeads: result.totalLeads || 0,
+        totalClients: result.totalClients || 0,
         totalTests: result.totalTests || 0,
         totalProspects: result.totalProspects || 0,
       };

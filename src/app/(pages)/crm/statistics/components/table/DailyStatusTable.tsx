@@ -8,6 +8,7 @@ export interface ReportsStatusState {
   [key: string]: {
     totalCalls: number;
     totalLeads: number;
+    totalClients: number;
     totalTests: number;
     totalProspects: number;
   };
@@ -46,9 +47,10 @@ const DailyStatusTable = () => {
             <tr className="bg-gray-50">
               <th className="sm:max-w-8">Marketer</th>
               <th>Calls</th>
-              <th>Tests</th>
               <th>Prospects</th>
               <th>Leads</th>
+              <th>Tests</th>
+              <th>Clients</th>
             </tr>
           </thead>
           <tbody className="text-base">
@@ -78,7 +80,7 @@ const DailyStatusTable = () => {
                         {reportsStatus[key].totalCalls < callsTarget &&
                           ` (${callsTarget - reportsStatus[key].totalCalls})`}
                       </td>
-                      <td>{reportsStatus[key].totalTests}</td>
+
                       <td>{reportsStatus[key].totalProspects}</td>
                       <td
                         className={
@@ -91,6 +93,8 @@ const DailyStatusTable = () => {
                         {reportsStatus[key].totalLeads < leadsTarget &&
                           ` (${leadsTarget - reportsStatus[key].totalLeads})`}
                       </td>
+                      <td>{reportsStatus[key].totalTests}</td>
+                      <td>{reportsStatus[key].totalClients}</td>
                     </tr>
                   );
                 })}
@@ -134,12 +138,6 @@ const DailyStatusTable = () => {
 
                   <td className="font-bold">
                     {Object.values(reportsStatus).reduce(
-                      (acc, curr) => acc + curr.totalTests,
-                      0,
-                    )}
-                  </td>
-                  <td className="font-bold">
-                    {Object.values(reportsStatus).reduce(
                       (acc, curr) => acc + curr.totalProspects,
                       0,
                     )}
@@ -177,11 +175,23 @@ const DailyStatusTable = () => {
                         )
                       })`}
                   </td>
+                  <td className="font-bold">
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) => acc + curr.totalTests,
+                      0,
+                    )}
+                  </td>
+                  <td className="font-bold">
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) => acc + curr.totalClients,
+                      0,
+                    )}
+                  </td>
                 </tr>
               </>
             ) : (
               <tr key={0}>
-                <td colSpan={5} className="align-center text-center">
+                <td colSpan={6} className="align-center text-center">
                   Loading...
                 </td>
               </tr>
