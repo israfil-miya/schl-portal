@@ -1,13 +1,23 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Filter, X } from 'lucide-react';
+import {
+  setCalculatedZIndex,
+  setClassNameAndIsDisabled,
+  setMenuPortalTarget,
+} from '@/utility/selectHelpers';
+import { Beaker, Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import Select from 'react-select';
+
+const baseZIndex = 50;
 
 interface PropsType {
   className?: string;
   submitHandler: () => void;
+  marketerNames: string[];
   filters: {
+    marketerName: string;
     country: string;
     companyName: string;
     category: string;
@@ -25,6 +35,11 @@ const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { filters, setFilters } = props;
   const popupRef = useRef<HTMLElement>(null);
+
+  const marketerOptions = (props.marketerNames || []).map(name => ({
+    label: name,
+    value: name,
+  }));
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -48,6 +63,7 @@ const FilterButton: React.FC<PropsType> = props => {
 
   const handleResetFilters = () => {
     setFilters({
+      marketerName: '',
       country: '',
       companyName: '',
       category: '',
@@ -85,7 +101,7 @@ const FilterButton: React.FC<PropsType> = props => {
 
       <section
         onClick={handleClickOutside}
-        className={`fixed z-50 inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
+        className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}
       >
         <article
           ref={popupRef}
@@ -131,6 +147,34 @@ const FilterButton: React.FC<PropsType> = props => {
                       type="date"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
+                    Marketer
+                  </label>
+                  <Select
+                    {...setClassNameAndIsDisabled(isOpen)}
+                    options={marketerOptions}
+                    closeMenuOnSelect={true}
+                    classNamePrefix="react-select"
+                    menuPortalTarget={setMenuPortalTarget}
+                    menuPlacement="auto"
+                    menuPosition="fixed" // Prevent clipping by parent containers
+                    styles={setCalculatedZIndex(baseZIndex)}
+                    value={
+                      marketerOptions.find(
+                        option => option.value === filters.marketerName,
+                      ) || null
+                    }
+                    onChange={selectedOption =>
+                      setFilters((prevFilters: PropsType['filters']) => ({
+                        ...prevFilters,
+                        marketerName: selectedOption?.value || '',
+                      }))
+                    }
+                    placeholder="Select marketer"
+                  />
                 </div>
 
                 <div className="">
@@ -207,7 +251,7 @@ const FilterButton: React.FC<PropsType> = props => {
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">
             <button
               onClick={handleResetFilters}
-              className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100px-4 py-1"
+              className="rounded-md bg-gray-600 text-white  hover:opacity-90 hover:ring-2 hover:ring-gray-600 transition duration-200 delay-300 hover:text-opacity-100 px-4 py-1"
               type="button"
               disabled={props.loading}
             >
