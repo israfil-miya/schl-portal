@@ -2,7 +2,7 @@ import Header from '@/components/Header';
 import React from 'react';
 import Table from './components/Table';
 
-const BrowsePage = async () => {
+const ClientsPage = async () => {
   return (
     <>
       <div className="px-4 mt-8 mb-4">
@@ -12,4 +12,4 @@ const BrowsePage = async () => {
   );
 };
 
-export default BrowsePage;
+export default ClientsPage;

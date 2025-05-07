@@ -5,6 +5,7 @@ import Linkify from '@/components/Linkify';
 import Pagination from '@/components/Pagination';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
+import { UserDataType } from '@/models/Users';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -45,6 +46,7 @@ const Table = () => {
   const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
+    marketerName: '',
     country: '',
     companyName: '',
     category: '',
@@ -53,6 +55,8 @@ const Table = () => {
     prospect: false,
     generalSearchString: '',
   });
+
+  const [marketerNames, setMarketerNames] = useState<string[]>([]);
 
   async function getAllReports() {
     try {
@@ -88,6 +92,32 @@ const Table = () => {
       toast.error('An error occurred while retrieving reports data');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function getAllMarketers() {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      let response = await fetchApi(url, options);
+
+      if (response.ok) {
+        let marketers = response.data as UserDataType[];
+        let marketerNames = marketers.map(marketer => marketer.provided_name!);
+        setMarketerNames(marketerNames);
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving marketers data');
     }
   }
 
@@ -165,6 +195,7 @@ const Table = () => {
 
   useEffect(() => {
     getAllReports();
+    getAllMarketers();
   }, []);
 
   useEffect(() => {
@@ -226,6 +257,7 @@ const Table = () => {
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
+            marketerNames={marketerNames}
           />
         </div>
       </div>
@@ -239,8 +271,8 @@ const Table = () => {
               <thead className="table-dark">
                 <tr>
                   <th>#</th>
+                  <th>Marketer</th>
                   <th>Calling Date</th>
-                  <th>Followup Date</th>
                   <th>Country</th>
                   <th>Website</th>
                   <th>Category</th>
@@ -276,13 +308,10 @@ const Table = () => {
                       className={tableRowColor ? tableRowColor : ''}
                     >
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
+                      <td>{item.marketer_name}</td>
                       <td>
                         {item.calling_date && formatDate(item.calling_date)}
                       </td>
-                      <td>
-                        {item.followup_date && formatDate(item.followup_date)}
-                      </td>
-
                       <td>{item.country}</td>
                       <td>
                         {item.website.length ? (

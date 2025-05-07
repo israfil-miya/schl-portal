@@ -47,9 +47,9 @@ const DailyStatusTable = () => {
             <tr className="bg-gray-50">
               <th className="sm:max-w-8">Marketer</th>
               <th>Calls</th>
-              <th>Prospects</th>
               <th>Leads</th>
               <th>Tests</th>
+              <th>Prospects</th>
               <th>Clients</th>
             </tr>
           </thead>
@@ -80,8 +80,6 @@ const DailyStatusTable = () => {
                         {reportsStatus[key].totalCalls < callsTarget &&
                           ` (${callsTarget - reportsStatus[key].totalCalls})`}
                       </td>
-
-                      <td>{reportsStatus[key].totalProspects}</td>
                       <td
                         className={
                           reportsStatus[key].totalLeads < leadsTarget
@@ -94,6 +92,7 @@ const DailyStatusTable = () => {
                           ` (${leadsTarget - reportsStatus[key].totalLeads})`}
                       </td>
                       <td>{reportsStatus[key].totalTests}</td>
+                      <td>{reportsStatus[key].totalProspects}</td>
                       <td>{reportsStatus[key].totalClients}</td>
                     </tr>
                   );
@@ -137,12 +136,6 @@ const DailyStatusTable = () => {
                   </td>
 
                   <td className="font-bold">
-                    {Object.values(reportsStatus).reduce(
-                      (acc, curr) => acc + curr.totalProspects,
-                      0,
-                    )}
-                  </td>
-                  <td className="font-bold">
                     {/* Calculate capped total calls made */}
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) =>
@@ -175,12 +168,21 @@ const DailyStatusTable = () => {
                         )
                       })`}
                   </td>
+
                   <td className="font-bold">
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) => acc + curr.totalTests,
                       0,
                     )}
                   </td>
+
+                  <td className="font-bold">
+                    {Object.values(reportsStatus).reduce(
+                      (acc, curr) => acc + curr.totalProspects,
+                      0,
+                    )}
+                  </td>
+
                   <td className="font-bold">
                     {Object.values(reportsStatus).reduce(
                       (acc, curr) => acc + curr.totalClients,
