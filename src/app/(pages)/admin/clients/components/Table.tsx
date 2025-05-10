@@ -243,11 +243,11 @@ const Table = () => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (clients?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllClients();
-      else getAllClientsFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (clients?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllClients();
+    else getAllClientsFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -269,8 +269,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllClients();
-    else getAllClientsFiltered();
+    // if (!isFiltered) getAllClients();
+    // else getAllClientsFiltered();
   }, [itemPerPage]);
 
   return (

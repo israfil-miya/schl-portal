@@ -131,10 +131,10 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   }, [c_code, month]);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (orders?.pagination?.pageCount == 1) return;
-      if (isFiltered) getAllOrdersFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (orders?.pagination?.pageCount == 1) return;
+    if (isFiltered) getAllOrdersFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -156,7 +156,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     prevPage.current = 1;
     setPage(1);
 
-    if (isFiltered) getAllOrdersFiltered();
+    // if (isFiltered) getAllOrdersFiltered();
   }, [itemPerPage]);
 
   return (

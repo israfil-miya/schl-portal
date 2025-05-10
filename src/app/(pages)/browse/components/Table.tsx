@@ -295,11 +295,11 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (orders?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllOrders();
-      else getAllOrdersFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (orders?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllOrders();
+    else getAllOrdersFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -321,8 +321,8 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllOrders();
-    else getAllOrdersFiltered();
+    // if (!isFiltered) getAllOrders();
+    // else getAllOrdersFiltered();
   }, [itemPerPage]);
 
   return (

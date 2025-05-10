@@ -53,13 +53,13 @@ export const createFlexibleSearchPattern = (searchString: string): string => {
   const escaped = escapeRegExp(searchString);
 
   // 2. Create two patterns:
-  // - One that matches the exact string with optional spaces
-  // - One that matches the string without any spaces
+  // - One with all spaces removed
+  // - One allowing flexible spacing (zero or more spaces)
   const withoutSpaces = escaped.replace(/\s+/g, '');
   const withFlexibleSpaces = escaped.replace(/\s+/g, '\\s*');
 
-  // 3. Combine patterns with word boundaries
-  const pattern = `\\b(${withoutSpaces}|${withFlexibleSpaces})\\b`;
+  // 3. Use custom "word boundary" simulation:
+  const pattern = `(?<![A-Za-z])(${withoutSpaces}|${withFlexibleSpaces})`;
 
   return pattern;
 };
@@ -69,11 +69,11 @@ export const createRegexQuery = (
   value?: string,
   exactMatch: boolean = false,
 ): RegexQuery | undefined =>
-  value
+  value?.trim()
     ? {
         $regex: exactMatch
-          ? `^${escapeRegExp(value.trim() || '')}$`
-          : createFlexibleSearchPattern(value) || '',
+          ? `^${escapeRegExp(value.trim())}$`
+          : createFlexibleSearchPattern(value),
         $options: 'i',
       }
     : undefined;

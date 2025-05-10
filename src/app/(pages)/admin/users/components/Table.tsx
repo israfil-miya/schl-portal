@@ -218,11 +218,11 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (users?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllUsers();
-      else getAllUsersFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (users?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllUsers();
+    else getAllUsersFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -244,8 +244,8 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllUsers();
-    else getAllUsersFiltered();
+    // if (!isFiltered) getAllUsers();
+    // else getAllUsersFiltered();
   }, [itemPerPage]);
 
   return (

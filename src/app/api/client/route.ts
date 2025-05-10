@@ -87,11 +87,11 @@ async function handleGetAllClients(req: NextRequest): Promise<{
 
     let query: Query = {};
 
-    addIfDefined(query, 'country', countryName);
-    addIfDefined(query, 'client_code', clientCode);
-    addIfDefined(query, 'contact_person', contactPerson);
-    addIfDefined(query, 'marketer', marketerName);
-    addIfDefined(query, 'category', category);
+    addIfDefined(query, 'country', createRegexQuery(countryName));
+    addIfDefined(query, 'client_code', createRegexQuery(clientCode));
+    addIfDefined(query, 'contact_person', createRegexQuery(contactPerson));
+    addIfDefined(query, 'marketer', createRegexQuery(marketerName));
+    addIfDefined(query, 'category', createRegexQuery(category));
 
     console.log(query);
 

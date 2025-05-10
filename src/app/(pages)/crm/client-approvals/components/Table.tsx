@@ -268,11 +268,11 @@ const Table = () => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (reports?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllReports();
-      else getAllReportsFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (reports?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllReports();
+    else getAllReportsFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -294,8 +294,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllReports();
-    else getAllReportsFiltered();
+    // if (!isFiltered) getAllReports();
+    // else getAllReportsFiltered();
   }, [itemPerPage]);
 
   return (
