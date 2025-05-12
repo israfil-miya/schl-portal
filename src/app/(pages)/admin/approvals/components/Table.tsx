@@ -248,11 +248,11 @@ const Table: React.FC = props => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (approvals?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllApprovals();
-      else getAllApprovalsFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (approvals?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllApprovals();
+    else getAllApprovalsFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -274,8 +274,8 @@ const Table: React.FC = props => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllApprovals();
-    else getAllApprovalsFiltered();
+    // if (!isFiltered) getAllApprovals();
+    // else getAllApprovalsFiltered();
   }, [itemPerPage]);
 
   return (

@@ -139,11 +139,11 @@ const Table = () => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (trackerData?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllDataByMonth();
-      else getAllDataByMonthFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (trackerData?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllDataByMonth();
+    else getAllDataByMonthFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -165,8 +165,8 @@ const Table = () => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllDataByMonth();
-    else getAllDataByMonthFiltered();
+    // if (!isFiltered) getAllDataByMonth();
+    // else getAllDataByMonthFiltered();
   }, [itemPerPage]);
 
   return (

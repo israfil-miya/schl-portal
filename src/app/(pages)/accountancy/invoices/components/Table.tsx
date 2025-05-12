@@ -235,11 +235,11 @@ const Table: React.FC = props => {
   }, []);
 
   useEffect(() => {
-    if (prevPage.current !== 1 || page > 1) {
-      if (invoices?.pagination?.pageCount == 1) return;
-      if (!isFiltered) getAllInvoices();
-      else getAllInvoicesFiltered();
-    }
+    // if (prevPage.current !== 1 || page > 1) {
+    if (invoices?.pagination?.pageCount == 1) return;
+    if (!isFiltered) getAllInvoices();
+    else getAllInvoicesFiltered();
+    // }
     prevPage.current = page;
   }, [page]);
 
@@ -261,8 +261,8 @@ const Table: React.FC = props => {
     prevPage.current = 1;
     setPage(1);
 
-    if (!isFiltered) getAllInvoices();
-    else getAllInvoicesFiltered();
+    // if (!isFiltered) getAllInvoices();
+    // else getAllInvoicesFiltered();
   }, [itemPerPage]);
 
   return (
