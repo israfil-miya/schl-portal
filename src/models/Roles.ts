@@ -1,9 +1,10 @@
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import mongoose from 'mongoose';
 
 interface RoleType {
   name: string;
   description: string;
-  permissions: string[];
+  permissions: PermissionValue[];
 }
 
 export type RoleDataType = RoleType & {
@@ -17,7 +18,6 @@ const RoleSchema = new mongoose.Schema<RoleDocType>({
   name: { type: String, required: [true, 'Role name is not given'] },
   description: {
     type: String,
-    required: [true, 'Role description is not given'],
   },
   permissions: {
     type: [String],

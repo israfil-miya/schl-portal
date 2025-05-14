@@ -1,5 +1,6 @@
 import NextAuth, { DefaultSession, DefaultUser } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
+import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
 import { UserSessionType } from './auth';
 
 // Extend the default User type
@@ -13,7 +14,7 @@ declare module 'next-auth' {
     db_id: string;
     real_name: string | null;
     cred_name: string;
-    permissions: string[];
+    permissions: PermissionValue[];
     role: string;
     db_role_id: string;
   }
@@ -25,7 +26,7 @@ declare module 'next-auth/jwt' {
     db_id: string;
     real_name: string | null;
     cred_name: string;
-    permissions: string[];
+    permissions: PermissionValue[];
     role: string;
     db_role_id: string;
   }

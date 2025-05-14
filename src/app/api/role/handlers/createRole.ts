@@ -1,4 +1,4 @@
-import Role from '@/models/Users';
+import Role from '@/models/Roles';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function handleCreateRole(req: NextRequest): Promise<{

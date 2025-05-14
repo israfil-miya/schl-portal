@@ -8,16 +8,21 @@ export async function handleDeleteRole(req: NextRequest): Promise<{
 }> {
   const { _id } = await req.json();
 
+  if (!_id) {
+    return { data: 'Role ID is required', status: 400 };
+  }
+
+  console.log('Delete role', _id);
+
   try {
     const resData = await Role.findById(_id);
     if (resData) {
       const users = await User.countDocuments({ role_id: _id });
       if (users > 0) {
-        return { data: 'Role is assigned to a user', status: 400 };
+        return { data: 'Role is assigned to at least one user', status: 400 };
       }
 
-      resData.deleteOne();
-      await resData.save();
+      await resData.deleteOne();
       return { data: 'Role deleted successfully', status: 200 };
     } else {
       return { data: 'Role not found', status: 400 };

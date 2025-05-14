@@ -47,7 +47,7 @@ const DeleteButton: React.FC<PropsType> = props => {
           </header>
           <div className="overflow-hidden max-h-[70vh] p-4">
             <p className="text-base">
-              Are you sure, you want to delete this user?
+              Are you sure, you want to delete this role?
             </p>
           </div>
           <footer className="flex space-x-2 items-center px-4 py-2 border-t justify-end border-gray-200 rounded-b">

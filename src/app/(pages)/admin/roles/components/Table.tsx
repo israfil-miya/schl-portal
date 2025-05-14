@@ -129,6 +129,11 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
 
   async function deleteRole(roleData: RoleDataType) {
     try {
+      if (!session?.user.permissions.includes('admin:delete_role')) {
+        toast.error("You don't have the permission to delete roles");
+        return;
+      }
+
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/role?action=delete-role';
       let options: {} = {
@@ -148,7 +153,7 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
         if (!isFiltered) await getAllRoles();
         else await getAllRolesFiltered();
       } else {
-        toast.error(response.data.message);
+        toast.error(response.data as string);
       }
     } catch (error) {
       console.error(error);
@@ -297,11 +302,9 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
               <thead className="table-dark">
                 <tr>
                   <th>S/N</th>
-                  <th>Full Name</th>
-                  <th>Username</th>
-                  <th>Role</th>
-                  <th>Comment</th>
-                  <th>Action</th>
+                  <th>Role Name</th>
+                  <th>Description</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -317,10 +320,14 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
                     >
                       <div className="inline-block">
                         <div className="flex gap-2">
-                          <DeleteButton
-                            roleData={role}
-                            submitHandler={deleteRole}
-                          />
+                          {session?.user.permissions.includes(
+                            'admin:delete_role',
+                          ) && (
+                            <DeleteButton
+                              roleData={role}
+                              submitHandler={deleteRole}
+                            />
+                          )}
 
                           {/* <EditButton
                             userData={role as unknown as zod_UserDataType}

@@ -1,5 +1,5 @@
 import Role from '@/models/Roles';
-import { addIfDefined } from '@/utility/filterHelpers';
+import { addIfDefined, createRegexQuery } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
 
@@ -23,7 +23,7 @@ export async function handleGetAllRoles(req: NextRequest): Promise<{
 
     const query: Query = {};
 
-    addIfDefined(query, 'name', filters.name);
+    addIfDefined(query, 'name', createRegexQuery(filters.name));
 
     const searchQuery: Query = { ...query };
 

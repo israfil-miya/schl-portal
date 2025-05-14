@@ -16,8 +16,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
-import { roleOptions } from '../create-user/components/Form';
-import { UserDataType, validationSchema } from '../schema';
+import { roleOptions } from '../create-role/components/Form';
+import { , validationSchema } from '../schema';
 
 const baseZIndex = 50; // 52
 

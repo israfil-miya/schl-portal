@@ -4,11 +4,13 @@ import Credentials from 'next-auth/providers/credentials';
 import { authConfig } from './auth.config';
 const BASE_URL: string = process.env.NEXT_PUBLIC_BASE_URL as string;
 
+import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
+
 export interface UserSessionType {
   db_id: string;
   real_name: string | null;
   cred_name: string;
-  permissions: string[];
+  permissions: PermissionValue[];
   role: string;
   db_role_id: string;
 }

@@ -25,7 +25,7 @@ import {
   RegexFields as notice_RegexFields,
   RegexQuery as notice_RegexQuery,
 } from '@/app/api/notice/route';
-import { Query as role_Query } from '@/app/api/roles/handlers/getAllRoles';
+import { Query as role_Query } from '@/app/api/role/handlers/getAllRoles';
 
 import { escapeRegExp } from 'lodash';
 

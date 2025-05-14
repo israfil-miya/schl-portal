@@ -12,9 +12,6 @@ import { handleGetRoleById } from './handlers/getRoleById';
 export async function GET(req: NextRequest) {
   let res: { data: string | Object; status: number };
   switch (getQuery(req).action) {
-    case 'get-all-roles':
-      res = await handleGetAllRoles(req);
-      return NextResponse.json(res.data, { status: res.status });
     default:
       return NextResponse.json({ response: 'OK' }, { status: 200 });
   }
@@ -26,6 +23,9 @@ export async function POST(req: NextRequest) {
     status: number;
   };
   switch (getQuery(req).action) {
+    case 'get-all-roles':
+      res = await handleGetAllRoles(req);
+      return NextResponse.json(res.data, { status: res.status });
     case 'create-role':
       res = await handleCreateRole(req);
       return NextResponse.json(res.data, { status: res.status });
