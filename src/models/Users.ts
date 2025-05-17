@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema<UserDocType>({
   // role: { type: String, required: [true, 'Role is not given'] },
   role_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: Role.modelName,
+    ref: 'Role',
     required: [true, 'Role has not been assigned'],
   },
   comment: { type: String },

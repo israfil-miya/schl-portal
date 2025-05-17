@@ -1,7 +1,9 @@
 'use client';
 
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { cn, generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
+import { RoleDataType } from '@/models/Roles';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -16,7 +18,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
-import { roleOptions } from '../create-user/components/Form';
 import { UserDataType, validationSchema } from '../schema';
 
 const baseZIndex = 50; // 52
@@ -25,6 +26,7 @@ interface PropsType {
   loading: boolean;
   userData: UserDataType;
   employeesData: EmployeeDataType[];
+  rolesData: RoleDataType[];
   submitHandler: (
     editedUserData: UserDataType,
     previousUserData: UserDataType,
@@ -37,20 +39,14 @@ const EditButton: React.FC<PropsType> = props => {
   const formRef = useRef<HTMLFormElement>(null);
   const { data: session } = useSession();
 
-  const filteredRoleOptions = useMemo(() => {
-    if (session?.user.role === 'admin') {
-      return roleOptions.filter(
-        option => option.value !== 'admin' && option.value !== 'super',
-      );
-    }
-    return roleOptions;
-  }, [session?.user.role]);
+  let employeeIdOptions = (props.employeesData || []).map(employee => ({
+    value: employee.e_id,
+    label: employee.e_id,
+  }));
 
-  const employeeIds = props.employeesData?.map(employee => employee.e_id);
-
-  let employeeIdOptions = (employeeIds || []).map(employeeId => ({
-    value: employeeId,
-    label: employeeId,
+  let roleOptions = (props.rolesData || []).map(role => ({
+    value: role._id,
+    label: role.name,
   }));
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -152,10 +148,7 @@ const EditButton: React.FC<PropsType> = props => {
         }}
         className={cn(
           'rounded-md disabled:cursor-not-allowed bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
-          session?.user.role === 'admin' &&
-            (props.userData.role === 'admin' ||
-              props.userData.role === 'super') &&
-            'hidden',
+          session?.user.permissions.includes('admin:edit_user'),
         )}
       >
         <SquarePen size={18} />
@@ -276,39 +269,54 @@ const EditButton: React.FC<PropsType> = props => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-x-3 gap-y-4 mb-4">
+              <div
+                className={cn(
+                  'grid grid-cols-1 gap-x-3 gap-y-4 mb-4',
+                  !session?.user.permissions.includes('admin:assign_role') &&
+                    'hidden',
+                )}
+              >
                 <div>
-                  <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-                    Role
+                  <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                    <span className="uppercase">Role*</span>
+                    <span className="text-red-700 text-wrap block text-xs">
+                      {errors.role_id && errors.role_id?.message}
+                    </span>
                   </label>
                   <Controller
-                    name="role"
+                    name="role_id"
                     control={control}
                     render={({ field }) => (
                       <Select
                         {...field}
                         {...setClassNameAndIsDisabled(isOpen)}
-                        options={filteredRoleOptions}
+                        options={roleOptions}
                         closeMenuOnSelect={true}
                         placeholder="Select role"
                         classNamePrefix="react-select"
                         menuPortalTarget={setMenuPortalTarget}
                         styles={setCalculatedZIndex(baseZIndex)}
                         value={
-                          filteredRoleOptions.find(
-                            option => option.value === field.value,
+                          roleOptions.find(
+                            option => String(option.value) === field.value,
                           ) || null
                         }
-                        onChange={option =>
-                          field.onChange(option ? option.value : '')
-                        }
+                        onChange={option => {
+                          field.onChange(option ? option.value : '');
+                          setValue(
+                            'permissions',
+                            props.rolesData.find(
+                              role => role._id === option?.value,
+                            )?.permissions,
+                          );
+                        }}
                       />
                     )}
                   />
                 </div>
               </div>
 
-              {watch('role') === 'marketer' && (
+              {watch('permissions')?.includes('login:crm') && (
                 <div>
                   <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                     <span className="uppercase">Provided Name*</span>

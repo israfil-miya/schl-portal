@@ -7,6 +7,7 @@ import { EmployeeDataType } from '@/models/Employees';
 
 import Pagination from '@/components/Pagination';
 import { cn } from '@/lib/utils';
+import { RoleDataType } from '@/models/Roles';
 import { UserDataType } from '@/models/Users';
 import {
   ChevronLeft,
@@ -31,7 +32,10 @@ type UsersState = {
   items: UserDataType[];
 };
 
-const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
+const Table: React.FC<{
+  employeesData: EmployeeDataType[];
+  rolesData: RoleDataType[];
+}> = props => {
   const [users, setUsers] = useState<UsersState>({
     pagination: {
       count: 0,
@@ -54,7 +58,6 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
   const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
-    role: '',
     generalSearchString: '',
   });
 
@@ -173,17 +176,19 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
         return;
       }
 
-      if (
-        (session?.user.role === 'admin' &&
-          ['super', 'admin'].includes(parsed.data.role)) ||
-        (session?.user.db_id === parsed.data._id &&
-          session?.user.role !== parsed.data.role)
-      ) {
-        toast.error("You don't have the permission to edit this user");
-        return;
-      }
+      // if (
+      //   (session?.user.role === 'admin' &&
+      //     ['super', 'admin'].includes(parsed.data.role || '')) ||
+      //   (session?.user.db_id === parsed.data._id &&
+      //     session?.user.role !== parsed.data.role)
+      // ) {
+      //   toast.error("You don't have the permission to edit this user");
+      //   return;
+      // }
 
       setLoading(true);
+
+      delete parsed.data.permissions;
 
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=edit-user';
@@ -342,6 +347,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
                           <EditButton
                             userData={user as unknown as zod_UserDataType}
                             employeesData={props.employeesData}
+                            rolesData={props.rolesData}
                             submitHandler={editUser}
                             loading={loading}
                           />

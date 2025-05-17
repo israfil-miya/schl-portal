@@ -18,19 +18,19 @@ export const permissionOptions = [
   {
     label: 'Login',
     options: [
-      { value: 'login:portal', label: 'login:task' },
-      { value: 'login:crm', label: 'login:crm' },
+      { value: 'login:portal', label: 'Login at portal' },
+      { value: 'login:crm', label: 'Login at crm' },
     ],
   },
 
   {
     label: 'Task',
     options: [
-      { value: 'task:view_page', label: 'task:view_page' },
-      { value: 'task:running_tasks', label: 'task:running_tasks' },
+      { value: 'task:view_page', label: 'View task page' },
+      { value: 'task:running_tasks', label: 'View running tasks' },
       {
         value: 'task:test_and_correction_tasks',
-        label: 'task:test_and_correction_tasks',
+        label: 'View test and correction tasks',
       },
     ],
   },
@@ -38,37 +38,37 @@ export const permissionOptions = [
   {
     label: 'Browse',
     options: [
-      { value: 'browse:view_page', label: 'browse:view_page' },
-      { value: 'browse:client_name', label: 'browse:client_name' },
-      { value: 'browse:edit_task', label: 'browse:edit_task' },
+      { value: 'browse:view_page', label: 'View browse page' },
+      { value: 'browse:client_name', label: 'View client name' },
+      { value: 'browse:edit_task', label: 'Edit task' },
       {
         value: 'browse:edit_task_approval',
-        label: 'browse:edit_task_approval',
+        label: 'Edit task (approval)',
       },
-      { value: 'browse:delete_task', label: 'browse:delete_task' },
+      { value: 'browse:delete_task', label: 'Delete task' },
       {
         value: 'browse:delete_task_approval',
-        label: 'browse:delete_task_approval',
+        label: 'Delet task (approval)',
       },
     ],
   },
 
   {
     label: 'FileFlow',
-    options: [{ value: 'fileflow:view_page', label: 'fileflow:view_page' }],
+    options: [{ value: 'fileflow:view_page', label: 'View fileflow page' }],
   },
 
   {
     label: 'Notice',
     options: [
-      { value: 'notice:view_notice', label: 'notice:view_notice' },
+      { value: 'notice:view_notice', label: 'View notice page' },
       {
         value: 'notice:send_notice_production',
-        label: 'notice:send_notice_production',
+        label: 'Send notice to production',
       },
       {
         value: 'notice:send_notice_marketers',
-        label: 'notice:send_notice_marketers',
+        label: 'Send notice to marketers',
       },
     ],
   },
@@ -76,43 +76,45 @@ export const permissionOptions = [
   {
     label: 'CRM',
     options: [
-      { value: 'crm:create_report', label: 'crm:create_report' },
+      { value: 'crm:create_report', label: 'Create report' },
       {
         value: 'crm:delete_report_approval',
-        label: 'crm:delete_report_approval',
+        label: 'Delete report (approval)',
       },
-      { value: 'crm:send_client_request', label: 'crm:send_client_request' },
+      { value: 'crm:send_client_request', label: 'Send client request' },
     ],
   },
 
   {
     label: 'Admin',
     options: [
-      { value: 'admin:create_employee', label: 'admin:create_employee' },
-      { value: 'admin:manage_employee', label: 'admin:manage_employee' },
-      { value: 'admin:create_client', label: 'admin:create_client' },
-      { value: 'admin:manage_client', label: 'admin:manage_client' },
-      { value: 'admin:create_invoice', label: 'admin:create_invoice' },
-      { value: 'admin:download_invoice', label: 'admin:download_invoice' },
-      { value: 'admin:delete_invoice', label: 'admin:delete_invoice' },
-      { value: 'admin:check_approvals', label: 'admin:check_approvals' },
+      { value: 'admin:create_employee', label: 'Create employee' },
+      { value: 'admin:manage_employee', label: 'Manage employee' },
+      { value: 'admin:create_client', label: 'Create client' },
+      { value: 'admin:manage_client', label: 'Mange client' },
+      { value: 'admin:create_invoice', label: 'Create invoice' },
+      { value: 'admin:download_invoice', label: 'Download invoice' },
+      { value: 'admin:delete_invoice', label: 'Delete invoice' },
+      { value: 'admin:check_approvals', label: 'Check approvals' },
       {
         value: 'admin:check_client_request',
-        label: 'admin:check_client_request',
+        label: 'Check client request',
       },
-      { value: 'admin:view_reports', label: 'admin:view_reports' },
+      { value: 'admin:view_reports', label: 'View reports' },
       {
         value: 'admin:delete_report_approval',
-        label: 'admin:delete_report_approval',
+        label: 'Delete report (approval)',
       },
-      { value: 'admin:view_crm_stats', label: 'admin:view_crm_stats' },
-      { value: 'admin:create_role', label: 'admin:create_role' },
-      { value: 'admin:delete_role', label: 'admin:delete_role' },
-      { value: 'admin:assign_role', label: 'admin:assign_role' },
-      { value: 'admin:create_user', label: 'admin:create_user' },
+      { value: 'admin:view_crm_stats', label: 'View crm stats' },
+      { value: 'admin:create_role', label: 'Create role' },
+      { value: 'admin:delete_role', label: 'Delete role' },
+      { value: 'admin:assign_role', label: 'Assign role' },
+      { value: 'admin:create_user', label: 'Create user' },
+      { value: 'admin:create_user_approval', label: 'Create user (approval)' },
+      { value: 'admin:edit_user', label: 'Edit user' },
       {
         value: 'admin:delete_user_approval',
-        label: 'admin:delete_user_approval',
+        label: 'Delete user (approval)',
       },
     ],
   },

@@ -141,8 +141,6 @@ async function handleGetAllUsers(req: NextRequest): Promise<{
 
     const query: Query = {};
 
-    addIfDefined(query, 'role', filters.role);
-
     const searchQuery: Query = { ...query };
 
     let sortQuery: Record<string, 1 | -1> = {
@@ -170,9 +168,20 @@ async function handleGetAllUsers(req: NextRequest): Promise<{
           { $sort: sortQuery },
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
+          {
+            $lookup: {
+              from: 'roles', // the MongoDB collection name, usually lowercase plural of the model
+              localField: 'role_id',
+              foreignField: '_id',
+              as: 'role',
+            },
+          },
+          { $unwind: '$role' }, // optional: flattens role array if only one role per user
         ]);
       } else {
-        users = await User.find(searchQuery).lean();
+        users = await User.find(searchQuery)
+          .populate('role_id', 'name description permissions')
+          .lean();
       }
 
       const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);

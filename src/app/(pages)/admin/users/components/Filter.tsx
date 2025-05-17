@@ -1,11 +1,6 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  setCalculatedZIndex,
-  setClassNameAndIsDisabled,
-  setMenuPortalTarget,
-} from '@/utility/selectHelpers';
 import { Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
@@ -16,21 +11,10 @@ interface PropsType {
   submitHandler: () => void;
   filters: {
     generalSearchString: string;
-    role: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   loading: boolean;
 }
-
-import Select from 'react-select';
-
-export const roleOptions = [
-  { value: 'super', label: 'Super' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'marketer', label: 'Marketer' },
-];
 
 const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -59,7 +43,6 @@ const FilterButton: React.FC<PropsType> = props => {
 
   const handleResetFilters = () => {
     setFilters({
-      role: '',
       generalSearchString: '',
     });
   };
@@ -110,32 +93,6 @@ const FilterButton: React.FC<PropsType> = props => {
             </button>
           </header>
           <div className="overflow-y-scroll max-h-[70vh] p-4">
-            <div className="grid grid-cols-1 gap-x-3 gap-y-4 mb-4">
-              <div>
-                <label className="block uppercase tracking-wide text-gray-700 text-sm font-bold mb-2">
-                  Role
-                </label>
-                <Select
-                  {...setClassNameAndIsDisabled(isOpen)}
-                  options={roleOptions}
-                  closeMenuOnSelect={true}
-                  classNamePrefix="react-select"
-                  menuPortalTarget={setMenuPortalTarget}
-                  styles={setCalculatedZIndex(baseZIndex)}
-                  value={
-                    roleOptions.find(option => option.value === filters.role) ||
-                    null
-                  }
-                  onChange={selectedOption =>
-                    setFilters((prevFilters: PropsType['filters']) => ({
-                      ...prevFilters,
-                      role: selectedOption?.value || '',
-                    }))
-                  }
-                  placeholder="Select role"
-                />
-              </div>
-            </div>
             <div className="w-full">
               <label className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2">
                 String Search

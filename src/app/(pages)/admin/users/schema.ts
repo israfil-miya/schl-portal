@@ -26,8 +26,6 @@ export const validationSchema = z
     createdAt: z.union([z.date(), z.string()]).optional(),
     updatedAt: z.union([z.date(), z.string()]).optional(),
     __v: z.number().optional(),
-
-    role: z.string().optional(),
     permissions: z.array(z.string()).optional(),
   })
   .superRefine((data, ctx) => {

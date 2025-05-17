@@ -3,11 +3,12 @@ import { ClientDataType } from '@/models/Clients';
 import { UserDataType } from '@/models/Users';
 import moment from 'moment-timezone';
 import React, { Suspense } from 'react';
-import { getAllEmployees } from '../page';
+import { getAllEmployees, getAllRoles } from '../page';
 import InputForm from './components/Form';
 
 const CreateUserPage = async () => {
   let employees = await getAllEmployees();
+  let roles = await getAllRoles();
   return (
     <>
       <div className="px-4 mt-8 mb-4 flex flex-col justify-center md:w-[70vw] mx-auto">
@@ -15,7 +16,7 @@ const CreateUserPage = async () => {
           Add a new user
         </h1>
         <Suspense fallback={<p className="text-center">Loading...</p>}>
-          <InputForm employeesData={employees || []} />
+          <InputForm employeesData={employees || []} rolesData={roles || []} />
         </Suspense>
       </div>
     </>

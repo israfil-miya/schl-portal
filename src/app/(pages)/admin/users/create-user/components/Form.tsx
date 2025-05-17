@@ -13,33 +13,30 @@ import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { UserDataType, validationSchema } from '../../schema';
 
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
+import { RoleDataType } from '@/models/Roles';
 import { KeySquare } from 'lucide-react';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
-
 interface PropsType {
   employeesData: EmployeeDataType[];
+  rolesData: RoleDataType[];
 }
-
-export let roleOptions = [
-  { value: 'super', label: 'Super' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'marketer', label: 'Marketer' },
-];
 
 const Form: React.FC<PropsType> = props => {
   const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
 
-  const employeeIds = props.employeesData?.map(employee => employee.e_id);
+  let employeeIdOptions = (props.employeesData || []).map(employee => ({
+    value: employee.e_id,
+    label: employee.e_id,
+  }));
 
-  let employeeIdOptions = (employeeIds || []).map(employeeId => ({
-    value: employeeId,
-    label: employeeId,
+  let roleOptions = (props.rolesData || []).map(role => ({
+    value: role._id,
+    label: role.name,
   }));
 
   const {
@@ -60,15 +57,6 @@ const Form: React.FC<PropsType> = props => {
       comment: '',
     },
   });
-
-  const filteredRoleOptions = useMemo(() => {
-    if (session?.user.role === 'admin') {
-      return roleOptions.filter(
-        option => option.value !== 'admin' && option.value !== 'super',
-      );
-    }
-    return roleOptions;
-  }, [session?.user.role]);
 
   const [employeeId, setEmployeeId] = useState<string>('');
 
@@ -130,17 +118,19 @@ const Form: React.FC<PropsType> = props => {
         return;
       }
 
-      if (
-        session?.user.role == 'admin' &&
-        (parsed.data.role == 'super' || parsed.data.role == 'admin')
-      ) {
-        toast.error("You don't have the permission to create this user");
-        return;
-      }
+      // if (
+      //   session?.user.role == 'admin' &&
+      //   (parsed.data.role == 'super' || parsed.data.role == 'admin')
+      // ) {
+      //   toast.error("You don't have the permission to create this user");
+      //   return;
+      // }
 
       setLoading(true);
 
-      if (session?.user.role == 'super') {
+      delete parsed.data.permissions;
+
+      if (session?.user.permissions.includes('admin:create_user')) {
         let url: string =
           process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
         let options: {} = {
@@ -160,7 +150,9 @@ const Form: React.FC<PropsType> = props => {
         } else {
           toast.error(response.data as string);
         }
-      } else {
+      } else if (
+        session?.user.permissions.includes('admin:create_user_approval')
+      ) {
         let url: string =
           process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
         let options: {} = {
@@ -183,6 +175,9 @@ const Form: React.FC<PropsType> = props => {
         } else {
           toast.error(response.data.message);
         }
+      } else {
+        toast.error('You do not have permission to create users');
+        return;
       }
 
       console.log('data', parsed.data, userData);
@@ -284,31 +279,46 @@ const Form: React.FC<PropsType> = props => {
             </button>
           </div>
         </div>
+        <div>
+          <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <span className="uppercase">Role*</span>
+            <span className="text-red-700 text-wrap block text-xs">
+              {errors.role_id && errors.role_id?.message}
+            </span>
+          </label>
 
-        <Controller
-          name="role"
-          control={control}
-          render={({ field }) => {
-            return (
-              <Select
-                {...field}
-                options={filteredRoleOptions}
-                closeMenuOnSelect={true}
-                placeholder="Select role"
-                classNamePrefix="react-select"
-                menuPortalTarget={setMenuPortalTarget}
-                value={
-                  filteredRoleOptions.find(
-                    option => option.value === field.value,
-                  ) || null
-                }
-                onChange={option => field.onChange(option ? option.value : '')}
-              />
-            );
-          }}
-        />
+          <Controller
+            name="role_id"
+            control={control}
+            render={({ field }) => {
+              return (
+                <Select
+                  {...field}
+                  options={roleOptions}
+                  closeMenuOnSelect={true}
+                  placeholder="Select role"
+                  classNamePrefix="react-select"
+                  menuPortalTarget={setMenuPortalTarget}
+                  value={
+                    roleOptions.find(
+                      option => String(option.value) === field.value,
+                    ) || null
+                  }
+                  onChange={option => {
+                    field.onChange(option ? option.value : '');
+                    setValue(
+                      'permissions',
+                      props.rolesData.find(role => role._id === option?.value)
+                        ?.permissions || [],
+                    );
+                  }}
+                />
+              );
+            }}
+          />
+        </div>
 
-        {watch('role') === 'marketer' && (
+        {watch('permissions')?.includes('login:crm') && (
           <div>
             <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
               <span className="uppercase">Provided Name*</span>
