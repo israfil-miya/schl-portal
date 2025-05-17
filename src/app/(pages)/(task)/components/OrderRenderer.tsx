@@ -17,20 +17,17 @@ interface OrderRendererProps {
 const OrderRenderer: React.FC<OrderRendererProps> = props => {
   const [timeRemaining, setTimeRemaining] = useState('');
   const [diff, setDiff] = useState(0);
-  const [statusColor, setStatusColor] = useState(
-    'bg-green-600 text-white border-green-600',
-  );
+  const [statusColor, setStatusColor] = useState('');
 
   const { data: session } = useSession();
 
   useEffect(() => {
     // console.log('>>> ' + diff + ' <<<');
-    if (diff <= 0) setStatusColor('bg-gray-800 border-gray-800 text-white');
-    else if (diff <= 30 * 60 * 1000)
+    if (diff <= 0) {
       setStatusColor('bg-orange-600 text-white border-orange-600');
-    else if (diff <= 60 * 60 * 1000)
-      setStatusColor('bg-yellow-600 text-white border-yellow-600');
-    else setStatusColor('bg-green-600 text-white border-green-600');
+    } else if (diff <= 30 * 60 * 1000)
+      setStatusColor('bg-yellow-300 text-black border-yellow-600');
+    else setStatusColor('');
   }, [diff]);
 
   useEffect(() => {
@@ -70,7 +67,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
   // rendering the order data
   return (
     <>
-      <tr key={props.key}>
+      <tr key={props.key} className={statusColor}>
         <td className="text-center">{props.index + 1}</td>
         <td>
           {['super', 'admin', 'manager'].includes(session?.user.role || '') ? (
@@ -107,14 +104,18 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
 
         <td
           className="uppercase text-nowrap"
-          style={{ verticalAlign: 'middle' }}
+          // style={{ verticalAlign: 'middle' }}
         >
-          <Badge value={timeRemaining} className={statusColor} />
+          {timeRemaining}
         </td>
 
-        <td className="uppercase text-wrap" style={{ verticalAlign: 'middle' }}>
+        <td className="uppercase text-wrap">
           {props.order.task?.split('+').map((task, index) => {
-            return <Badge key={index} value={task} />;
+            // return <Badge key={index} value={task} />;
+            return (
+              `${task}` +
+              (index !== props.order.task.split('+').length - 1 ? ' + ' : '')
+            );
           })}
         </td>
         <td>{props.order.et}</td>
@@ -123,25 +124,24 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
         <td>
           <ClickToCopy text={props.order.folder_path} />
         </td>
-        <td
-          className="uppercase text-nowrap"
-          style={{ verticalAlign: 'middle' }}
-        >
-          {props.order.priority != '' && (
-            <Badge
-              value={props.order.priority}
-              className={
-                props.order.priority == 'High'
-                  ? 'bg-orange-600 text-white border-orange-600'
-                  : props.order.priority == 'Medium'
-                    ? 'bg-yellow-600 text-white border-yellow-600'
-                    : 'bg-green-600 text-white border-green-600'
-              }
-            />
-          )}
+        <td className="uppercase text-nowrap">
+          {
+            props.order.priority != '' && props.order.priority
+            // <Badge
+            //   value={props.order.priority}
+            //   className={
+            //     props.order.priority == 'High'
+            //       ? 'bg-orange-600 text-white border-orange-600'
+            //       : props.order.priority == 'Medium'
+            //         ? 'bg-yellow-600 text-white border-yellow-600'
+            //         : 'bg-green-600 text-white border-green-600'
+            //   }
+            // />
+          }
         </td>
-        <td className="uppercase text-wrap" style={{ verticalAlign: 'middle' }}>
-          <Badge value={props.order.type} />
+        <td className="uppercase text-wrap">
+          {/* <Badge value={props.order.type} /> */}
+          {props.order.type}
         </td>
 
         <ExtendableTd data={props.order.comment} />
