@@ -81,10 +81,15 @@ async function handleGetUnfinishedOrders(req: NextRequest): Promise<{
   status: number;
 }> {
   try {
-    const orders: any[] = await Order.find({
-      status: { $nin: ['Finished', 'Correction'] },
-      type: { $ne: 'Test' },
-    }).lean();
+    const orders: any[] = await Order.aggregate([
+      {
+        $match: {
+          status: { $nin: ['Finished', 'Correction'] },
+          type: { $ne: 'Test' },
+          $expr: { $ne: ['$production', '$quantity'] },
+        },
+      },
+    ]);
 
     if (orders) {
       const sortedOrders = orders

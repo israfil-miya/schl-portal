@@ -26,7 +26,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
     if (diff <= 0) {
       setStatusColor('bg-orange-600 text-white border-orange-600');
     } else if (diff <= 30 * 60 * 1000)
-      setStatusColor('bg-yellow-300 text-black border-yellow-600');
+      setStatusColor('bg-yellow-300 text-black border-yellow-300');
     else setStatusColor('');
   }, [diff]);
 

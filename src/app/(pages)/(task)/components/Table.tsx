@@ -24,15 +24,15 @@ const Table = () => {
         </div>
         <div>
           <h3 className="text-lg uppercase tracking-wider font-semibold underline flex justify-start mb-2">
-            Running Tasks
-          </h3>
-          <RunningTasksTable />
-        </div>
-        <div>
-          <h3 className="text-lg uppercase tracking-wider font-semibold underline flex justify-start mb-2">
             Waiting For QC
           </h3>
           <WaitingForQC />
+        </div>
+        <div>
+          <h3 className="text-lg uppercase tracking-wider font-semibold underline flex justify-start mb-2">
+            Running Tasks
+          </h3>
+          <RunningTasksTable />
         </div>
       </div>
     </>
