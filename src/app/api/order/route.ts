@@ -107,6 +107,42 @@ async function handleGetUnfinishedOrders(req: NextRequest): Promise<{
   }
 }
 
+async function handleGeQCOrders(req: NextRequest): Promise<{
+  data: string | OrderDataType[];
+  status: number;
+}> {
+  try {
+    const orders: any[] = await Order.aggregate([
+      {
+        $match: {
+          status: { $nin: ['Finished', 'Correction'] },
+          type: { $ne: 'Test' },
+          $expr: { $eq: ['$production', '$quantity'] },
+        },
+      },
+    ]);
+
+    if (orders) {
+      const sortedOrders = orders
+        .map(order => ({
+          ...order,
+          timeDifference: calculateTimeDifference(
+            order.delivery_date,
+            order.delivery_bd_time,
+          ),
+        }))
+        .sort((a, b) => a.timeDifference - b.timeDifference);
+
+      return { data: sortedOrders, status: 200 };
+    } else {
+      return { data: [], status: 200 };
+    }
+  } catch (e) {
+    console.error(e);
+    return { data: 'An error occurred', status: 500 };
+  }
+}
+
 async function handleGetRedoOrders(req: NextRequest): Promise<{
   data: string | (OrderDataType & { timeDifference: number })[];
   status: number;
@@ -886,6 +922,9 @@ export async function GET(req: NextRequest) {
   switch (getQuery(req).action) {
     case 'get-unfinished-orders':
       res = await handleGetUnfinishedOrders(req);
+      return NextResponse.json(res.data, { status: res.status });
+    case 'get-qc-orders':
+      res = await handleGeQCOrders(req);
       return NextResponse.json(res.data, { status: res.status });
     case 'get-redo-orders':
       res = await handleGetRedoOrders(req);

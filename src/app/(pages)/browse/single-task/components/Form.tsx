@@ -84,7 +84,8 @@ const Form: React.FC<PropsType> = props => {
       if (
         props.orderData.quantity != orderData.quantity ||
         props.orderData.production != orderData.production ||
-        props.orderData.qc1 != orderData.qc1
+        props.orderData.qc1 != orderData.qc1 ||
+        props.orderData.qc2 != orderData.qc2
       ) {
         toast.error('Save changes before updating the status!');
         return;
@@ -104,7 +105,8 @@ const Form: React.FC<PropsType> = props => {
 
       if (
         orderData.production >= orderData.quantity &&
-        orderData.qc1 >= orderData.quantity
+        orderData.qc1 >= orderData.quantity &&
+        orderData.qc2 >= orderData.quantity
       ) {
         const response = await fetchApi(url, options);
 
@@ -117,8 +119,11 @@ const Form: React.FC<PropsType> = props => {
       } else {
         if (orderData.production < orderData.quantity) {
           toast.error('Production is not completed');
-        } else if (orderData.qc1 < orderData.quantity) {
-          toast.error('QC1 is not completed');
+        } else if (
+          orderData.qc1 < orderData.quantity ||
+          orderData.qc2 < orderData.quantity
+        ) {
+          toast.error('QC is not completed');
         } else {
           toast.error('Unable to change status');
         }
@@ -389,7 +394,21 @@ const Form: React.FC<PropsType> = props => {
               {...register('qc1')}
               className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
               type="number"
-              placeholder="Enter QC count"
+              placeholder="Enter QC count (1)"
+            />
+          </div>
+          <div>
+            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+              <span className="uppercase">QC2*</span>
+              <span className="text-red-700 text-wrap block text-xs">
+                {errors.qc2 && errors.qc2.message}
+              </span>
+            </label>
+            <input
+              {...register('qc2')}
+              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+              type="number"
+              placeholder="Enter QC count (2)"
             />
           </div>
           <div>

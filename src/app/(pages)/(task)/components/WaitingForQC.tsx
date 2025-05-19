@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import OrderRenderer from './OrderRenderer';
 
-function RunningTasks() {
+function WaitingForQC() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<OrderDataType[]>([]);
 
@@ -25,8 +25,7 @@ function RunningTasks() {
     try {
       setLoading(true);
       const url =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/order?action=get-unfinished-orders';
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-qc-orders';
       const options = {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -94,8 +93,8 @@ function RunningTasks() {
           <table className="table border">
             <tbody>
               <tr key={0}>
-                <td className="align-center text-center text-wrap text-gray-400">
-                  No Running Tasks To Show.
+                <td className="align-center capitalize text-center text-wrap text-gray-400">
+                  No Task Waiting For QC
                 </td>
               </tr>
             </tbody>
@@ -124,4 +123,4 @@ function RunningTasks() {
   );
 }
 
-export default RunningTasks;
+export default WaitingForQC;

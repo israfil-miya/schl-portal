@@ -190,7 +190,8 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
 
       if (
         orderData.production >= orderData.quantity &&
-        orderData.qc1 >= orderData.quantity
+        orderData.qc1 >= orderData.quantity &&
+        orderData.qc2 >= orderData.quantity
       ) {
         const response = await fetchApi(url, options);
 
@@ -204,8 +205,11 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       } else {
         if (orderData.production < orderData.quantity) {
           toast.error('Production is not completed');
-        } else if (orderData.qc1 < orderData.quantity) {
-          toast.error('QC1 is not completed');
+        } else if (
+          orderData.qc1 < orderData.quantity ||
+          orderData.qc2 < orderData.quantity
+        ) {
+          toast.error('QC is not completed');
         } else {
           toast.error('Unable to change status');
         }
@@ -396,6 +400,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                   <th>E.T.</th>
                   <th>Production</th>
                   <th>QC1</th>
+                  <th>QC2</th>
                   <th>Folder Location</th>
                   <th>Type</th>
                   <th>Status</th>
@@ -433,6 +438,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                     <td className="text-wrap">{order.et}</td>
                     <td className="text-wrap">{order.production}</td>
                     <td className="text-wrap">{order.qc1}</td>
+                    <td className="text-wrap">{order.qc2}</td>
                     <td className="text-wrap">
                       <ClickToCopy text={order.folder_path} />
                     </td>

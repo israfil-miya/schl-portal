@@ -13,6 +13,7 @@ interface OrderType {
   et: number;
   production: number;
   qc1: number;
+  qc2: number;
   comment: string;
   type: string;
   status: string;
@@ -38,9 +39,11 @@ const OrderSchema = new mongoose.Schema<OrderDocType>(
   {
     client_code: {
       type: String,
+      required: [true, 'Client code is not given'],
     },
     client_name: {
       type: String,
+      required: [true, 'Client name is not given'],
     },
     folder: {
       type: String,
@@ -51,6 +54,7 @@ const OrderSchema = new mongoose.Schema<OrderDocType>(
     },
     quantity: {
       type: Number,
+      default: 0,
     },
     download_date: {
       type: String,
@@ -72,6 +76,11 @@ const OrderSchema = new mongoose.Schema<OrderDocType>(
     },
     qc1: {
       type: Number,
+      default: 0,
+    },
+    qc2: {
+      type: Number,
+      default: 0,
     },
     comment: {
       type: String,

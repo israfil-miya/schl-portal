@@ -102,14 +102,9 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
             : null}
         </td>
 
-        <td
-          className="uppercase text-nowrap"
-          // style={{ verticalAlign: 'middle' }}
-        >
-          {timeRemaining}
-        </td>
+        <td className="capitalize text-nowrap ">{timeRemaining}</td>
 
-        <td className="uppercase text-wrap">
+        <td className="capitalize text-wrap">
           {props.order.task?.split('+').map((task, index) => {
             // return <Badge key={index} value={task} />;
             return (
@@ -121,10 +116,11 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
         <td>{props.order.et}</td>
         <td>{props.order.production}</td>
         <td>{props.order.qc1}</td>
+        <td>{props.order.qc2}</td>
         <td>
           <ClickToCopy text={props.order.folder_path} />
         </td>
-        <td className="uppercase text-nowrap">
+        <td className="capitalize text-nowrap">
           {
             props.order.priority != '' && props.order.priority
             // <Badge
@@ -139,7 +135,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
             // />
           }
         </td>
-        <td className="uppercase text-wrap">
+        <td className="capitalize text-wrap">
           {/* <Badge value={props.order.type} /> */}
           {props.order.type}
         </td>

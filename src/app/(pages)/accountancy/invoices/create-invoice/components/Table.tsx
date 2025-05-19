@@ -5,9 +5,13 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 
-import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
+import {
+  validationSchema,
+  OrderDataType as zod_OrderDataType,
+} from '@/app/(pages)/browse/schema';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import {
   ChevronLeft,
@@ -232,6 +236,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                   <th>E.T.</th>
                   <th>Production</th>
                   <th>QC1</th>
+                  <th>QC2</th>
                   <th>Status</th>
                   <th>Comment</th>
                   {/* <th>Action</th> */}
@@ -263,6 +268,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                     <td className="text-wrap">{order.et}</td>
                     <td className="text-wrap">{order.production}</td>
                     <td className="text-wrap">{order.qc1}</td>
+                    <td className="text-wrap">{order.qc2}</td>
                     <td
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}
@@ -287,41 +293,6 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                       )}
                     </td>
                     <ExtendableTd data={order.comment || ''} />
-
-                    {/* <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          <DeleteButton
-                            orderData={order}
-                            submitHandler={deleteUser}
-                          />
-
-                          <EditButton
-                            orderData={order}
-                            employeesData={props.employeesData}
-                            submitHandler={editUser}
-                            loading={loading}
-                          />
-
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                `${order.name} ${order.password}`,
-                              );
-                              toast.info('Copied to clipboard', {
-                                position: 'bottom-right',
-                              });
-                            }}
-                            className="rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                          >
-                            <ClipboardCopy size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    </td> */}
                   </tr>
                 ))}
               </tbody>

@@ -34,6 +34,7 @@ export const validationSchema = z.object({
     .default(0),
   production: z.coerce.number().default(0),
   qc1: z.coerce.number().default(0),
+  qc2: z.coerce.number().default(0),
   comment: z.string(),
   type: z.string(),
   status: z.string(),

@@ -77,6 +77,7 @@ function TestAndCorrection() {
                 <th>E.T</th>
                 <th>Production</th>
                 <th>QC1</th>
+                <th>QC2</th>
                 <th>Folder Location</th>
                 <th>Priority</th>
                 <th>Type</th>
@@ -135,6 +136,7 @@ function TestAndCorrection() {
                     <td>{order.et}</td>
                     <td>{order.production}</td>
                     <td>{order.qc1}</td>
+                    <td>{order.qc2}</td>
                     <td>
                       <ClickToCopy text={order.folder_path} />
                     </td>
@@ -182,7 +184,7 @@ function TestAndCorrection() {
           <table className="table border">
             <tbody>
               <tr key={0}>
-                <td className="align-center text-center text-wrap">
+                <td className="align-center capitalize text-center text-wrap">
                   No Test or Correction To Show.
                 </td>
               </tr>
