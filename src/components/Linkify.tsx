@@ -4,10 +4,11 @@ import React from 'react';
 interface PropsType {
   data: string;
   coverText?: string;
+  newTab?: boolean;
 }
 
 const Linkify: React.FC<PropsType> = props => {
-  const { data, coverText } = props;
+  const { data, coverText, newTab = true } = props;
 
   return (
     <>
@@ -19,7 +20,8 @@ const Linkify: React.FC<PropsType> = props => {
             <Link
               key={index}
               className="block hover:cursor-pointer hover:underline hover:opacity-100 text-blue-700"
-              target="_blank"
+              target={newTab ? '_blank' : '_self'}
+              rel="noopener noreferrer"
               href={websiteLink}
             >
               {coverText ? coverText : websiteLink}

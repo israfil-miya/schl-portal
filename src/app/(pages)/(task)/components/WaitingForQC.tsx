@@ -58,7 +58,7 @@ function WaitingForQC() {
     <>
       <div className="table-responsive text-md">
         {orders?.length !== 0 ? (
-          <table className="table border-black table-bordered">
+          <table className="table table-hover border-gray-300 table-bordered">
             <thead>
               <tr className="bg-gray-50 text-nowrap">
                 <th>S/N</th>

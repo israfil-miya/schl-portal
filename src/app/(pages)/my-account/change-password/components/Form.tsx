@@ -159,7 +159,7 @@ const Form: React.FC = props => {
                 setValue('new_password', generatePassword(watch('username')));
               }}
               type="button"
-              className="bg-gray-200 hover:bg-gray-300 text-black py-3 px-4 rounded-r focus:outline-none transition duration-100 delay-100"
+              className="bg-gray-100 disabled:cursor-not-allowed border-gray-200 border enabled:hover:bg-gray-200 text-gray-600 py-[0.75rem] px-4 rounded-r enabled:focus:outline-none enabled:transition duration-100 delay-100"
             >
               <KeySquare size={18} />
             </button>

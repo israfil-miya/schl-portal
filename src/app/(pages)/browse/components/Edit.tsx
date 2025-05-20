@@ -135,7 +135,7 @@ const EditButton: React.FC<PropsType> = props => {
     if (isOpen) {
       reset(props.orderData);
     }
-    console.log(props.orderData);
+    // console.log(props.orderData);
   }, [isOpen]);
 
   const customStyles = {

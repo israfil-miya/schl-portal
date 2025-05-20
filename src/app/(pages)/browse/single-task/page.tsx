@@ -1,7 +1,9 @@
 import { auth } from '@/auth';
+import Linkify from '@/components/Linkify';
 import { fetchApi, verifyCookie } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import { cookies } from 'next/headers';
+import Link from 'next/link';
 import { redirect, useSearchParams } from 'next/navigation';
 import React, { Suspense } from 'react';
 import { OrderDataType } from '../schema';
@@ -55,9 +57,20 @@ export default async function Protected({
 
   return (
     <div className="px-4 mt-8 mb-4 flex flex-col justify-center md:w-[70vw] mx-auto">
-      <h1 className="text-2xl font-semibold text-left mb-8 underline underline-offset-4 uppercase">
-        Manage task
+      <h1 className="text-2xl font-semibold text-left underline underline-offset-4 uppercase">
+        TASK DETAILS
       </h1>
+      <span className="mb-8 text-sm font-mono text-gray-400 flex flex-row gap-2 mt-1">
+        (for updating client code/name update from
+        <Link
+          href={'/browse'}
+          className="block hover:cursor-pointer hover:underline hover:opacity-100 text-blue-700"
+        >
+          Browse
+        </Link>{' '}
+        page)
+      </span>
+
       <Suspense fallback={<p className="text-center">Loading...</p>}>
         <InputForm orderData={orderData} />
       </Suspense>
