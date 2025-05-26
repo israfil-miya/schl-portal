@@ -5,6 +5,7 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { cn } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
@@ -373,15 +374,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Users To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Users Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

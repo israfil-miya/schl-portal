@@ -10,6 +10,7 @@ import {
 } from '@/app/(pages)/admin/employees/schema';
 import Badge from '@/components/Badge';
 import HiddenText from '@/components/HiddenText';
+import NoData, { Type } from '@/components/NoData';
 import { EmployeeDataType } from '@/models/Employees';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
@@ -379,15 +380,7 @@ const Table = () => {
               </tfoot>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Employees To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Employees Found" type={Type.danger} />
           ))}
       </div>
 

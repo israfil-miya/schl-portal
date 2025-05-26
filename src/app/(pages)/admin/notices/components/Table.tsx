@@ -1,6 +1,7 @@
 'use client';
 
 import Badge from '@/components/Badge';
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { cn, constructFileName, fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
@@ -403,15 +404,7 @@ const Table = () => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Notices To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Notices Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

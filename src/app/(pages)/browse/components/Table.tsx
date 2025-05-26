@@ -2,6 +2,7 @@
 
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { cn, fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
@@ -17,7 +18,7 @@ import {
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   validationSchema,
@@ -26,6 +27,8 @@ import {
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
+
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 
 type OrdersState = {
   pagination: {
@@ -52,9 +55,6 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
-
   const { data: session } = useSession();
   const userRole = session?.user.role;
 
@@ -68,79 +68,87 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     generalSearchString: '',
   });
 
-  async function getAllOrders() {
-    try {
-      // setLoading(true);
+  const getAllOrders = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: false,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          staleClient: true,
-          regularClient: false,
-          test: false,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: false,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            staleClient: true,
+            regularClient: false,
+            test: false,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setOrders(response.data as OrdersState);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setOrders(response.data as OrdersState);
+          setPageCount((response.data as OrdersState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving orders data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving orders data');
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [],
+  );
 
-  async function getAllOrdersFiltered() {
-    try {
-      // setLoading(true);
+  const getAllOrdersFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setOrders(response.data as OrdersState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setOrders(response.data as OrdersState);
+          setIsFiltered(true);
+          setPageCount((response.data as OrdersState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving orders data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving orders data');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
   async function deleteOrder(orderData: OrderDataType) {
     try {
@@ -197,8 +205,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
 
         if (response.ok) {
           toast.success('Changed the status to FINISHED');
-          if (!isFiltered) await getAllOrders();
-          else await getAllOrdersFiltered();
+          await fetchOrders();
         } else {
           toast.error('Unable to change status');
         }
@@ -239,8 +246,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
 
       if (response.ok) {
         toast.success('Changed the status to CORRECTION');
-        if (!isFiltered) await getAllOrders();
-        else await getAllOrdersFiltered();
+        await fetchOrders();
       } else {
         toast.error('Unable to change status');
       }
@@ -281,8 +287,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       if (response.ok) {
         toast.success('Updated the order data');
 
-        if (!isFiltered) await getAllOrders();
-        else await getAllOrdersFiltered();
+        await fetchOrders();
       } else {
         toast.error(response.data as string);
       }
@@ -294,40 +299,34 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     }
   }
 
-  useEffect(() => {
-    getAllOrders();
-  }, []);
-
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (orders?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllOrders();
-    else getAllOrdersFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (orders?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllOrdersFiltered();
-      }
-      if (orders) setPageCount(orders?.pagination?.pageCount);
-      prevPageCount.current = orders?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchOrders = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllOrders(page, itemPerPage);
+    } else {
+      await getAllOrdersFiltered(page, itemPerPage);
     }
-  }, [orders?.pagination?.pageCount]);
+  }, [isFiltered, getAllOrders, getAllOrdersFiltered, page, itemPerPage]);
 
-  useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchOrders,
+  });
 
-    // if (!isFiltered) getAllOrders();
-    // else getAllOrdersFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    // 1) apply the new filters
+    setIsFiltered(true);
+
+    // 2) if we're already on page 1, directly fetch
+    if (page === 1) {
+      fetchOrders();
+    } else {
+      // otherwise reset to page 1 and let usePaginationManager fire the fetch
+      setPage(1);
+    }
+  }, [page, fetchOrders, setIsFiltered, setPage]);
 
   return (
     <>
@@ -354,8 +353,8 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           <Pagination
             page={page}
             pageCount={pageCount}
-            setPage={setPage}
             isLoading={loading}
+            setPage={setPage}
           />
 
           <select
@@ -371,7 +370,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllOrdersFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
@@ -516,15 +515,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Orders To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Orders Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

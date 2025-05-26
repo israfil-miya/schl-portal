@@ -2,6 +2,7 @@
 
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { cn, fetchApi } from '@/lib/utils';
 import { formatDate, formatTime } from '@/utility/date';
@@ -257,15 +258,7 @@ const Table = () => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Data To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Client Records Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>{``}</style>

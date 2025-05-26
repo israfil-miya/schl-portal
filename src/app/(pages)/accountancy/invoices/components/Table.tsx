@@ -5,6 +5,7 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { formatDate } from '@/utility/date';
 import {
@@ -392,15 +393,7 @@ const Table: React.FC = props => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Invoices To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Invoices Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

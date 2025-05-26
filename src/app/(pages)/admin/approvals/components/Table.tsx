@@ -3,6 +3,7 @@
 import { fetchApi } from '@/lib/utils';
 
 import Badge from '@/components/Badge';
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { ApprovalDataType } from '@/models/Approvals';
 import { formatDate, formatTime, formatTimestamp } from '@/utility/date';
@@ -486,15 +487,7 @@ const Table: React.FC = props => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Approvals To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Requests Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>
