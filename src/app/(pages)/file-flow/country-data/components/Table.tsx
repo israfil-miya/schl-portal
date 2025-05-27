@@ -11,6 +11,7 @@ import {
 import { OrderDetails } from '@/app/api/order/route';
 import Badge from '@/components/Badge';
 import HiddenText from '@/components/HiddenText';
+import NoData, { Type } from '@/components/NoData';
 import { formatDate, formatTime, getTodayDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight, CirclePlus, Undo2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -168,15 +169,7 @@ const Table: React.FC<{ country: string; date: string }> = props => {
               </tfoot>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Orders To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Orders Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

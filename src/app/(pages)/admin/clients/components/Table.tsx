@@ -4,6 +4,7 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { ClientDataType } from '@/models/Clients';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
@@ -376,15 +377,7 @@ const Table = () => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Clients To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Clients Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

@@ -2,6 +2,7 @@
 
 import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
+import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
@@ -373,15 +374,7 @@ const Table = () => {
               </tbody>
             </table>
           ) : (
-            <table className="table border table-bordered table-striped">
-              <tbody>
-                <tr key={0}>
-                  <td className="align-center text-center text-wrap">
-                    No Reports To Show.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <NoData text="No Reports Found" type={Type.danger} />
           ))}
       </div>
       <style jsx>

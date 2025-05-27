@@ -5,9 +5,14 @@ import ExtendableTd from '@/components/ExtendableTd';
 import { fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 
-import { OrderDataType, validationSchema } from '@/app/(pages)/browse/schema';
+import {
+  validationSchema,
+  OrderDataType as zod_OrderDataType,
+} from '@/app/(pages)/browse/schema';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
+import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import {
   ChevronLeft,
@@ -18,7 +23,7 @@ import {
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Details from './Details';
 import FilterButton from './Filter';
@@ -30,6 +35,24 @@ type OrdersState = {
   };
   items: OrderDataType[];
 };
+
+function getMonthRange(monthYear: string): { from: string; to: string } {
+  if (!monthYear) return { from: '', to: '' };
+
+  const [monthName, year] = monthYear.split('-');
+  const monthNumber = moment().month(monthName).format('MM');
+
+  const startDate = moment
+    .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
+    .startOf('month')
+    .format('YYYY-MM-DD');
+  const endDate = moment
+    .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
+    .endOf('month')
+    .format('YYYY-MM-DD');
+
+  return { from: startDate, to: endDate };
+}
 
 const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [orders, setOrders] = useState<OrdersState>({
@@ -46,16 +69,11 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
-
   const searchParams = useSearchParams();
   const c_code =
     searchParams.get('c-code') || props.clientsData?.[0].client_code;
   const month = searchParams.get('month') || moment().format('MMMM-YYYY');
   const { from, to } = getMonthRange(month);
-
-  const { data: session } = useSession();
 
   const [selectedClient, setSelectedClient] = useState<string>(c_code || '');
 
@@ -68,96 +86,78 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     toDate: to,
   });
 
-  function getMonthRange(monthYear: string): { from: string; to: string } {
-    if (!monthYear) return { from: '', to: '' };
+  const getAllOrdersFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-    const [monthName, year] = monthYear.split('-');
-    const monthNumber = moment().month(monthName).format('MM');
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+            type: 'general',
+          }),
+        };
 
-    const startDate = moment
-      .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
-      .startOf('month')
-      .format('YYYY-MM-DD');
-    const endDate = moment
-      .tz(`${year}-${monthNumber}-01`, 'Asia/Dhaka')
-      .endOf('month')
-      .format('YYYY-MM-DD');
+        let response = await fetchApi(url, options);
 
-    return { from: startDate, to: endDate };
-  }
-
-  async function getAllOrdersFiltered() {
-    try {
-      // setLoading(true);
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=get-all-orders';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-          type: 'general',
-        }),
-      };
-
-      let response = await fetchApi(url, options);
-
-      if (response.ok) {
-        setOrders(response.data as OrdersState);
-        setIsFiltered(true);
-        setSelectedClient(filters.clientCode);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setOrders(response.data as OrdersState);
+          setIsFiltered(true);
+          setSelectedClient(filters.clientCode);
+          setPageCount((response.data as OrdersState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving orders data');
+      } finally {
+        setLoading(false);
+        console.log('Filters::: ', filters);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving orders data');
-    } finally {
-      setLoading(false);
-      console.log('Filters::: ', filters);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
-  useEffect(() => {
-    if (isFiltered) getAllOrdersFiltered();
-  }, [c_code, month]);
-
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (orders?.pagination?.pageCount == 1) return;
-    if (isFiltered) getAllOrdersFiltered();
+  const fetchOrders = useCallback(async () => {
+    // if (!isFiltered) {
+    //   await getAllOrders(page, itemPerPage);
+    // } else {
+    await getAllOrdersFiltered(page, itemPerPage);
     // }
-    prevPage.current = page;
-  }, [page]);
+  }, [getAllOrdersFiltered, page, itemPerPage]);
 
-  useEffect(() => {
-    if (orders?.pagination?.pageCount !== undefined) {
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchOrders,
+  });
+
+  const handleSearch = useCallback(() => {
+    // 1) apply the new filters
+    setIsFiltered(true);
+
+    // 2) if we're already on page 1, directly fetch
+    if (page === 1) {
+      fetchOrders();
+    } else {
+      // otherwise reset to page 1 and let usePaginationManager fire the fetch
       setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllOrdersFiltered();
-      }
-      if (orders) setPageCount(orders?.pagination?.pageCount);
-      prevPageCount.current = orders?.pagination?.pageCount;
-      prevPage.current = 1;
     }
-  }, [orders?.pagination?.pageCount]);
-
-  useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
-
-    // if (isFiltered) getAllOrdersFiltered();
-  }, [itemPerPage]);
+  }, [page, fetchOrders, setIsFiltered, setPage]);
 
   return (
     <>
@@ -198,7 +198,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllOrdersFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             clientsData={props.clientsData}
@@ -232,6 +232,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                   <th>E.T.</th>
                   <th>Production</th>
                   <th>QC1</th>
+                  <th>QC2</th>
                   <th>Status</th>
                   <th>Comment</th>
                   {/* <th>Action</th> */}
@@ -263,6 +264,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                     <td className="text-wrap">{order.et}</td>
                     <td className="text-wrap">{order.production}</td>
                     <td className="text-wrap">{order.qc1}</td>
+                    <td className="text-wrap">{order.qc2}</td>
                     <td
                       className="uppercase text-wrap"
                       style={{ verticalAlign: 'middle' }}
@@ -287,47 +289,12 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                       )}
                     </td>
                     <ExtendableTd data={order.comment || ''} />
-
-                    {/* <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          <DeleteButton
-                            orderData={order}
-                            submitHandler={deleteUser}
-                          />
-
-                          <EditButton
-                            orderData={order}
-                            employeesData={props.employeesData}
-                            submitHandler={editUser}
-                            loading={loading}
-                          />
-
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                `${order.name} ${order.password}`,
-                              );
-                              toast.info('Copied to clipboard', {
-                                position: 'bottom-right',
-                              });
-                            }}
-                            className="rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                          >
-                            <ClipboardCopy size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    </td> */}
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <NoData text="No orders found!" type={Type.danger} />
+            <NoData text="No Orders Found!" type={Type.danger} />
           ))}
       </div>
 

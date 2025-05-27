@@ -135,7 +135,7 @@ const EditButton: React.FC<PropsType> = props => {
     if (isOpen) {
       reset(props.orderData);
     }
-    console.log(props.orderData);
+    // console.log(props.orderData);
   }, [isOpen]);
 
   const customStyles = {
@@ -498,7 +498,21 @@ const EditButton: React.FC<PropsType> = props => {
                   {...register('qc1')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   type="number"
-                  placeholder="Enter QC count"
+                  placeholder="Enter QC count (1)"
+                />
+              </div>
+              <div>
+                <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                  <span className="uppercase">QC2*</span>
+                  <span className="text-red-700 text-wrap block text-xs">
+                    {errors.qc2 && errors.qc2.message}
+                  </span>
+                </label>
+                <input
+                  {...register('qc2')}
+                  className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                  type="number"
+                  placeholder="Enter QC count (2)"
                 />
               </div>
               <div>

@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 
+import { BookCheck, SquarePen, Trash2 } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 import { toast } from 'sonner';
 import {
@@ -26,7 +27,12 @@ interface PropsType {
 }
 
 const Form: React.FC<PropsType> = props => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    deleteOrder: false,
+    editOrder: false,
+    redoOrder: false,
+    finishOrder: false,
+  });
   const { data: session } = useSession();
 
   const router = useRouter();
@@ -47,8 +53,11 @@ const Form: React.FC<PropsType> = props => {
     },
   });
 
-  async function deleteOrder(orderData: OrderDataType) {
+  const deleteOrder = async (orderData: OrderDataType) => {
     try {
+      if (!confirm('Are you sure you want to delete this order?')) return;
+      setLoading(prevData => ({ ...prevData, deleteOrder: true }));
+
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
       let options: {} = {
@@ -75,16 +84,20 @@ const Form: React.FC<PropsType> = props => {
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while sending request for approval');
+    } finally {
+      setLoading(prevData => ({ ...prevData, deleteOrder: false }));
     }
-    return;
-  }
+  };
 
   const finishOrder = async (orderData: OrderDataType) => {
     try {
+      setLoading(prevData => ({ ...prevData, finishOrder: true }));
+
       if (
         props.orderData.quantity != orderData.quantity ||
         props.orderData.production != orderData.production ||
-        props.orderData.qc1 != orderData.qc1
+        props.orderData.qc1 != orderData.qc1 ||
+        props.orderData.qc2 != orderData.qc2
       ) {
         toast.error('Save changes before updating the status!');
         return;
@@ -104,7 +117,8 @@ const Form: React.FC<PropsType> = props => {
 
       if (
         orderData.production >= orderData.quantity &&
-        orderData.qc1 >= orderData.quantity
+        orderData.qc1 >= orderData.quantity &&
+        orderData.qc2 >= orderData.quantity
       ) {
         const response = await fetchApi(url, options);
 
@@ -117,8 +131,11 @@ const Form: React.FC<PropsType> = props => {
       } else {
         if (orderData.production < orderData.quantity) {
           toast.error('Production is not completed');
-        } else if (orderData.qc1 < orderData.quantity) {
-          toast.error('QC1 is not completed');
+        } else if (
+          orderData.qc1 < orderData.quantity ||
+          orderData.qc2 < orderData.quantity
+        ) {
+          toast.error('QC is not completed');
         } else {
           toast.error('Unable to change status');
         }
@@ -126,12 +143,15 @@ const Form: React.FC<PropsType> = props => {
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while changing the status');
+    } finally {
+      setLoading(prevData => ({ ...prevData, finishOrder: false }));
     }
-    return;
   };
 
   const redoOrder = async (orderData: OrderDataType) => {
     try {
+      setLoading(prevData => ({ ...prevData, redoOrder: true }));
+
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/order?action=redo-order';
       let options: {} = {
@@ -155,13 +175,14 @@ const Form: React.FC<PropsType> = props => {
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while changing the status');
+    } finally {
+      setLoading(prevData => ({ ...prevData, redoOrder: false }));
     }
-    return;
   };
 
-  async function editOrder(editedOrderData: OrderDataType) {
+  const editOrder = async (editedOrderData: OrderDataType) => {
     try {
-      setLoading(true);
+      setLoading(prevData => ({ ...prevData, editOrder: true }));
       const parsed = validationSchema.safeParse(editedOrderData);
 
       if (!parsed.success) {
@@ -193,9 +214,9 @@ const Form: React.FC<PropsType> = props => {
       console.error(error);
       toast.error('An error occurred while updating the order');
     } finally {
-      setLoading(false);
+      setLoading(prevData => ({ ...prevData, editOrder: false }));
     }
-  }
+  };
 
   return (
     <div className="overflow-x-hidden text-start">
@@ -364,34 +385,94 @@ const Form: React.FC<PropsType> = props => {
               placeholder="Enter estimated time in minutes"
             />
           </div>
+
           <div>
-            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
               <span className="uppercase">Production*</span>
               <span className="text-red-700 text-wrap block text-xs">
                 {errors.production && errors.production.message}
               </span>
             </label>
-            <input
-              {...register('production')}
-              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              type="number"
-              placeholder="Enter the number of completed files"
-            />
+            <div className="flex items-center">
+              <input
+                {...register('production')}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                placeholder="Enter the number of completed files"
+                type="number"
+              />
+              <button
+                disabled={watch('quantity') === watch('production')}
+                onClick={() => {
+                  setValue('production', watch('quantity') || 0, {
+                    shouldValidate: true,
+                  });
+                }}
+                type="button"
+                className="bg-gray-100 disabled:cursor-not-allowed border-gray-200 border enabled:hover:bg-gray-200 text-gray-800 py-[0.63rem] px-4 rounded-r enabled:focus:outline-none enabled:transition duration-100 delay-100"
+              >
+                <span className="text-nowrap">= NOF</span>
+              </button>
+            </div>
           </div>
+
           <div>
-            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
               <span className="uppercase">QC1*</span>
               <span className="text-red-700 text-wrap block text-xs">
                 {errors.qc1 && errors.qc1.message}
               </span>
             </label>
-            <input
-              {...register('qc1')}
-              className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-              type="number"
-              placeholder="Enter QC count"
-            />
+            <div className="flex items-center">
+              <input
+                {...register('qc1')}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                placeholder="Enter QC count (1)"
+                type="number"
+              />
+              <button
+                disabled={watch('production') === watch('qc1')}
+                onClick={() => {
+                  setValue('qc1', watch('production') || 0, {
+                    shouldValidate: true,
+                  });
+                }}
+                type="button"
+                className="bg-gray-100 disabled:cursor-not-allowed border-gray-200 border enabled:hover:bg-gray-200 text-gray-800 py-[0.63rem] px-4 rounded-r enabled:focus:outline-none enabled:transition duration-100 delay-100"
+              >
+                <span className="text-nowrap">= PROD</span>
+              </button>
+            </div>
           </div>
+
+          <div>
+            <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2">
+              <span className="uppercase">QC2*</span>
+              <span className="text-red-700 text-wrap block text-xs">
+                {errors.qc2 && errors.qc2.message}
+              </span>
+            </label>
+            <div className="flex items-center">
+              <input
+                {...register('qc2')}
+                className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                placeholder="Enter QC count (2)"
+                type="number"
+              />
+              <button
+                disabled={watch('qc1') === watch('qc2')}
+                onClick={() => {
+                  setValue('qc2', watch('qc1') || 0, {
+                    shouldValidate: true,
+                  });
+                }}
+                type="button"
+                className="bg-gray-100 disabled:cursor-not-allowed border-gray-200 border enabled:hover:bg-gray-200 text-gray-800 py-[0.63rem] px-4 rounded-r enabled:focus:outline-none enabled:transition duration-100 delay-100"
+              >
+                <span className="text-nowrap">= QC1</span>
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
               <span className="uppercase">Folder Path*</span>
@@ -494,41 +575,59 @@ const Form: React.FC<PropsType> = props => {
       <div className="flex gap-2 my-2 mx-1">
         <button
           onClick={() => editOrder(getValues())}
-          disabled={loading}
+          disabled={loading.editOrder}
           className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
           type="button"
         >
-          {loading ? 'Updating...' : 'Update'}
+          {loading.editOrder ? (
+            'Updating...'
+          ) : (
+            <span className="flex items-center gap-2">
+              Update <SquarePen size={18} />
+            </span>
+          )}
         </button>
 
         {['super', 'admin'].includes(session?.user.role || '') && (
           <>
             <button
               onClick={() => deleteOrder(props.orderData)}
-              disabled={loading}
+              disabled={loading.deleteOrder}
               className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
               type="button"
             >
-              {loading ? 'Deleting...' : 'Delete'}
+              {loading.deleteOrder ? (
+                'Deleting...'
+              ) : (
+                <span className="flex items-center gap-2">
+                  Delete <Trash2 size={18} />
+                </span>
+              )}
             </button>
 
             {watch('status')?.trim().toLocaleLowerCase() === 'finished' ? (
               <button
                 onClick={() => redoOrder(getValues())}
-                disabled={loading}
+                disabled={loading.redoOrder}
                 className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
                 type="button"
               >
-                {loading ? 'Redoing...' : 'Redo'}
+                {loading.redoOrder ? 'Redoing...' : 'Redo'}
               </button>
             ) : (
               <button
                 onClick={() => finishOrder(getValues())}
-                disabled={loading}
+                disabled={loading.finishOrder}
                 className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
                 type="button"
               >
-                {loading ? 'Finishing...' : 'Finish'}
+                {loading.finishOrder ? (
+                  'Finishing...'
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Finish <BookCheck size={18} />
+                  </span>
+                )}
               </button>
             )}
           </>

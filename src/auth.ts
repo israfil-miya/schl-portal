@@ -1,10 +1,9 @@
 import mongoose from 'mongoose';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import { authConfig } from './auth.config';
-const BASE_URL: string = process.env.NEXT_PUBLIC_BASE_URL as string;
-
 import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
+import { authConfig } from './auth.config';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 export interface UserSessionType {
   db_id: string;

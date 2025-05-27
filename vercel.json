@@ -15,5 +15,11 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "dev": false,
+      "dev-*": false
+    }
+  }
 }
