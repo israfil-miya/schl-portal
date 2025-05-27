@@ -5,6 +5,7 @@ import { fetchApi } from '@/lib/utils';
 import Badge from '@/components/Badge';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { ApprovalDataType } from '@/models/Approvals';
 import { formatDate, formatTime, formatTimestamp } from '@/utility/date';
 import {
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import FilterButton from './Filter';
 import ViewButton from './View';
@@ -72,78 +73,88 @@ const Table: React.FC = props => {
     toDate: '',
   });
 
-  async function getAllApprovals() {
-    try {
-      // setLoading(true);
+  const getAllApprovals = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/approval?action=get-all-approvals';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: false,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/approval?action=get-all-approvals';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: false,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        console.log('response', response.data);
-        setApprovals(response.data as ApprovalsState);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          console.log('response', response.data);
+          setApprovals(response.data as ApprovalsState);
+          setPageCount((response.data as ApprovalsState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving approvals data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving approvals data');
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [],
+  );
 
-  async function getAllApprovalsFiltered() {
-    try {
-      // setLoading(true);
+  const getAllApprovalsFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/approval?action=get-all-approvals';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(filters),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/approval?action=get-all-approvals';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setApprovals(response.data as ApprovalsState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setApprovals(response.data as ApprovalsState);
+          setIsFiltered(true);
+          setPageCount((response.data as ApprovalsState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving approvals data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving approvals data');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
-  async function singleApproval(req_id: string, res: 'approve' | 'reject') {
+  const singleApproval = async (req_id: string, res: 'approve' | 'reject') => {
     try {
       let toastId = toast.loading('Sending request for approval...');
       let url: string =
@@ -164,11 +175,9 @@ const Table: React.FC = props => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        if (!isFiltered) await getAllApprovals();
-        else await getAllApprovalsFiltered();
-        toast.success('Request processed successfully', { id: toastId });
-
         console.log('response', response.data);
+        toast.success('Request processed successfully', { id: toastId });
+        await fetchApprovals();
       } else {
         toast.error(response.data.message, { id: toastId });
       }
@@ -177,9 +186,9 @@ const Table: React.FC = props => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
-  }
+  };
 
-  async function multipleApproval(res: 'approve' | 'reject') {
+  const multipleApproval = async (res: 'approve' | 'reject') => {
     try {
       let toastId = toast.loading('Sending request for approval...');
       let url: string =
@@ -200,12 +209,11 @@ const Table: React.FC = props => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        if (!isFiltered) await getAllApprovals();
-        else await getAllApprovalsFiltered();
         toast.success('Checked ' + approvalIds.length + ' approval requests', {
           id: toastId,
         });
         setApprovalIds([]);
+        await fetchApprovals();
       } else {
         toast.error(response.data.message, { id: toastId });
       }
@@ -214,7 +222,7 @@ const Table: React.FC = props => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
-  }
+  };
 
   // Function to handle the "Select All" checkbox
   const handleSelectAll = (e: any) => {
@@ -244,40 +252,34 @@ const Table: React.FC = props => {
     });
   };
 
-  useEffect(() => {
-    getAllApprovals();
-  }, []);
-
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (approvals?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllApprovals();
-    else getAllApprovalsFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (approvals?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllApprovalsFiltered();
-      }
-      if (approvals) setPageCount(approvals?.pagination?.pageCount);
-      prevPageCount.current = approvals?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchApprovals = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllApprovals(page, itemPerPage);
+    } else {
+      await getAllApprovalsFiltered(page, itemPerPage);
     }
-  }, [approvals?.pagination?.pageCount]);
+  }, [isFiltered, getAllApprovals, getAllApprovalsFiltered, page, itemPerPage]);
 
-  useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchApprovals,
+  });
 
-    // if (!isFiltered) getAllApprovals();
-    // else getAllApprovalsFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    // 1) apply the new filters
+    setIsFiltered(true);
+
+    // 2) if we're already on page 1, directly fetch
+    if (page === 1) {
+      fetchApprovals();
+    } else {
+      // otherwise reset to page 1 and let usePaginationManager fire the fetch
+      setPage(1);
+    }
+  }, [page, fetchApprovals, setIsFiltered, setPage]);
 
   return (
     <>
@@ -303,7 +305,7 @@ const Table: React.FC = props => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllApprovalsFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"

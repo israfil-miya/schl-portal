@@ -1,23 +1,12 @@
 'use client';
 
-import Badge from '@/components/Badge';
-import ClickToCopy from '@/components/CopyText';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
-import { cn, fetchApi } from '@/lib/utils';
-import { formatDate, formatTime } from '@/utility/date';
-import {
-  BookCheck,
-  ChevronLeft,
-  ChevronRight,
-  CirclePlus,
-  Redo2,
-} from 'lucide-react';
-import moment from 'moment-timezone';
-import { useSession } from 'next-auth/react';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
+import { fetchApi } from '@/lib/utils';
+
 import Link from 'next/link';
-import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import FilterButton from './Filter';
 
@@ -49,126 +38,130 @@ const Table = () => {
     items: [],
   });
 
-  const router = useRouter();
-
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
-
-  const { data: session } = useSession();
-  const userRole = session?.user.role;
-
   const [filters, setFilters] = useState({
     clientCode: '',
   });
 
-  async function getAllDataByMonth() {
-    try {
-      setLoading(true);
+  const getAllOrdersByMonth = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/order?action=get-orders-by-month';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          items_per_page: itemPerPage,
-          page: page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/order?action=get-orders-by-month';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setTrackerData(response.data as TrackerDataState);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setTrackerData(response.data as TrackerDataState);
+          setPageCount(
+            (response.data as TrackerDataState).pagination.pageCount,
+          );
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving invoice data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving invoice data');
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [],
+  );
 
-  async function getAllDataByMonthFiltered() {
-    try {
-      setLoading(true);
+  const getAllOrdersByMonthFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/order?action=get-orders-by-month';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          // page,
-          items_per_page: itemPerPage,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/order?action=get-orders-by-month';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setTrackerData(response.data as TrackerDataState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setTrackerData(response.data as TrackerDataState);
+          setIsFiltered(true);
+          setPageCount(
+            (response.data as TrackerDataState).pagination.pageCount,
+          );
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving invoice data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving invoice data');
-    } finally {
-      setLoading(false);
+      return;
+    },
+    [filters],
+  );
+
+  const fetchOrders = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllOrdersByMonth(page, itemPerPage);
+    } else {
+      await getAllOrdersByMonthFiltered(page, itemPerPage);
     }
-    return;
-  }
+  }, [
+    isFiltered,
+    getAllOrdersByMonth,
+    getAllOrdersByMonthFiltered,
+    page,
+    itemPerPage,
+  ]);
 
-  useEffect(() => {
-    getAllDataByMonth();
-  }, []);
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchOrders,
+  });
 
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (trackerData?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllDataByMonth();
-    else getAllDataByMonthFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
+  const handleSearch = useCallback(() => {
+    // 1) apply the new filters
+    setIsFiltered(true);
 
-  useEffect(() => {
-    if (trackerData?.pagination?.pageCount !== undefined) {
+    // 2) if we're already on page 1, directly fetch
+    if (page === 1) {
+      fetchOrders();
+    } else {
+      // otherwise reset to page 1 and let usePaginationManager fire the fetch
       setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllDataByMonthFiltered();
-      }
-      if (trackerData) setPageCount(trackerData?.pagination?.pageCount);
-      prevPageCount.current = trackerData?.pagination?.pageCount;
-      prevPage.current = 1;
     }
-  }, [trackerData?.pagination?.pageCount]);
-
-  useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
-
-    // if (!isFiltered) getAllDataByMonth();
-    // else getAllDataByMonthFiltered();
-  }, [itemPerPage]);
+  }, [page, fetchOrders, setIsFiltered, setPage]);
 
   return (
     <>
@@ -195,7 +188,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllDataByMonthFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"

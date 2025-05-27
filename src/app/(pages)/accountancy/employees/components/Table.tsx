@@ -115,7 +115,7 @@ const Table = () => {
     }
   }, []);
 
-  async function getAllEmployeesFiltered() {
+  const getAllEmployeesFiltered = useCallback(async () => {
     try {
       // setLoading(true);
 
@@ -153,7 +153,7 @@ const Table = () => {
       setLoading(false);
     }
     return;
-  }
+  }, [filters]);
 
   async function deleteEmployee(employeeData: EmployeeDataType) {
     try {
@@ -232,9 +232,18 @@ const Table = () => {
     }
   }
 
+  const fetchEmployees = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllEmployees();
+    } else {
+      await getAllEmployeesFiltered();
+    }
+  }, [isFiltered, getAllEmployees, getAllEmployeesFiltered]);
+
   useEffect(() => {
-    getAllEmployees();
-  }, [getAllEmployees]);
+    fetchEmployees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

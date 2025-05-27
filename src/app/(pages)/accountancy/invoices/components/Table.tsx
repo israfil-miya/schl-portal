@@ -7,6 +7,7 @@ import { EmployeeDataType } from '@/models/Employees';
 
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { formatDate } from '@/utility/date';
 import {
   ChevronLeft,
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { InvoiceDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
@@ -47,11 +48,6 @@ const Table: React.FC = props => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
-
-  const { data: session } = useSession();
-
   const [filters, setFilters] = useState({
     clientCode: '',
     invoiceNumber: '',
@@ -59,81 +55,89 @@ const Table: React.FC = props => {
     toDate: '',
   });
 
-  async function getAllInvoices() {
-    try {
-      // setLoading(true);
+  const getAllInvoices = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/invoice?action=get-all-invoices';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: false,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          staleInvoice: true,
-          regularInvoice: false,
-          test: false,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/invoice?action=get-all-invoices';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: false,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            staleInvoice: true,
+            regularInvoice: false,
+            test: false,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setInvoices(response.data as InvoicesState);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setInvoices(response.data as InvoicesState);
+          setPageCount((response.data as InvoicesState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving invoices data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving invoices data');
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [],
+  );
 
-  async function getAllInvoicesFiltered() {
-    try {
-      // setLoading(true);
+  const getAllInvoicesFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL +
-        '/api/invoice?action=get-all-invoices';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/invoice?action=get-all-invoices';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setInvoices(response.data as InvoicesState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setInvoices(response.data as InvoicesState);
+          setIsFiltered(true);
+          setPageCount((response.data as InvoicesState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving invoices data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving invoices data');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
   async function deleteInvoice(invoiceNumber: string) {
     try {
@@ -176,8 +180,7 @@ const Table: React.FC = props => {
         } else {
           toast.success(response.data as string);
         }
-        if (!isFiltered) await getAllInvoices();
-        else await getAllInvoicesFiltered();
+        await fetchInvoices();
       } else {
         toast.error(response.data.message);
       }
@@ -231,40 +234,34 @@ const Table: React.FC = props => {
     }
   }
 
-  useEffect(() => {
-    getAllInvoices();
-  }, []);
-
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (invoices?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllInvoices();
-    else getAllInvoicesFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (invoices?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllInvoicesFiltered();
-      }
-      if (invoices) setPageCount(invoices?.pagination?.pageCount);
-      prevPageCount.current = invoices?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchInvoices = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllInvoices(page, itemPerPage);
+    } else {
+      await getAllInvoicesFiltered(page, itemPerPage);
     }
-  }, [invoices?.pagination?.pageCount]);
+  }, [isFiltered, getAllInvoices, getAllInvoicesFiltered, page, itemPerPage]);
 
-  useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchInvoices,
+  });
 
-    // if (!isFiltered) getAllInvoices();
-    // else getAllInvoicesFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    // 1) apply the new filters
+    setIsFiltered(true);
+
+    // 2) if we're already on page 1, directly fetch
+    if (page === 1) {
+      fetchInvoices();
+    } else {
+      // otherwise reset to page 1 and let usePaginationManager fire the fetch
+      setPage(1);
+    }
+  }, [page, fetchInvoices, setIsFiltered, setPage]);
 
   return (
     <>
@@ -302,7 +299,7 @@ const Table: React.FC = props => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllInvoicesFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"
