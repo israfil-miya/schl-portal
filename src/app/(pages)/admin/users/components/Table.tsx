@@ -7,6 +7,7 @@ import { EmployeeDataType } from '@/models/Employees';
 
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { cn } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 import {
@@ -17,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { use, useEffect, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { validationSchema, UserDataType as zod_UserDataType } from '../schema';
 import DeleteButton from './Delete';
@@ -48,6 +49,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchVersion, setSearchVersion] = useState<number>(0);
 
   const prevPageCount = useRef<number>(0);
   const prevPage = useRef<number>(1);
@@ -59,7 +61,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
     generalSearchString: '',
   });
 
-  async function getAllUsers() {
+  const getAllUsers = useCallback(async (page: number, itemPerPage: number) => {
     try {
       // setLoading(true);
 
@@ -81,6 +83,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
 
       if (response.ok) {
         setUsers(response.data as UsersState);
+        setPageCount((response.data as UsersState).pagination.pageCount);
       } else {
         toast.error(response.data as string);
       }
@@ -90,46 +93,50 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function getAllUsersFiltered() {
-    try {
-      // setLoading(true);
+  const getAllUsersFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-users';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-users';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setUsers(response.data as UsersState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setUsers(response.data as UsersState);
+          setIsFiltered(true);
+          setPageCount((response.data as UsersState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving users data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving users data');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
-  async function deleteUser(userData: UserDataType) {
+  const deleteUser = async (userData: UserDataType) => {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -159,12 +166,12 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
-  }
+  };
 
-  async function editUser(
+  const editUser = async (
     editedUserData: zod_UserDataType,
     previousUserData: zod_UserDataType,
-  ) {
+  ) => {
     try {
       const parsed = validationSchema.safeParse(editedUserData);
 
@@ -201,8 +208,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
       if (response.ok) {
         toast.success('Updated the user data');
 
-        if (!isFiltered) await getAllUsers();
-        else await getAllUsersFiltered();
+        await fetchUsers();
       } else {
         toast.error(response.data as string);
       }
@@ -212,42 +218,36 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    getAllUsers();
-  }, []);
-
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (users?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllUsers();
-    else getAllUsersFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (users?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllUsersFiltered();
-      }
-      if (users) setPageCount(users?.pagination?.pageCount);
-      prevPageCount.current = users?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchUsers = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllUsers(page, itemPerPage);
+    } else {
+      await getAllUsersFiltered(page, itemPerPage);
     }
-  }, [users?.pagination?.pageCount]);
+  }, [isFiltered, getAllUsers, getAllUsersFiltered, page, itemPerPage]);
+
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchUsers,
+  });
 
   useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+    if (searchVersion > 0 && isFiltered && page === 1) {
+      fetchUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchVersion, isFiltered, page]);
 
-    // if (!isFiltered) getAllUsers();
-    // else getAllUsersFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    setIsFiltered(true);
+    setPage(1);
+    setSearchVersion(v => v + 1);
+  }, [setIsFiltered, setPage]);
 
   return (
     <>
@@ -284,7 +284,7 @@ const Table: React.FC<{ employeesData: EmployeeDataType[] }> = props => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllUsersFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"

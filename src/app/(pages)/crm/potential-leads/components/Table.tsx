@@ -4,6 +4,7 @@ import CallingStatusTd from '@/components/ExtendableTd';
 import Linkify from '@/components/Linkify';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { fetchApi } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
 import { UserDataType } from '@/models/Users';
@@ -11,7 +12,7 @@ import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
@@ -40,9 +41,7 @@ const Table = () => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
+  const [searchVersion, setSearchVersion] = useState<number>(0);
 
   const { data: session } = useSession();
 
@@ -60,110 +59,94 @@ const Table = () => {
 
   const [marketerNames, setMarketerNames] = useState<string[]>([]);
 
-  async function getAllMarketers() {
-    try {
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
-      let options: {} = {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      };
+  const getAllReports = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let response = await fetchApi(url, options);
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/report?action=get-all-reports';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: false,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prospect: true,
+            test: false,
+            regularClient: false,
+          }),
+        };
 
-      if (response.ok) {
-        let marketers = response.data as UserDataType[];
-        let marketerNames = marketers.map(marketer => marketer.provided_name!);
-        setMarketerNames(marketerNames);
-      } else {
-        toast.error(response.data as string);
+        let response = await fetchApi(url, options);
+
+        if (response.ok) {
+          setReports(response.data as ReportsState);
+          setPageCount((response.data as ReportsState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving reports data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving marketers data');
-    }
-  }
+    },
+    [],
+  );
 
-  async function getAllReports() {
-    try {
-      // setLoading(true);
+  const getAllReportsFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/report?action=get-all-reports';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: false,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prospect: true,
-          test: false,
-          regularClient: false,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/report?action=get-all-reports';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+            prospect: true,
+            test: false,
+            regularClient: false,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setReports(response.data as ReportsState);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setReports(response.data as ReportsState);
+          setIsFiltered(true);
+          setPageCount((response.data as ReportsState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving reports data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving reports data');
-    } finally {
-      setLoading(false);
-    }
-  }
+      return;
+    },
+    [filters],
+  );
 
-  async function getAllReportsFiltered() {
-    try {
-      // setLoading(true);
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/report?action=get-all-reports';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-          prospect: true,
-          test: false,
-          regularClient: false,
-        }),
-      };
-
-      let response = await fetchApi(url, options);
-
-      if (response.ok) {
-        setReports(response.data as ReportsState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving reports data');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
-
-  async function deleteReport(reportData: ReportDataType) {
+  const deleteReport = async (reportData: ReportDataType) => {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -193,43 +176,66 @@ const Table = () => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
-  }
+  };
+
+  const getAllMarketers = async () => {
+    try {
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
+      let options: {} = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      let response = await fetchApi(url, options);
+
+      if (response.ok) {
+        let marketers = response.data as UserDataType[];
+        let marketerNames = marketers.map(marketer => marketer.provided_name!);
+        setMarketerNames(marketerNames);
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while retrieving marketers data');
+    }
+  };
 
   useEffect(() => {
-    getAllReports();
     getAllMarketers();
   }, []);
 
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (reports?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllReports();
-    else getAllReportsFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (reports?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllReportsFiltered();
-      }
-      if (reports) setPageCount(reports?.pagination?.pageCount);
-      prevPageCount.current = reports?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchReports = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllReports(page, itemPerPage);
+    } else {
+      await getAllReportsFiltered(page, itemPerPage);
     }
-  }, [reports?.pagination?.pageCount]);
+  }, [isFiltered, getAllReports, getAllReportsFiltered, page, itemPerPage]);
+
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchReports,
+  });
 
   useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+    if (searchVersion > 0 && isFiltered && page === 1) {
+      fetchReports();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchVersion, isFiltered, page]);
 
-    // if (!isFiltered) getAllReports();
-    // else getAllReportsFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    setIsFiltered(true);
+    setPage(1);
+    setSearchVersion(v => v + 1);
+  }, [setIsFiltered, setPage]);
 
   return (
     <>
@@ -255,7 +261,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllReportsFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"

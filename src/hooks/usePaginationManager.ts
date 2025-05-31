@@ -71,17 +71,17 @@ export function usePaginationManager({
     }
   }, [page, itemPerPage, triggerFetch]);
 
-  // 6) pageCount changes → fetch once (unless skipped)
-  useEffect(() => {
-    if (!didMountRef.current) return;
+  // // 6) pageCount changes → fetch once (unless skipped)
+  // useEffect(() => {
+  //   if (!didMountRef.current) return;
 
-    if (prevPageCountRef.current !== pageCount) {
-      if (skipNextPageCountFetchRef.current) {
-        skipNextPageCountFetchRef.current = false;
-      } else {
-        triggerFetch();
-      }
-      prevPageCountRef.current = pageCount;
-    }
-  }, [pageCount, triggerFetch]);
+  //   if (prevPageCountRef.current !== pageCount) {
+  //     if (skipNextPageCountFetchRef.current) {
+  //       skipNextPageCountFetchRef.current = false;
+  //     } else {
+  //       triggerFetch();
+  //     }
+  //     prevPageCountRef.current = pageCount;
+  //   }
+  // }, [pageCount, triggerFetch]);
 }

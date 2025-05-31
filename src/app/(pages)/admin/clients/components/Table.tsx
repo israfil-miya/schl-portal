@@ -6,11 +6,12 @@ import { UserDataType } from '@/models/Users';
 
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { ClientDataType } from '@/models/Clients';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   validationSchema,
@@ -28,7 +29,7 @@ type ClientsState = {
   items: ClientDataType[];
 };
 
-const Table = () => {
+const Table: React.FC = () => {
   const [clients, setClients] = useState<ClientsState>({
     pagination: {
       count: 0,
@@ -44,9 +45,7 @@ const Table = () => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
+  const [searchVersion, setSearchVersion] = useState(0);
 
   const { data: session } = useSession();
 
@@ -61,83 +60,93 @@ const Table = () => {
 
   const [marketerNames, setMarketerNames] = useState<string[]>([]);
 
-  async function getAllClients() {
-    try {
-      // setLoading(true);
+  const getAllClients = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          Accept: '*/*',
-          filtered: false,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          staleClient: true,
-          regularClient: false,
-          test: false,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/client?action=get-all-clients';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            Accept: '*/*',
+            filtered: false,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            staleClient: true,
+            regularClient: false,
+            test: false,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setClients(response.data as ClientsState);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setClients(response.data as ClientsState);
+          setPageCount((response.data as ClientsState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving clients data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving clients data');
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [],
+  );
 
-  async function getAllClientsFiltered() {
-    try {
-      // setLoading(true);
+  const getAllClientsFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/client?action=get-all-clients';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          Accept: '*/*',
-          filtered: true,
-          paginated: true,
-          items_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...filters,
-        }),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/client?action=get-all-clients';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            Accept: '*/*',
+            filtered: true,
+            paginated: true,
+            items_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...filters,
+          }),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setClients(response.data as ClientsState);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data as string);
+        if (response.ok) {
+          setClients(response.data as ClientsState);
+          setIsFiltered(true);
+          setPageCount((response.data as ClientsState).pagination.pageCount);
+        } else {
+          toast.error(response.data as string);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving clients data');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving clients data');
-    } finally {
-      setLoading(false);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
-  async function deleteClient(clientData: ClientDataType) {
+  const deleteClient = async (clientData: ClientDataType) => {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -167,9 +176,9 @@ const Table = () => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
-  }
+  };
 
-  async function getAllMarketers() {
+  const getAllMarketers = async () => {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=get-all-marketers';
@@ -193,12 +202,12 @@ const Table = () => {
       console.error(error);
       toast.error('An error occurred while retrieving marketers data');
     }
-  }
+  };
 
-  async function editClient(
+  const editClient = async (
     editedClientData: zod_ClientDataType,
     previousClientData: zod_ClientDataType,
-  ) {
+  ) => {
     try {
       setLoading(true);
       const parsed = validationSchema.safeParse(editedClientData);
@@ -224,9 +233,7 @@ const Table = () => {
 
       if (response.ok) {
         toast.success('Updated the client data');
-
-        if (!isFiltered) await getAllClients();
-        else await getAllClientsFiltered();
+        await fetchClients();
       } else {
         toast.error(response.data as string);
       }
@@ -236,43 +243,40 @@ const Table = () => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getAllClients();
     getAllMarketers();
   }, []);
 
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (clients?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllClients();
-    else getAllClientsFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (clients?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllClientsFiltered();
-      }
-      if (clients) setPageCount(clients?.pagination?.pageCount);
-      prevPageCount.current = clients?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchClients = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllClients(page, itemPerPage);
+    } else {
+      await getAllClientsFiltered(page, itemPerPage);
     }
-  }, [clients?.pagination?.pageCount]);
+  }, [isFiltered, getAllClients, getAllClientsFiltered, page, itemPerPage]);
+
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchClients,
+  });
 
   useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+    if (searchVersion > 0 && isFiltered && page === 1) {
+      fetchClients();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchVersion, isFiltered, page]);
 
-    // if (!isFiltered) getAllClients();
-    // else getAllClientsFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    setIsFiltered(true);
+    setPage(1);
+    setSearchVersion(v => v + 1);
+  }, [setIsFiltered, setPage]);
 
   return (
     <>
@@ -309,7 +313,7 @@ const Table = () => {
           </select>
           <FilterButton
             loading={loading}
-            submitHandler={getAllClientsFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             marketerNames={marketerNames}
