@@ -190,6 +190,8 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     const isFilter: boolean = headersList.get('filtered') === 'true';
     const paginated: boolean = headersList.get('paginated') === 'true';
 
+    const isForInvoice: boolean = headersList.get('for_invoice') === 'true';
+
     const filters = await req.json();
 
     const {
@@ -218,7 +220,7 @@ async function handleGetAllOrders(req: NextRequest): Promise<{
     }
 
     addRegexField(query, 'folder', folder);
-    addRegexField(query, 'client_code', clientCode);
+    addRegexField(query, 'client_code', clientCode, isForInvoice ?? false);
     addRegexField(query, 'task', task);
     addRegexField(query, 'type', type, true);
     addRegexField(query, 'status', status, true);
@@ -751,7 +753,7 @@ async function handleGetOrdersByMonth(req: NextRequest): Promise<{
   const { clientCode } = await req.json();
   const query: any = {};
   if (clientCode) {
-    query.client_code = createRegexQuery(clientCode, true);
+    query.client_code = createRegexQuery(clientCode);
   }
 
   try {

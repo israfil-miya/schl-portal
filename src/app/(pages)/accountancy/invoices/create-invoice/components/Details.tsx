@@ -249,6 +249,7 @@ const Details: React.FC<DetailsProps> = props => {
         method: 'POST',
         headers: {
           Accept: '*/*',
+          for_invoice: true,
           filtered: true,
           paginated: false,
           'Content-Type': 'application/json',

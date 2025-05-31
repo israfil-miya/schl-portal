@@ -97,6 +97,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
         let options: {} = {
           method: 'POST',
           headers: {
+            for_invoice: true,
             filtered: true,
             paginated: true,
             items_per_page: itemPerPage,
