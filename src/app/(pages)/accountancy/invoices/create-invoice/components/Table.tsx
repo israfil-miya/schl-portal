@@ -68,6 +68,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchVersion, setSearchVersion] = useState<number>(0);
 
   const searchParams = useSearchParams();
   const c_code =
@@ -96,6 +97,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
         let options: {} = {
           method: 'POST',
           headers: {
+            for_invoice: true,
             filtered: true,
             paginated: true,
             items_per_page: itemPerPage,
@@ -146,18 +148,18 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     triggerFetch: fetchOrders,
   });
 
-  const handleSearch = useCallback(() => {
-    // 1) apply the new filters
-    setIsFiltered(true);
-
-    // 2) if we're already on page 1, directly fetch
-    if (page === 1) {
+  useEffect(() => {
+    if (searchVersion > 0 && isFiltered && page === 1) {
       fetchOrders();
-    } else {
-      // otherwise reset to page 1 and let usePaginationManager fire the fetch
-      setPage(1);
     }
-  }, [page, fetchOrders, setIsFiltered, setPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchVersion, isFiltered, page]);
+
+  const handleSearch = useCallback(() => {
+    setIsFiltered(true);
+    setPage(1);
+    setSearchVersion(v => v + 1);
+  }, [setIsFiltered, setPage]);
 
   return (
     <>

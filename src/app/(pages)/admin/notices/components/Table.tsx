@@ -3,6 +3,7 @@
 import Badge from '@/components/Badge';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
+import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { cn, constructFileName, fetchApi } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
 import {
@@ -14,7 +15,7 @@ import {
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { NoticeDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
@@ -45,12 +46,10 @@ const Table = () => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setIsLoading] = useState<boolean>(true);
+  const [searchVersion, setSearchVersion] = useState<number>(0);
 
   const { data: session } = useSession();
   const userRole = session?.user.role;
-
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
 
   const [filters, setFilters] = useState({
     fromDate: '',
@@ -60,80 +59,90 @@ const Table = () => {
     channel: '',
   });
 
-  async function getAllNotices() {
-    try {
-      // setIsLoading(true);
+  const getAllNotices = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setIsLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/notice?action=get-all-notices';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: false,
-          paginated: true,
-          item_per_page: itemPerPage,
-          page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(
-          userRole !== 'admin' && userRole !== 'super'
-            ? { channel: 'production' }
-            : {},
-        ),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/notice?action=get-all-notices';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: false,
+            paginated: true,
+            item_per_page: itemPerPage,
+            page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(
+            userRole !== 'admin' && userRole !== 'super'
+              ? { channel: 'production' }
+              : {},
+          ),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setNotices(response.data);
-        setIsFiltered(false);
-      } else {
-        toast.error(response.data);
+        if (response.ok) {
+          setNotices(response.data);
+          setIsFiltered(false);
+          setPageCount((response.data as NoticesState).pagination.pageCount);
+        } else {
+          toast.error(response.data);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving notices data');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving notices data');
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    },
+    [userRole],
+  );
 
-  async function getAllNoticesFiltered() {
-    try {
-      // setIsLoading(true);
+  const getAllNoticesFiltered = useCallback(
+    async (page: number, itemPerPage: number) => {
+      try {
+        // setIsLoading(true);
 
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/notice?action=get-all-notices';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          filtered: true,
-          paginated: true,
-          item_per_page: itemPerPage,
-          page: !isFiltered ? 1 : page,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(filters),
-      };
+        let url: string =
+          process.env.NEXT_PUBLIC_BASE_URL +
+          '/api/notice?action=get-all-notices';
+        let options: {} = {
+          method: 'POST',
+          headers: {
+            filtered: true,
+            paginated: true,
+            item_per_page: itemPerPage,
+            page: page,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(filters),
+        };
 
-      let response = await fetchApi(url, options);
+        let response = await fetchApi(url, options);
 
-      if (response.ok) {
-        setNotices(response.data);
-        setIsFiltered(true);
-      } else {
-        toast.error(response.data);
+        if (response.ok) {
+          setNotices(response.data as NoticesState);
+          setIsFiltered(true);
+          setPageCount((response.data as NoticesState).pagination.pageCount);
+        } else {
+          toast.error(response.data);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('An error occurred while retrieving notices data');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error('An error occurred while retrieving notices data');
-    } finally {
-      setIsLoading(false);
-    }
-    return;
-  }
+      return;
+    },
+    [filters],
+  );
 
-  async function deleteNotice(noticeData: NoticeDataType) {
+  const deleteNotice = async (noticeData: NoticeDataType) => {
     try {
       const url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/notice?action=delete-notice';
@@ -187,8 +196,7 @@ const Table = () => {
             id: 'success',
           });
         }
-        if (!isFiltered) await getAllNotices();
-        else await getAllNoticesFiltered();
+        await fetchNotices();
       } else {
         toast.error(response.data.message);
       }
@@ -197,9 +205,9 @@ const Table = () => {
       toast.error('An error occurred while deleting the notice');
     }
     return;
-  }
+  };
 
-  async function editNotice(editedNoticeData: NoticeDataType) {
+  const editNotice = async (editedNoticeData: NoticeDataType) => {
     try {
       setIsLoading(true);
       const parsed = validationSchema.safeParse(editedNoticeData);
@@ -226,8 +234,7 @@ const Table = () => {
       if (response.ok) {
         toast.success('Updated the notice data');
 
-        if (!isFiltered) await getAllNotices();
-        else await getAllNoticesFiltered();
+        await fetchNotices();
       } else {
         toast.error(response.data as string);
       }
@@ -237,42 +244,36 @@ const Table = () => {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    getAllNotices();
-  }, []);
-
-  useEffect(() => {
-    // if (prevPage.current !== 1 || page > 1) {
-    if (notices?.pagination?.pageCount == 1) return;
-    if (!isFiltered) getAllNotices();
-    else getAllNoticesFiltered();
-    // }
-    prevPage.current = page;
-  }, [page]);
-
-  useEffect(() => {
-    if (notices?.pagination?.pageCount !== undefined) {
-      setPage(1);
-      if (prevPageCount.current !== 0) {
-        if (!isFiltered) getAllNoticesFiltered();
-      }
-      if (notices) setPageCount(notices?.pagination?.pageCount);
-      prevPageCount.current = notices?.pagination?.pageCount;
-      prevPage.current = 1;
+  const fetchNotices = useCallback(async () => {
+    if (!isFiltered) {
+      await getAllNotices(page, itemPerPage);
+    } else {
+      await getAllNoticesFiltered(page, itemPerPage);
     }
-  }, [notices?.pagination?.pageCount]);
+  }, [isFiltered, getAllNotices, getAllNoticesFiltered, page, itemPerPage]);
+
+  usePaginationManager({
+    page,
+    itemPerPage,
+    pageCount,
+    setPage,
+    triggerFetch: fetchNotices,
+  });
 
   useEffect(() => {
-    // Reset to first page when itemPerPage changes
-    prevPageCount.current = 0;
-    prevPage.current = 1;
-    setPage(1);
+    if (searchVersion > 0 && isFiltered && page === 1) {
+      fetchNotices();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchVersion, isFiltered, page]);
 
-    // if (!isFiltered) getAllNotices();
-    // else getAllNoticesFiltered();
-  }, [itemPerPage]);
+  const handleSearch = useCallback(() => {
+    setIsFiltered(true);
+    setPage(1);
+    setSearchVersion(v => v + 1);
+  }, [setIsFiltered, setPage]);
 
   return (
     <>
@@ -319,7 +320,7 @@ const Table = () => {
           </select>
           <FilterButton
             isLoading={loading}
-            submitHandler={getAllNoticesFiltered}
+            submitHandler={handleSearch}
             setFilters={setFilters}
             filters={filters}
             className="w-full justify-between sm:w-auto"

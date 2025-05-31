@@ -4,6 +4,7 @@ import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { fetchApi } from '@/lib/utils';
+import { useEffect } from 'react';
 
 import Link from 'next/link';
 import React, { useCallback, useState } from 'react';
@@ -43,6 +44,7 @@ const Table = () => {
   const [pageCount, setPageCount] = useState<number>(0);
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchVersion, setSearchVersion] = useState<number>(0);
 
   const [filters, setFilters] = useState({
     clientCode: '',
@@ -150,18 +152,18 @@ const Table = () => {
     triggerFetch: fetchOrders,
   });
 
-  const handleSearch = useCallback(() => {
-    // 1) apply the new filters
-    setIsFiltered(true);
-
-    // 2) if we're already on page 1, directly fetch
-    if (page === 1) {
+  useEffect(() => {
+    if (searchVersion > 0 && isFiltered && page === 1) {
       fetchOrders();
-    } else {
-      // otherwise reset to page 1 and let usePaginationManager fire the fetch
-      setPage(1);
     }
-  }, [page, fetchOrders, setIsFiltered, setPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchVersion, isFiltered, page]);
+
+  const handleSearch = useCallback(() => {
+    setIsFiltered(true);
+    setPage(1);
+    setSearchVersion(v => v + 1);
+  }, [setIsFiltered, setPage]);
 
   return (
     <>
