@@ -26,6 +26,12 @@ import {
   RegexQuery as notice_RegexQuery,
 } from '@/app/api/notice/route';
 
+import {
+  Query as schedule_Query,
+  RegexFields as schedule_RegexFields,
+  RegexQuery as schedule_RegexQuery,
+} from '@/app/api/schedule/route';
+
 import { escapeRegExp } from 'lodash';
 
 type RegexQuery =
@@ -33,19 +39,22 @@ type RegexQuery =
   | client_RegexQuery
   | order_RegexQuery
   | invoice_RegexQuery
-  | notice_RegexQuery;
+  | notice_RegexQuery
+  | schedule_RegexQuery;
 type Query =
   | report_Query
   | client_Query
   | order_Query
   | invoice_Query
-  | notice_Query;
+  | notice_Query
+  | schedule_Query;
 type RegexFields =
   | report_RegexFields
   | client_RegexFields
   | order_RegexFields
   | invoice_RegexFields
-  | notice_RegexFields;
+  | notice_RegexFields
+  | schedule_RegexFields;
 type BooleanFields = report_BooleanFields;
 
 export const createFlexibleSearchPattern = (searchString: string): string => {
