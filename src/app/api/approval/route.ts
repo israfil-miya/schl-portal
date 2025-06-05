@@ -4,6 +4,7 @@ import Client from '@/models/Clients';
 import Employee from '@/models/Employees';
 import Order from '@/models/Orders';
 import Report from '@/models/Reports';
+import Schedule from '@/models/Schedule';
 import User from '@/models/Users';
 import { toISODate } from '@/utility/date';
 import { createRegexQuery } from '@/utility/filterHelpers';
@@ -193,7 +194,14 @@ async function handleNewRequest(
   try {
     const data = await req.json();
 
-    const allowedModels = ['User', 'Report', 'Employee', 'Order', 'Client'];
+    const allowedModels = [
+      'User',
+      'Report',
+      'Employee',
+      'Order',
+      'Client',
+      'Schedule',
+    ];
     if (!data.target_model || !allowedModels.includes(data.target_model)) {
       return { data: 'Invalid or missing target model', status: 400 };
     }
@@ -401,6 +409,13 @@ async function handleApproveResponse(data: {
           case 'Client':
             if (approvalData.action === 'delete') {
               resData = await Client.findByIdAndDelete(approvalData.object_id);
+            }
+            break;
+          case 'Schedule':
+            if (approvalData.action === 'delete') {
+              resData = await Schedule.findByIdAndDelete(
+                approvalData.object_id,
+              );
             }
             break;
           case 'Report':

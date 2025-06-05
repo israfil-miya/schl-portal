@@ -355,6 +355,50 @@ const Nav: React.FC<PropsType> = props => {
         >
           File Flow
         </Link>
+        <span
+          role="button"
+          id="scheduleDropdownButton"
+          data-dropdown-toggle="scheduleDropdown"
+          data-dropdown-trigger="hover"
+          className={cn(
+            'py-3 px-5 select-none',
+            pathname.includes('/work-schedule/')
+              ? 'bg-primary'
+              : 'hover:opacity-90',
+            !['super', 'admin'].includes(userRole || '') && 'hidden',
+          )}
+        >
+          <span className="flex gap-1 items-center justify-between">
+            <span>Work Schedule</span>
+            <ChevronDown size={17} />
+          </span>
+        </span>
+        <div
+          id="scheduleDropdown"
+          className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
+        >
+          <ul
+            className="py-2 text-white"
+            aria-labelledby="scheduleDropdownButton"
+          >
+            <li>
+              <Link
+                className={cn('block px-4 py-2 hover:bg-primary')}
+                href={'/work-schedule/schedule-task'}
+              >
+                Schedule Task
+              </Link>
+            </li>
+            <li>
+              <Link
+                className={cn('block px-4 py-2 hover:bg-primary')}
+                href={'/work-schedule/view-schedule'}
+              >
+                View Schedule
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <span className="max-lg:hidden">{msg}</span>

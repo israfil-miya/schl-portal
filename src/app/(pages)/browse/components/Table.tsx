@@ -151,7 +151,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     [filters],
   );
 
-  async function deleteOrder(orderData: OrderDataType) {
+  const deleteOrder = async (orderData: OrderDataType) => {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -181,7 +181,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
       toast.error('An error occurred while sending request for approval');
     }
     return;
-  }
+  };
 
   const finishOrder = async (orderData: OrderDataType) => {
     try {
@@ -258,10 +258,10 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     return;
   };
 
-  async function editOrder(
+  const editOrder = async (
     editedOrderData: zod_OrderDataType,
     previousOrderData: zod_OrderDataType,
-  ) {
+  ) => {
     try {
       setLoading(true);
       const parsed = validationSchema.safeParse(editedOrderData);
@@ -298,7 +298,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const fetchOrders = useCallback(async () => {
     if (!isFiltered) {

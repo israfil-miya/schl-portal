@@ -2,7 +2,13 @@ import { Change } from '@/lib/utils';
 import mongoose from 'mongoose';
 
 export interface ApprovalType {
-  target_model: 'User' | 'Report' | 'Employee' | 'Order' | 'Client';
+  target_model:
+    | 'User'
+    | 'Report'
+    | 'Employee'
+    | 'Order'
+    | 'Client'
+    | 'Schedule';
   action: 'create' | 'update' | 'delete';
   object_id?: mongoose.Types.ObjectId; // Not required for create requests
   changes?: Change[]; // Only needed for update operations
@@ -32,7 +38,7 @@ const ApprovalSchema = new mongoose.Schema<ApprovalDocType>(
     target_model: {
       type: String,
       required: true,
-      enum: ['User', 'Report', 'Employee', 'Order', 'Client'],
+      enum: ['User', 'Report', 'Employee', 'Order', 'Client', 'Schedule'],
     },
     action: {
       type: String,
