@@ -14,8 +14,8 @@ export interface ReportsStatusState {
   };
 }
 
-export const callsTargetConst = 60;
-export const leadsTargetConst = 10;
+export const callsTargetConst = 50;
+export const leadsTargetConst = 20;
 
 const DailyStatusTable = () => {
   const [reportsStatus, setReportsStatus] = useState<ReportsStatusState>({});
@@ -29,7 +29,7 @@ const DailyStatusTable = () => {
       <div className="flex flex-col sm:flex-row justify-center gap-1 sm:gap-4 sm:mb-0 items-center px-2">
         <p className="font-mono inline-block text-destructive font-extrabold text-lg sm:text-xl md:text-2xl text-center uppercase">
           <span className="underline">DAILY TARGET:</span> {callsTargetConst}{' '}
-          CALLS (10 NORMAL, 50 RECALL), {leadsTargetConst} LEADS, 5 TESTS/MONTH
+          CALLS (20 NORMAL, 30 RECALL), {leadsTargetConst} LEADS, 10 TESTS/MONTH
         </p>
         <FilterButton
           loading={loading}
