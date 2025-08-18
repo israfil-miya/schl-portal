@@ -1,4 +1,4 @@
-import Role from '@/models/Roles';
+import Role, { RoleDataType } from '@/models/Roles';
 import { addIfDefined, createRegexQuery } from '@/utility/filterHelpers';
 import { headers } from 'next/headers';
 import { NextRequest } from 'next/server';
@@ -7,8 +7,13 @@ export interface Query {
   name?: string;
 }
 
+interface PaginatedData<ItemsType> {
+  pagination: { count: number; pageCount: number };
+  items: ItemsType;
+}
+
 export async function handleGetAllRoles(req: NextRequest): Promise<{
-  data: string | Object;
+  data: string | PaginatedData<RoleDataType[]>;
   status: number;
 }> {
   try {
