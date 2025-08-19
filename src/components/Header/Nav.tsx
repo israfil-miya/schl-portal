@@ -21,6 +21,7 @@ const Nav: React.FC<PropsType> = props => {
   let pathname = usePathname();
 
   const userRole = session?.user.role;
+  const userPermissions = session?.user.permissions;
 
   // Use useEffect to safely initialize flowbite on the client
   useEffect(() => {
@@ -35,13 +36,17 @@ const Nav: React.FC<PropsType> = props => {
 
   return (
     <div
-      className={`w-full flex flex-row align-middle items-center justify-between bg-gray-900 px-5 text-white ${props.className}`}
+      className={cn(
+        `w-full flex flex-row align-middle items-center justify-between bg-gray-900 px-5 text-white`,
+        props.className,
+      )}
     >
       <div className="flex flex-row">
         <Link
           className={cn(
             'py-3 px-5',
             pathname == '/' ? 'bg-primary' : 'hover:opacity-90',
+            !userPermissions?.includes('task:view_page') && 'hidden',
           )}
           href={'/'}
         >
@@ -51,7 +56,7 @@ const Nav: React.FC<PropsType> = props => {
           className={cn(
             'py-3 px-5',
             pathname == '/browse' ? 'bg-primary' : 'hover:opacity-90',
-            userRole === 'user' && 'hidden',
+            !userPermissions?.includes('browse:view_page') && 'hidden',
           )}
           href={'/browse'}
         >
@@ -65,7 +70,7 @@ const Nav: React.FC<PropsType> = props => {
           className={cn(
             'py-3 px-5 select-none',
             pathname.includes('/admin/') ? 'bg-primary' : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+            !userPermissions?.includes('admin:view_page') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -78,16 +83,23 @@ const Nav: React.FC<PropsType> = props => {
           className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul className="py-2 text-white" aria-labelledby="adminDropdownButton">
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('admin:create_employee') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/employees'}
               >
-                {/* without salary*/}
                 Employee
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('admin:create_task') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/tasks'}
@@ -95,7 +107,13 @@ const Nav: React.FC<PropsType> = props => {
                 Task
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.some(item =>
+                  ['admin:manage_client', 'admin:create_client'].includes(item),
+                ) && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/clients'}
@@ -103,7 +121,11 @@ const Nav: React.FC<PropsType> = props => {
                 Clients
               </Link>
             </li>
-            <li className={cn(!['super'].includes(userRole || '') && 'hidden')}>
+            <li
+              className={cn(
+                !userPermissions?.includes('admin:check_approvals') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/approvals'}
@@ -111,7 +133,17 @@ const Nav: React.FC<PropsType> = props => {
                 Approvals
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.some(item =>
+                  [
+                    'admin:assign_role',
+                    'admin:create_role',
+                    'admin:delete_role',
+                  ].includes(item),
+                ) && 'hidden',
+              )}
+            >
               <span
                 role="button"
                 id="adminAccessDropdownButton"
@@ -205,7 +237,7 @@ const Nav: React.FC<PropsType> = props => {
             pathname.includes('/accountancy/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !['super'].includes(userRole || '') && 'hidden',
+            !userPermissions?.includes('accountancy:view_page') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -221,7 +253,12 @@ const Nav: React.FC<PropsType> = props => {
             className="py-2 text-white"
             aria-labelledby="accountancyDropdownButton"
           >
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('accountancy:manage_employee') &&
+                  'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/accountancy/employees'}
@@ -237,7 +274,15 @@ const Nav: React.FC<PropsType> = props => {
                 data-dropdown-toggle="accountancyInvoicesDropdown"
                 data-dropdown-trigger="hover"
                 data-dropdown-placement="right-start"
-                className="block px-4 py-2 hover:bg-primary"
+                className={cn(
+                  'block px-4 py-2 hover:bg-primary',
+                  !userPermissions?.some(item =>
+                    [
+                      'accountancy:create_invoice',
+                      'accountancy:download_invoice',
+                    ].includes(item),
+                  ) && 'hidden',
+                )}
               >
                 <span className="flex gap-1 items-end align-bottom justify-between">
                   <span>Invoices</span>
@@ -252,7 +297,13 @@ const Nav: React.FC<PropsType> = props => {
                   className="py-2 text-white"
                   aria-labelledby="accountancyInvoicesDropdownButton"
                 >
-                  <li>
+                  <li
+                    className={cn(
+                      !userPermissions?.includes(
+                        'accountancy:create_invoice',
+                      ) && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/accountancy/invoices/create-invoice'}
@@ -260,7 +311,13 @@ const Nav: React.FC<PropsType> = props => {
                       Create New
                     </Link>
                   </li>
-                  <li>
+                  <li
+                    className={cn(
+                      !userPermissions?.includes(
+                        'accountancy:download_invoice',
+                      ) && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/accountancy/invoices'}
@@ -268,7 +325,13 @@ const Nav: React.FC<PropsType> = props => {
                       View All
                     </Link>
                   </li>
-                  <li>
+                  <li
+                    className={cn(
+                      !userPermissions?.includes(
+                        'accountancy:create_invoice',
+                      ) && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/accountancy/invoices/invoice-tracker'}
@@ -290,7 +353,12 @@ const Nav: React.FC<PropsType> = props => {
           className={cn(
             'py-3 px-5 select-none',
             pathname.includes('/crm/') ? 'bg-primary' : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+
+            !userPermissions?.some(item =>
+              ['admin:crm:view_reports', 'crm:check_client_request'].includes(
+                item,
+              ),
+            ) && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -303,7 +371,11 @@ const Nav: React.FC<PropsType> = props => {
           className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul className="py-2 text-white" aria-labelledby="crmDropdownButton">
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('crm:view_crm_stats') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/statistics'}
@@ -311,7 +383,11 @@ const Nav: React.FC<PropsType> = props => {
                 Statistics
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('crm:view_reports') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/trial-clients'}
@@ -319,7 +395,11 @@ const Nav: React.FC<PropsType> = props => {
                 Trial Clients
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('crm:view_reports') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/pending-prospects'}
@@ -327,7 +407,11 @@ const Nav: React.FC<PropsType> = props => {
                 Pending Prospects
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('crm:view_reports') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/potential-leads'}
@@ -335,7 +419,12 @@ const Nav: React.FC<PropsType> = props => {
                 Potential Leads
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('crm:check_client_request') &&
+                  'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/client-approvals'}
@@ -349,7 +438,7 @@ const Nav: React.FC<PropsType> = props => {
           className={cn(
             'py-3 px-5',
             pathname.includes('/file-flow') ? 'bg-primary' : 'hover:opacity-90',
-            ['user', 'manager'].includes(userRole || '') && 'hidden',
+            userPermissions?.includes('fileflow:view_page') && 'hidden',
           )}
           href={'/file-flow'}
         >
@@ -365,7 +454,7 @@ const Nav: React.FC<PropsType> = props => {
             pathname.includes('/work-schedule/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+            userPermissions?.includes('schedule:view_page') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -381,7 +470,12 @@ const Nav: React.FC<PropsType> = props => {
             className="py-2 text-white"
             aria-labelledby="scheduleDropdownButton"
           >
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('schedule:create_schedule') &&
+                  'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/work-schedule/schedule-task'}
@@ -389,7 +483,11 @@ const Nav: React.FC<PropsType> = props => {
                 Schedule Task
               </Link>
             </li>
-            <li>
+            <li
+              className={cn(
+                !userPermissions?.includes('schedule:view_page') && 'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/work-schedule/view-schedule'}

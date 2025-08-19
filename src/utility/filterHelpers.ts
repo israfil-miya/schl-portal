@@ -2,7 +2,7 @@ import {
   Query as order_Query,
   RegexFields as order_RegexFields,
   RegexQuery as order_RegexQuery,
-} from '@/app/api/order/route';
+} from '@/app/api/order/handlers/getAllOrders';
 
 import {
   BooleanFields as report_BooleanFields,
@@ -132,7 +132,6 @@ export const addRegexField = (
 };
 
 // Helper function to add fields if they are defined
-
 export const addIfDefined = <T extends Query>(
   query: T,
   key: keyof T,
