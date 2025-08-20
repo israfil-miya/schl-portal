@@ -108,6 +108,7 @@ export const permissionOptions = [
       },
     ],
   },
+
   {
     label: 'Schedule',
     options: [
@@ -115,6 +116,19 @@ export const permissionOptions = [
       { value: 'schedule:create_schedule', label: 'Create schedule' },
       { value: 'schedule:edit_schedule', label: 'Edit schedule' },
       { value: 'schedule:delete_schedule', label: 'Delete schedule' },
+    ],
+  },
+
+  {
+    label: 'Settings',
+    options: [
+      { value: 'settings:view_page', label: 'View settings page' },
+      // { value: 'settings:edit_profile', label: 'Edit profile' },
+      { value: 'settings:change_password', label: 'Change password' },
+      {
+        value: 'settings:bypass_ip_restrictions',
+        label: 'Bypass IP Restrictions',
+      },
     ],
   },
 ] as const;

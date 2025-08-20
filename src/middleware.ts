@@ -1,20 +1,28 @@
 import { NextResponse } from 'next/server';
+import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
 import { auth as authMiddleware } from './auth';
+import {
+  allAuthorizedRoutes,
+  AuthorizedRoute,
+  isRouteAuthorized,
+} from './route';
 
-const PUBLIC_ROUTES = ['/login', '/forbidden']; // Public routes
-const ROOT = '/login'; // Root path
-const FORBIDDEN_REDIRECT = '/forbidden'; // Redirect path for forbidden access
-const ALLOWED_ROLES = ['admin', 'super']; // Allowed roles if IP is not in ALLOWED_IPS
+const PUBLIC_ROUTES = ['/login', '/forbidden'];
+const ROOT = '/login';
+const FORBIDDEN_REDIRECT = '/forbidden';
 const ALLOWED_IPS = process.env.ALLOWED_IPS?.split(',') || [];
+
+// Using cached flattened route list from route.ts (includes containers & leaves)
+const ALL_ROUTES: AuthorizedRoute[] = allAuthorizedRoutes;
 
 export default authMiddleware((req: any) => {
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
 
-  // Pull user info
-  const userRole = req.auth?.user?.role || '';
+  // --- User info ---
+  const userPermissions: PermissionValue[] = req.auth?.user?.permissions || [];
 
-  // Get client IP from request
+  // --- Client IP ---
   const forwardedFor = req.headers['x-forwarded-for'];
   const ipFromForwarded = Array.isArray(forwardedFor)
     ? forwardedFor[0]
@@ -22,59 +30,63 @@ export default authMiddleware((req: any) => {
 
   const clientIp =
     ipFromForwarded ||
-    req.ip ||
-    (process.env.NODE_ENV === 'development' ? '0.0.0.0' : '');
+    (process.env.NODE_ENV === 'development' ? '127.0.0.1' : null);
 
-  // Auth checks
+  // --- Route checks ---
   const isAuthenticated = !!req.auth;
-  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname.startsWith(route));
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    route => pathname === route || pathname.startsWith(route + '/'),
+  );
 
-  // 1. If this is not a public route:
-  //    - Require authentication
-  //    - Enforce IP or role checks
+  // 1. Protected routes
   if (!isPublicRoute) {
-    // Not authenticated? => redirect to login
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL(ROOT, nextUrl));
     }
 
-    // Authenticated but not on an allowed IP? => must have an allowed role
-    // If not, redirect to /forbidden
-    if (!ALLOWED_IPS.includes(clientIp) && !ALLOWED_ROLES.includes(userRole)) {
+    if (
+      clientIp &&
+      !ALLOWED_IPS.includes(clientIp) &&
+      !userPermissions.includes('settings:bypass_ip_restrictions')
+    ) {
+      return NextResponse.redirect(new URL(FORBIDDEN_REDIRECT, nextUrl));
+    }
+
+    const matchingRoute = ALL_ROUTES.filter(r => {
+      if (r.href === '/') return pathname === '/';
+      return pathname === r.href || pathname.startsWith(r.href + '/');
+    }).sort((a, b) => b.href.length - a.href.length)[0];
+
+    if (matchingRoute && !isRouteAuthorized(matchingRoute, userPermissions)) {
       return NextResponse.redirect(new URL(FORBIDDEN_REDIRECT, nextUrl));
     }
   }
 
-  // 2. If authenticated and trying to access /forbidden => redirect to home
+  // 2. Forbidden page handling
   if (!isAuthenticated && pathname === FORBIDDEN_REDIRECT) {
     return NextResponse.redirect(new URL(ROOT, nextUrl));
   }
 
-  // 2. If authenticated and trying to access /forbidden => redirect to home
   if (
     isAuthenticated &&
-    pathname == FORBIDDEN_REDIRECT &&
-    (ALLOWED_IPS.includes(clientIp) || ALLOWED_ROLES.includes(userRole))
+    pathname === FORBIDDEN_REDIRECT &&
+    (ALLOWED_IPS.includes(clientIp || '') ||
+      userPermissions.includes('settings:bypass_ip_restrictions'))
   ) {
     return NextResponse.redirect(new URL('/', nextUrl));
   }
 
-  // 3. If authenticated and trying to access /login => redirect to home
+  // 3. Login page handling
   if (isAuthenticated && pathname === ROOT) {
     return NextResponse.redirect(new URL('/', nextUrl));
   }
 
-  // 4. Otherwise, allow the request to proceed
+  // 4. Allow request
   return NextResponse.next();
 });
 
 export const config = {
   matcher: [
-    // Match all request paths except for the ones starting with:
-    // - api (API routes)
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - icon.ico, sitemap.xml, robots.txt (metadata files)
     '/((?!api|_next/static|_next/image|icon.ico|sitemap.xml|robots.txt).*)',
   ],
 };

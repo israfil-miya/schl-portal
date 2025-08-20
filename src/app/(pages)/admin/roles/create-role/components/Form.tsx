@@ -12,7 +12,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
-import { permissionOptions } from '../../permissions';
+import { permissionOptions } from '../../../../../../permissions';
 import { RoleDataType, validationSchema } from '../../schema';
 
 type PermissionOptions = typeof permissionOptions;
