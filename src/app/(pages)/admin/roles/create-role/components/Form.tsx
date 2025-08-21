@@ -45,15 +45,34 @@ const Form: React.FC = props => {
     },
   });
 
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
+  // Filter groups to only include permissions user already has
+  const filteredPermissionOptions = useMemo(
+    () =>
+      permissionOptions
+        .map(group => ({
+          label: group.label,
+          options: group.options.filter(opt =>
+            userPermissions.includes(opt.value),
+          ),
+        }))
+        .filter(group => group.options.length > 0),
+    [userPermissions],
+  );
+
   const flatOptions = useMemo<FlatOption[]>(
     () =>
-      permissionOptions.flatMap(group =>
+      filteredPermissionOptions.flatMap(group =>
         group.options.map(option => ({
           value: option.value,
           label: option.label,
         })),
       ),
-    [],
+    [filteredPermissionOptions],
   );
 
   async function createRole(roleData: RoleDataType) {
@@ -153,7 +172,7 @@ const Form: React.FC = props => {
               {...field}
               isSearchable={true}
               isMulti={true}
-              options={permissionOptions}
+              options={filteredPermissionOptions}
               closeMenuOnSelect={false}
               placeholder="Select permission(s)"
               classNamePrefix="react-select"

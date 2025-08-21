@@ -58,19 +58,15 @@ export const authorizedRoutes: AuthorizedRoute[] = [
         href: '/admin/users',
         label: 'Users',
         permissions: [
+          'admin:edit_user',
+          'admin:delete_user_approval',
           'admin:assign_role',
-          'admin:create_role',
-          'admin:delete_role',
         ],
       },
       {
         href: '/admin/roles',
         label: 'Roles',
-        permissions: [
-          'admin:assign_role',
-          'admin:create_role',
-          'admin:delete_role',
-        ],
+        permissions: ['admin:create_role', 'admin:delete_role'],
       },
       {
         href: '/admin/notices/create-notice',

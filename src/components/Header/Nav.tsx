@@ -168,9 +168,9 @@ const Nav: React.FC<PropsType> = props => {
                   <li
                     className={cn(
                       !hasAny([
+                        'admin:edit_user',
+                        'admin:delete_user_approval',
                         'admin:assign_role',
-                        'admin:create_role',
-                        'admin:delete_role',
                       ]) && 'hidden',
                     )}
                   >
@@ -183,11 +183,8 @@ const Nav: React.FC<PropsType> = props => {
                   </li>
                   <li
                     className={cn(
-                      !hasAny([
-                        'admin:assign_role',
-                        'admin:create_role',
-                        'admin:delete_role',
-                      ]) && 'hidden',
+                      !hasAny(['admin:create_role', 'admin:delete_role']) &&
+                        'hidden',
                     )}
                   >
                     <Link

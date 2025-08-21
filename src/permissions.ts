@@ -129,6 +129,10 @@ export const permissionOptions = [
         value: 'settings:bypass_ip_restrictions',
         label: 'Bypass IP Restrictions',
       },
+      {
+        value: 'settings:the_super_admin',
+        label: 'The Super Admin',
+      },
     ],
   },
 ] as const;
