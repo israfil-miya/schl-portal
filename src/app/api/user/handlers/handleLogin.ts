@@ -1,3 +1,5 @@
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
+import { hasAnyPerm, hasPerm } from '@/lib/utils';
 import Role from '@/models/Roles';
 import User, { UserDataType, UserDocType } from '@/models/Users';
 import { headers } from 'next/headers';
@@ -6,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 interface PopulatedUser extends Omit<UserDocType, 'role_id'> {
   role_id: {
     name: string;
-    permissions: string[];
+    permissions: PermissionValue[];
   };
 }
 
@@ -28,7 +30,7 @@ export const handleLogin = async (
       .exec();
 
     if (userData) {
-      if (userData.role_id.permissions.includes('login:portal') === false) {
+      if (!hasPerm('login:portal', userData.role_id.permissions)) {
         return {
           data: 'You are not authorized to login here',
           status: 400,

@@ -3,8 +3,8 @@
 import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { cn } from '@/lib/utils';
 
+import { hasAnyPerm, hasPerm } from '@/lib/utils';
 import 'flowbite';
-import { initFlowbite } from 'flowbite';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -23,9 +23,10 @@ const Nav: React.FC<PropsType> = props => {
 
   const userPermissions = session?.user.permissions;
 
-  const has = (perm: PermissionValue) => userPermissions?.includes(perm);
+  // Local permission helpers bound to current user's permissions
+  const has = (perm: PermissionValue) => hasPerm(perm, userPermissions || []);
   const hasAny = (perms: PermissionValue[]) =>
-    userPermissions?.some(item => perms.includes(item));
+    hasAnyPerm(perms, userPermissions || []);
 
   // Use useEffect to safely initialize flowbite on the client
   useEffect(() => {

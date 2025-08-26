@@ -22,7 +22,8 @@ export default function ForbiddenPage() {
         </div>
         <div className="p-6 space-y-4">
           <p className="text-gray-700 text-base">
-            This website can only be accessed from the office.
+            You are <span className="font-semibold">denied</span> to access the
+            page.
           </p>
           <div>
             <span className="text-gray-600">Go to </span>

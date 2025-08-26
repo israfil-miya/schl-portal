@@ -1,3 +1,4 @@
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';
@@ -7,6 +8,15 @@ import { NextRequest } from 'next/server';
 import { twMerge } from 'tailwind-merge';
 
 export const cn = (...input: ClassValue[]) => twMerge(clsx(input));
+
+export const hasPerm = (
+  perm: PermissionValue,
+  userPermissions: PermissionValue[],
+) => userPermissions?.includes(perm);
+export const hasAnyPerm = (
+  perms: PermissionValue[],
+  userPermissions: PermissionValue[],
+) => userPermissions?.some(item => perms.includes(item));
 
 export const fetchApi = async (
   url: string,
