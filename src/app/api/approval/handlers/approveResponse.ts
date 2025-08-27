@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import Approval from '@/models/Approvals';
 import Client from '@/models/Clients';
 import Employee from '@/models/Employees';
@@ -13,6 +14,8 @@ export async function handleApproveResponse(data: {
   approval_id?: string;
 }): Promise<{ data: string | object; status: number }> {
   try {
+    const session = await auth();
+    if (!session) return { data: 'Unauthorized', status: 401 };
     if (
       (!Array.isArray(data.approval_ids) || data.approval_ids.length === 0) &&
       !data.approval_id
@@ -33,10 +36,48 @@ export async function handleApproveResponse(data: {
         let resData;
         switch (approvalData.target_model) {
           case 'User':
-            if (approvalData.action === 'create')
+            if (approvalData.action === 'create') {
+              // Block creating super-admin user or assigning perms beyond reviewer
+              const newUser = approvalData.new_data as any;
+              const roleDoc = await mongoose
+                .model('Role')
+                .findById(newUser.role_id)
+                .select('permissions');
+              const perms: string[] = Array.isArray(roleDoc?.permissions)
+                ? (roleDoc.permissions as string[])
+                : [];
+              const reviewer = new Set(session.user.permissions);
+              if (
+                perms.includes('settings:the_super_admin') &&
+                !reviewer.has('settings:the_super_admin')
+              )
+                throw new Error(
+                  "You can't approve creating a super admin user",
+                );
+              const invalid = perms.filter(p => !reviewer.has(p as any));
+              if (invalid.length > 0)
+                throw new Error(
+                  `You tried to approve permissions the reviewer doesn't have: ${invalid.join(', ')}`,
+                );
               resData = await User.create(approvalData.new_data);
-            else if (approvalData.action === 'delete')
+            } else if (approvalData.action === 'delete') {
+              const target = await User.findById(
+                approvalData.object_id,
+              ).populate('role_id', 'permissions');
+              const targetPerms: string[] = Array.isArray(
+                (target as any)?.role_id?.permissions,
+              )
+                ? ((target as any).role_id.permissions as string[])
+                : [];
+              if (
+                targetPerms.includes('settings:the_super_admin') &&
+                !session.user.permissions.includes('settings:the_super_admin')
+              )
+                throw new Error(
+                  "You can't approve deleting a super admin user",
+                );
               resData = await User.findByIdAndDelete(approvalData.object_id);
+            }
             break;
           case 'Order':
             if (approvalData.action === 'delete')

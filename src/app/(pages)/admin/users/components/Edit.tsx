@@ -44,7 +44,24 @@ const EditButton: React.FC<PropsType> = props => {
     label: employee.e_id,
   }));
 
-  let roleOptions = (props.rolesData || []).map(role => ({
+  const editorPerms = useMemo(
+    () => new Set(session?.user.permissions || []),
+    [session?.user.permissions],
+  );
+
+  const allowedRoles = useMemo(() => {
+    return (props.rolesData || []).filter(role => {
+      const perms = role.permissions || [];
+      if (
+        perms.includes('settings:the_super_admin' as PermissionValue) &&
+        !editorPerms.has('settings:the_super_admin' as PermissionValue)
+      )
+        return false;
+      return perms.every(p => editorPerms.has(p as PermissionValue));
+    });
+  }, [props.rolesData, editorPerms]);
+
+  let roleOptions = allowedRoles.map(role => ({
     value: role._id,
     label: role.name,
   }));
@@ -138,7 +155,7 @@ const EditButton: React.FC<PropsType> = props => {
       reset(props.userData);
     }
     console.log(props.userData);
-  }, [isOpen]);
+  }, [isOpen, props.userData, reset]);
 
   return (
     <>

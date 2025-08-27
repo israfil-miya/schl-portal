@@ -34,7 +34,25 @@ const Form: React.FC<PropsType> = props => {
     label: employee.e_id,
   }));
 
-  let roleOptions = (props.rolesData || []).map(role => ({
+  const userPerms = useMemo(
+    () => new Set(session?.user.permissions || []),
+    [session?.user.permissions],
+  );
+
+  const allowedRoles = useMemo(() => {
+    return (props.rolesData || []).filter(role => {
+      const perms = role.permissions || [];
+      if (
+        perms.includes('settings:the_super_admin' as PermissionValue) &&
+        !userPerms.has('settings:the_super_admin' as PermissionValue)
+      )
+        return false;
+      // Ensure editor can only assign roles whose permissions are subset of their own
+      return perms.every(p => userPerms.has(p as PermissionValue));
+    });
+  }, [props.rolesData, userPerms]);
+
+  let roleOptions = allowedRoles.map(role => ({
     value: role._id,
     label: role.name,
   }));
@@ -117,14 +135,6 @@ const Form: React.FC<PropsType> = props => {
         toast.error('Invalid form data');
         return;
       }
-
-      // if (
-      //   session?.user.role == 'admin' &&
-      //   (parsed.data.role == 'super' || parsed.data.role == 'admin')
-      // ) {
-      //   toast.error("You don't have the permission to create this user");
-      //   return;
-      // }
 
       setLoading(true);
 

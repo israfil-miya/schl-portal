@@ -199,7 +199,15 @@ const Nav: React.FC<PropsType> = props => {
               </div>
             </li>
 
-            <li>
+            <li
+              className={cn(
+                !hasAny([
+                  'notice:view_notice',
+                  'notice:send_notice_production',
+                  'notice:send_notice_marketers',
+                ]) && 'hidden',
+              )}
+            >
               <span
                 role="button"
                 id="adminNoticesDropdownButton"
@@ -222,7 +230,14 @@ const Nav: React.FC<PropsType> = props => {
                   className="py-2 text-white"
                   aria-labelledby="adminNoticesDropdownButton"
                 >
-                  <li>
+                  <li
+                    className={cn(
+                      !hasAny([
+                        'notice:send_notice_production',
+                        'notice:send_notice_marketers',
+                      ]) && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/admin/notices/create-notice'}
@@ -230,7 +245,15 @@ const Nav: React.FC<PropsType> = props => {
                       Send New
                     </Link>
                   </li>
-                  <li>
+                  <li
+                    className={cn(
+                      !hasAny([
+                        'notice:view_notice',
+                        'notice:send_notice_production',
+                        'notice:send_notice_marketers',
+                      ]) && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/admin/notices'}

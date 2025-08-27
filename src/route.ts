@@ -71,12 +71,19 @@ export const authorizedRoutes: AuthorizedRoute[] = [
       {
         href: '/admin/notices/create-notice',
         label: 'Create Notice',
-        permissions: ['admin:view_page'],
+        permissions: [
+          'notice:send_notice_production',
+          'notice:send_notice_marketers',
+        ],
       },
       {
         href: '/admin/notices',
         label: 'Notices',
-        permissions: ['admin:view_page'],
+        permissions: [
+          'notice:view_notice',
+          'notice:send_notice_production',
+          'notice:send_notice_marketers',
+        ],
       },
     ],
   },

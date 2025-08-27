@@ -42,7 +42,7 @@ export async function handleGetAllRoles(req: NextRequest): Promise<{
       const skip = (page - 1) * ITEMS_PER_PAGE;
 
       const count: number = await Role.countDocuments(searchQuery);
-      let roles: any;
+      let roles: RoleDataType[];
 
       if (paginated) {
         roles = await Role.aggregate([
@@ -52,7 +52,7 @@ export async function handleGetAllRoles(req: NextRequest): Promise<{
           { $limit: ITEMS_PER_PAGE },
         ]);
       } else {
-        roles = await Role.find(searchQuery).lean();
+        roles = await Role.find(searchQuery);
       }
 
       const pageCount: number = Math.ceil(count / ITEMS_PER_PAGE);

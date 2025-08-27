@@ -59,6 +59,8 @@ const Table: React.FC<{
   const prevPage = useRef<number>(1);
 
   const { data: session } = useSession();
+  const viewerPerms = new Set(session?.user.permissions || []);
+  const viewerIsSuper = viewerPerms.has('settings:the_super_admin' as any);
 
   const [filters, setFilters] = useState({
     generalSearchString: '',
@@ -184,16 +186,6 @@ const Table: React.FC<{
         return;
       }
 
-      // if (
-      //   (session?.user.role === 'admin' &&
-      //     ['super', 'admin'].includes(parsed.data.role || '')) ||
-      //   (session?.user.db_id === parsed.data._id &&
-      //     session?.user.role !== parsed.data.role)
-      // ) {
-      //   toast.error("You don't have the permission to edit this user");
-      //   return;
-      // }
-
       setLoading(true);
 
       delete parsed.data.permissions;
@@ -314,69 +306,90 @@ const Table: React.FC<{
                 </tr>
               </thead>
               <tbody>
-                {users?.items?.map((user, index) => (
-                  <tr
-                    key={String(user._id)}
-                    className={cn(
-                      session?.user.role === 'admin' &&
-                        (user.role === 'admin' || user.role === 'super') &&
-                        'hidden',
-                    )}
-                  >
-                    <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                    <td className="text-wrap">{user.real_name}</td>
-                    <td className="text-wrap">{user.name}</td>
-                    <td
-                      // className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <Badge value={user.role} className="text-sm uppercase" />
-                    </td>
-                    <ExtendableTd data={user?.comment || ''} />
+                {users?.items
+                  ?.filter(u => {
+                    // Defense-in-depth: hide super-admin users from non–super-admin viewers
+                    const perms =
+                      (u as any)?.role_id?.permissions ||
+                      (u as any)?.role?.permissions ||
+                      [];
+                    const isTargetSuper = Array.isArray(perms)
+                      ? perms.includes('settings:the_super_admin')
+                      : false;
+                    return viewerIsSuper || !isTargetSuper;
+                  })
+                  .map((user, index) => (
+                    <tr key={String(user._id)}>
+                      <td>{index + 1 + itemPerPage * (page - 1)}</td>
+                      <td className="text-wrap">{user.real_name}</td>
+                      <td className="text-wrap">{user.name}</td>
+                      <td
+                        // className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        {/* Show role name if available from aggregation/populate; fallback to unknown */}
+                        <Badge
+                          value={
+                            ((user as any)?.role?.name ||
+                              (user as any)?.role_id?.name ||
+                              'unknown') as any
+                          }
+                          className="text-sm uppercase"
+                        />
+                      </td>
+                      <ExtendableTd data={user?.comment || ''} />
 
-                    <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          <DeleteButton
-                            userData={user}
-                            submitHandler={deleteUser}
-                          />
-
-                          <EditButton
-                            userData={user as unknown as zod_UserDataType}
-                            employeesData={props.employeesData}
-                            rolesData={props.rolesData}
-                            submitHandler={editUser}
-                            loading={loading}
-                          />
-
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(
-                                `${user.name} ${user.password}`,
-                              );
-                              toast.info('Copied to clipboard', {
-                                position: 'bottom-right',
-                              });
-                            }}
-                            className={cn(
-                              'rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
-                              session?.user.role === 'admin' &&
-                                (user.role === 'admin' ||
-                                  user.role === 'super') &&
-                                'hidden',
+                      <td
+                        className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <div className="inline-block">
+                          <div className="flex gap-2">
+                            {/* Delete allowed only with approval perm, and not on super-admin unless viewer is super */}
+                            {viewerPerms.has(
+                              'admin:delete_user_approval' as any,
+                            ) && (
+                              <DeleteButton
+                                userData={user}
+                                submitHandler={deleteUser}
+                              />
                             )}
-                          >
-                            <ClipboardCopy size={18} />
-                          </button>
+
+                            {/* Edit allowed only with edit perm, and not on super-admin unless viewer is super */}
+                            {viewerPerms.has('admin:edit_user' as any) && (
+                              <EditButton
+                                userData={user as unknown as zod_UserDataType}
+                                employeesData={props.employeesData}
+                                rolesData={props.rolesData}
+                                submitHandler={editUser}
+                                loading={loading}
+                              />
+                            )}
+
+                            {/* Copy credentials: block when masked (non–super) */}
+                            {viewerIsSuper ||
+                            (user as any)?.password !== '******' ? (
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(
+                                    `${user.name} ${(user as any).password}`,
+                                  );
+                                  toast.info('Copied to clipboard', {
+                                    position: 'bottom-right',
+                                  });
+                                }}
+                                className={cn(
+                                  'rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
+                                )}
+                              >
+                                <ClipboardCopy size={18} />
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           ) : (
