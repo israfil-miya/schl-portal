@@ -49,20 +49,31 @@ const EditRoleButton: React.FC<PropsType> = ({
   );
   const hasSuperAdmin = userPermissions.includes('settings:the_super_admin');
   const canEditBase = userPermissions.includes('admin:create_role'); // using create_role permission as edit authority
-  const canEdit = canEditBase && (!isSuperAdminRole || hasSuperAdmin);
+  const canEdit = canEditBase;
 
-  const filteredPermissionGroups = useMemo(
-    () =>
-      permissionOptions
-        .map(group => ({
-          label: group.label,
-          options: group.options.filter(opt =>
-            userPermissions.includes(opt.value),
-          ),
-        }))
-        .filter(g => g.options.length > 0),
-    [userPermissions],
-  );
+  const filteredPermissionGroups = useMemo(() => {
+    const groups = permissionOptions.map(group => ({
+      label: group.label,
+      options: group.options.map(opt => ({
+        value: opt.value,
+        label: opt.label,
+      })),
+    }));
+    const hasSuper = userPermissions.includes('settings:the_super_admin');
+    const sanitized = groups.map(g => ({
+      label: g.label,
+      options: g.options.filter(
+        opt => hasSuper || opt.value !== 'settings:the_super_admin',
+      ),
+    }));
+    if (canEditBase) return sanitized;
+    return sanitized
+      .map(g => ({
+        label: g.label,
+        options: g.options.filter(opt => userPermissions.includes(opt.value)),
+      }))
+      .filter(g => g.options.length > 0);
+  }, [canEditBase, userPermissions]);
 
   const flatOptions = useMemo<FlatOption[]>(
     () =>
@@ -91,13 +102,7 @@ const EditRoleButton: React.FC<PropsType> = ({
 
   const onSubmit = async (data: RoleDataType) => {
     if (!canEdit) return;
-    // Safety: ensure permissions subset on client too
-    const perms = data.permissions as PermissionValue[];
-    const invalid = perms.filter(p => !userPermissions.includes(p));
-    if (invalid.length) {
-      toast.error("You tried to assign permissions you don't have");
-      return;
-    }
+    // Guard super admin assignment unless editor has it
     if (
       data.permissions.includes('settings:the_super_admin') &&
       !hasSuperAdmin

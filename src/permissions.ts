@@ -16,6 +16,10 @@ export const permissionOptions = [
         value: 'task:test_and_correction_tasks',
         label: 'View test and correction tasks',
       },
+      {
+        value: 'task:qc_waitlist',
+        label: 'View qc waitlist',
+      },
     ],
   },
 

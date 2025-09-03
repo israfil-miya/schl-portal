@@ -19,22 +19,13 @@ export async function handleCreateRole(req: NextRequest): Promise<{
 
     const data = await req.json();
 
-    // Security: user can only assign permissions they possess
+    // Allow broad assignment for 'admin:create_role' but keep super-admin guarded
     const requestedPermissions: PermissionValue[] = Array.isArray(
       data.permissions,
     )
       ? (data.permissions as PermissionValue[])
       : [];
     const userPerms = new Set<PermissionValue>(session.user.permissions);
-    const invalid = requestedPermissions.filter(
-      p => !userPerms.has(p as PermissionValue),
-    );
-    if (invalid.length > 0) {
-      return {
-        data: `You tried to assign permissions you don't have: ${invalid.join(', ')}`,
-        status: 403,
-      };
-    }
     if (
       requestedPermissions.includes('settings:the_super_admin') &&
       !userPerms.has('settings:the_super_admin')
@@ -44,6 +35,8 @@ export async function handleCreateRole(req: NextRequest): Promise<{
         status: 403,
       };
     }
+
+    // Note: Users with 'admin:create_role' can assign other permissions they don't personally have.
     const docCount = await Role.countDocuments({ name: data.name });
 
     if (docCount > 0) {

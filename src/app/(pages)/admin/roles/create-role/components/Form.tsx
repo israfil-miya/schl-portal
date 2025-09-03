@@ -49,29 +49,38 @@ const Form: React.FC = props => {
     () => session?.user.permissions || [],
     [session?.user.permissions],
   );
-
-  // Filter groups to only include permissions user already has
-  const filteredPermissionOptions = useMemo(
-    () =>
-      permissionOptions
-        .map(group => ({
-          label: group.label,
-          options: group.options.filter(opt =>
-            userPermissions.includes(opt.value),
-          ),
-        }))
-        .filter(group => group.options.length > 0),
+  const canManageAny = useMemo(
+    () => userPermissions.includes('admin:create_role'),
     [userPermissions],
   );
 
-  const flatOptions = useMemo<FlatOption[]>(
-    () =>
-      filteredPermissionOptions.flatMap(group =>
-        group.options.map(option => ({
-          value: option.value,
-          label: option.label,
-        })),
+  // Build react-select compatible option groups
+  const filteredPermissionOptions = useMemo(() => {
+    const groups = permissionOptions.map(group => ({
+      label: group.label,
+      options: group.options.map(opt => ({
+        value: opt.value,
+        label: opt.label,
+      })),
+    }));
+    const hasSuper = userPermissions.includes('settings:the_super_admin');
+    const sanitized = groups.map(g => ({
+      label: g.label,
+      options: g.options.filter(
+        opt => hasSuper || opt.value !== 'settings:the_super_admin',
       ),
+    }));
+    if (canManageAny) return sanitized;
+    return sanitized
+      .map(g => ({
+        label: g.label,
+        options: g.options.filter(opt => userPermissions.includes(opt.value)),
+      }))
+      .filter(g => g.options.length > 0);
+  }, [canManageAny, userPermissions]);
+
+  const flatOptions = useMemo<FlatOption[]>(
+    () => filteredPermissionOptions.flatMap(group => group.options),
     [filteredPermissionOptions],
   );
 

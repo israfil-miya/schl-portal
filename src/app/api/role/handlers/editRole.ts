@@ -19,12 +19,14 @@ export async function handleEditRole(req: NextRequest): Promise<{
     if (!existing) return { data: 'Role not found', status: 404 };
 
     const userPerms = new Set<PermissionValue>(session.user.permissions);
+    const canManageAny = userPerms.has('admin:create_role');
 
     // Cannot edit a role containing super admin perm unless you have it
-    if (
-      existing.permissions.includes('settings:the_super_admin') &&
-      !userPerms.has('settings:the_super_admin')
-    ) {
+    // Protect super admin roles: require 'settings:the_super_admin' to edit/assign it
+    const isSuperAdminRole = existing.permissions.includes(
+      'settings:the_super_admin',
+    );
+    if (isSuperAdminRole && !userPerms.has('settings:the_super_admin')) {
       return { data: "You can't edit this role", status: 403 };
     }
 
@@ -33,14 +35,28 @@ export async function handleEditRole(req: NextRequest): Promise<{
     )
       ? (body.permissions as PermissionValue[])
       : [];
-    const invalid = requestedPermissions.filter(p => !userPerms.has(p));
-    if (invalid.length > 0) {
-      return {
-        data: `You tried to assign permissions you don't have: ${invalid.join(', ')}`,
-        status: 403,
-      };
+    if (!canManageAny) {
+      const invalid = requestedPermissions.filter(p => !userPerms.has(p));
+      if (invalid.length > 0) {
+        return {
+          data: `You tried to assign permissions you don't have: ${invalid.join(', ')}`,
+          status: 403,
+        };
+      }
+      // Guard super admin assignment if editor doesn't have it
+      if (
+        requestedPermissions.includes('settings:the_super_admin') &&
+        !userPerms.has('settings:the_super_admin')
+      ) {
+        return {
+          data: "You can't assign the super admin permission",
+          status: 403,
+        };
+      }
     }
+    // Even if canManageAny, still block adding/removing super admin unless editor has it
     if (
+      canManageAny &&
       requestedPermissions.includes('settings:the_super_admin') &&
       !userPerms.has('settings:the_super_admin')
     ) {
