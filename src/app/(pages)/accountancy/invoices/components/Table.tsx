@@ -2,7 +2,7 @@
 
 import Badge from '@/components/Badge';
 import ExtendableTd from '@/components/ExtendableTd';
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 
 import NoData, { Type } from '@/components/NoData';
@@ -17,7 +17,13 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { InvoiceDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
@@ -39,6 +45,13 @@ const Table: React.FC = props => {
     },
     items: [],
   });
+
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const router = useRouter();
 
@@ -276,9 +289,10 @@ const Table: React.FC = props => {
           }
           className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
         >
-          Add new invoice
+          Create new invoice
           <CirclePlus size={18} />
         </button>
+
         <div className="items-center flex gap-2">
           <Pagination
             pageCount={pageCount}
@@ -373,16 +387,29 @@ const Table: React.FC = props => {
                     >
                       <div className="inline-block">
                         <div className="flex gap-2">
-                          <DeleteButton
-                            invoiceData={invoice}
-                            submitHandler={deleteInvoice}
-                          />
-                          <button
-                            onClick={() => downloadFile(invoice.invoice_number)}
-                            className="rounded-md bg-sky-600 hover:opacity-90 hover:ring-2 hover:ring-sky-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                          >
-                            <CloudDownload size={18} />
-                          </button>
+                          {hasPerm(
+                            'accountancy:delete_invoice',
+                            userPermissions,
+                          ) && (
+                            <DeleteButton
+                              invoiceData={invoice}
+                              submitHandler={deleteInvoice}
+                            />
+                          )}
+
+                          {hasPerm(
+                            'accountancy:download_invoice',
+                            userPermissions,
+                          ) && (
+                            <button
+                              onClick={() =>
+                                downloadFile(invoice.invoice_number)
+                              }
+                              className="rounded-md bg-sky-600 hover:opacity-90 hover:ring-2 hover:ring-sky-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                            >
+                              <CloudDownload size={18} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </td>
