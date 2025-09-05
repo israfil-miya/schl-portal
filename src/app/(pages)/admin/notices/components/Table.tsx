@@ -4,7 +4,13 @@ import Badge from '@/components/Badge';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
-import { cn, constructFileName, fetchApi } from '@/lib/utils';
+import {
+  cn,
+  constructFileName,
+  fetchApi,
+  hasAnyPerm,
+  hasPerm,
+} from '@/lib/utils';
 import { formatDate } from '@/utility/date';
 import {
   ChevronLeft,
@@ -15,7 +21,13 @@ import {
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { NoticeDataType, validationSchema } from '../schema';
 import DeleteButton from './Delete';
@@ -39,6 +51,13 @@ const Table = () => {
     items: [],
   });
 
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
   const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -47,9 +66,6 @@ const Table = () => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setIsLoading] = useState<boolean>(true);
   const [searchVersion, setSearchVersion] = useState<number>(0);
-
-  const { data: session } = useSession();
-  const userRole = session?.user.role;
 
   const [filters, setFilters] = useState({
     fromDate: '',
@@ -76,10 +92,20 @@ const Table = () => {
             page,
             'Content-Type': 'application/json',
           },
+
+          // show only production notices to users with permission to send production notices
+          // show only marketers notices to users with permission to send marketers notices
+          // show both if user has both permissions
+          // show only production notices if user has none of the permissions
           body: JSON.stringify(
-            userRole !== 'admin' && userRole !== 'super'
-              ? { channel: 'production' }
-              : {},
+            hasPerm('notice:send_notice_production', userPermissions) &&
+              hasPerm('notice:send_notice_marketers', userPermissions)
+              ? {}
+              : hasPerm('notice:send_notice_production', userPermissions)
+                ? { channel: 'production' }
+                : hasPerm('notice:send_notice_marketers', userPermissions)
+                  ? { channel: 'marketers' }
+                  : { channel: 'production' },
           ),
         };
 
@@ -99,7 +125,7 @@ const Table = () => {
         setIsLoading(false);
       }
     },
-    [userRole],
+    [userPermissions],
   );
 
   const getAllNoticesFiltered = useCallback(
@@ -279,13 +305,19 @@ const Table = () => {
     <>
       <div
         className={cn(
-          'flex flex-col sm:flex-row justify-between mb-4 gap-2',
-          userRole !== 'super' &&
-            userRole !== 'admin' &&
-            'justify-center sm:flex-row sm:justify-end',
+          'flex flex-col mb-4 gap-2',
+          hasAnyPerm(
+            ['notice:send_notice_marketers', 'notice:send_notice_production'],
+            userPermissions,
+          )
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
         )}
       >
-        {(userRole == 'super' || userRole == 'admin') && (
+        {hasAnyPerm(
+          ['notice:send_notice_marketers', 'notice:send_notice_production'],
+          userPermissions,
+        ) && (
           <button
             onClick={() =>
               router.push(
@@ -295,10 +327,11 @@ const Table = () => {
             }
             className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
           >
-            Add new notice
+            Send new notice
             <CirclePlus size={18} />
           </button>
         )}
+
         <div className="items-center flex gap-2">
           <Pagination
             page={page}
@@ -340,9 +373,13 @@ const Table = () => {
                   <th>Date</th>
                   <th>Notice No</th>
                   <th>Title</th>
-                  {(userRole == 'super' || userRole == 'admin') && (
-                    <th>Channel</th>
-                  )}
+                  {hasAnyPerm(
+                    [
+                      'notice:send_notice_marketers',
+                      'notice:send_notice_production',
+                    ],
+                    userPermissions,
+                  ) && <th>Channel</th>}
                   <th>Manage</th>
                 </tr>
               </thead>
@@ -356,7 +393,13 @@ const Table = () => {
                       </td>
                       <td>{notice.notice_no}</td>
                       <td className="text-wrap">{notice.title}</td>
-                      {(userRole == 'super' || userRole == 'admin') && (
+                      {hasAnyPerm(
+                        [
+                          'notice:send_notice_marketers',
+                          'notice:send_notice_production',
+                        ],
+                        userPermissions,
+                      ) && (
                         <td
                           className="uppercase text-wrap"
                           style={{ verticalAlign: 'middle' }}
@@ -370,7 +413,13 @@ const Table = () => {
                       >
                         <div className="inline-block">
                           <div className="flex gap-2">
-                            {(userRole == 'super' || userRole == 'admin') && (
+                            {hasAnyPerm(
+                              [
+                                'notice:send_notice_marketers',
+                                'notice:send_notice_production',
+                              ],
+                              userPermissions,
+                            ) && (
                               <>
                                 <DeleteButton
                                   noticeData={notice}

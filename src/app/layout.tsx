@@ -1,5 +1,6 @@
 import '@/app/globals.css';
 import { auth } from '@/auth';
+import ClientZoom from '@/components/ClientZoom';
 import { cn } from '@/lib/utils';
 import type { Metadata } from 'next';
 import { Karla, Lato } from 'next/font/google';

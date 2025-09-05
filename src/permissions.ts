@@ -110,6 +110,10 @@ export const permissionOptions = [
         value: 'admin:delete_user_approval',
         label: 'Delete user (approval)',
       },
+      {
+        value: 'admin:view_client_name',
+        label: 'View client name',
+      },
     ],
   },
 
@@ -118,8 +122,7 @@ export const permissionOptions = [
     options: [
       { value: 'schedule:view_page', label: 'View schedule page' },
       { value: 'schedule:create_schedule', label: 'Create schedule' },
-      { value: 'schedule:edit_schedule', label: 'Edit schedule' },
-      { value: 'schedule:delete_schedule', label: 'Delete schedule' },
+      { value: 'schedule:manage_schedule', label: 'Manage schedule' },
     ],
   },
 

@@ -8,7 +8,9 @@ import { EmployeeDataType } from '@/models/Employees';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
+import { cn } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
+import { has } from 'lodash';
 import {
   ChevronLeft,
   ChevronRight,
@@ -279,19 +281,28 @@ const Table: React.FC = props => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <button
-          onClick={() =>
-            router.push(
-              process.env.NEXT_PUBLIC_BASE_URL +
-                '/accountancy/invoices/create-invoice',
-            )
-          }
-          className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-        >
-          Create new invoice
-          <CirclePlus size={18} />
-        </button>
+      <div
+        className={cn(
+          'flex flex-col mb-4 gap-2',
+          hasPerm('accountancy:create_invoice', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
+        )}
+      >
+        {hasPerm('accountancy:create_invoice', userPermissions) && (
+          <button
+            onClick={() =>
+              router.push(
+                process.env.NEXT_PUBLIC_BASE_URL +
+                  '/accountancy/invoices/create-invoice',
+              )
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Create new invoice
+            <CirclePlus size={18} />
+          </button>
+        )}
 
         <div className="items-center flex gap-2">
           <Pagination
@@ -321,9 +332,7 @@ const Table: React.FC = props => {
           />
         </div>
       </div>
-
       {loading ? <p className="text-center">Loading...</p> : <></>}
-
       <div className="table-responsive text-nowrap text-base">
         {!loading &&
           (invoices?.items?.length !== 0 ? (

@@ -1,7 +1,7 @@
 'use client';
 
 import ExtendableTd from '@/components/ExtendableTd';
-import { cn, fetchApi, getObjectChanges } from '@/lib/utils';
+import { cn, fetchApi, getObjectChanges, hasPerm } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 
 import {
@@ -17,7 +17,13 @@ import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
@@ -41,6 +47,11 @@ const Table = () => {
   });
 
   const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const router = useRouter();
   const [totalPayOut, setTotalPayOut] = useState({
@@ -247,16 +258,26 @@ const Table = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <button
-          onClick={() =>
-            router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/employees')
-          }
-          className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-        >
-          Add new employee
-          <CirclePlus size={18} />
-        </button>
+      <div
+        className={cn(
+          'flex flex-col mb-4 gap-2',
+          hasPerm('admin:create_employee', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
+        )}
+      >
+        {hasPerm('admin:create_employee', userPermissions) && (
+          <button
+            onClick={() =>
+              router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/employees')
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Create new employee
+            <CirclePlus size={18} />
+          </button>
+        )}
+
         <div className="items-center flex gap-2">
           {/* pagination controls removed for this page */}
 
@@ -288,7 +309,9 @@ const Table = () => {
                   <th>Gross Salary</th>
                   <th>Status</th>
                   <th>Note</th>
-                  <th>Action</th>
+                  {hasPerm('accountancy:manage_employee', userPermissions) && (
+                    <th>Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -297,12 +320,19 @@ const Table = () => {
                     <td>{index + 1}</td>
                     <td className="text-wrap">{employee.e_id}</td>
                     <td className="text-wrap">
-                      <Link
-                        className="hover:underline underline-offset-2"
-                        href={`/accountancy/employees/employee-profile/?name=${encodeURIComponent(String(employee.real_name))}`}
-                      >
-                        {employee.real_name}
-                      </Link>
+                      {hasPerm(
+                        'accountancy:manage_employee',
+                        userPermissions,
+                      ) ? (
+                        <Link
+                          className="hover:underline underline-offset-2"
+                          href={`/accountancy/employees/employee-profile/?name=${encodeURIComponent(String(employee.real_name))}`}
+                        >
+                          {employee.real_name}
+                        </Link>
+                      ) : (
+                        <span>{employee.real_name}</span>
+                      )}
                     </td>
                     <td className="text-wrap">
                       {formatDate(employee.joining_date)}
@@ -330,27 +360,32 @@ const Table = () => {
                     </td>
                     <ExtendableTd data={employee.note} />
 
-                    <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          <DeleteButton
-                            employeeData={employee}
-                            submitHandler={deleteEmployee}
-                          />
+                    {hasPerm(
+                      'accountancy:manage_employee',
+                      userPermissions,
+                    ) && (
+                      <td
+                        className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <div className="inline-block">
+                          <div className="flex gap-2">
+                            <DeleteButton
+                              employeeData={employee}
+                              submitHandler={deleteEmployee}
+                            />
 
-                          <EditButton
-                            loading={loading}
-                            employeeData={
-                              employee as unknown as zod_EmployeeDataType
-                            }
-                            submitHandler={editEmployee}
-                          />
+                            <EditButton
+                              loading={loading}
+                              employeeData={
+                                employee as unknown as zod_EmployeeDataType
+                              }
+                              submitHandler={editEmployee}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

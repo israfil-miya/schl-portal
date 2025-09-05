@@ -100,6 +100,11 @@ export const authorizedRoutes: AuthorizedRoute[] = [
         permissions: ['accountancy:manage_employee'],
       },
       {
+        href: '/accountancy/employees/employee-profile',
+        label: 'Employee Profile',
+        permissions: ['accountancy:manage_employee'],
+      },
+      {
         href: '/accountancy/invoices/create-invoice',
         label: 'Create Invoice',
         permissions: ['accountancy:create_invoice'],
@@ -176,23 +181,44 @@ export const authorizedRoutes: AuthorizedRoute[] = [
       },
     ],
   },
+
+  // Password Change
+  {
+    href: '/my-account/change-password',
+    label: 'Change Password',
+    permissions: ['settings:change_password'],
+  },
+
+  // Account Settings
+  {
+    href: '/my-account',
+    label: 'My Account',
+    permissions: ['settings:view_page'],
+    children: [
+      {
+        href: '/my-account/change-password',
+        label: 'Change Password',
+        permissions: ['settings:change_password'],
+      },
+    ],
+  },
 ];
 
 // Optional: flatten all leaf routes (if needed for quick lookups)
-export const flatAuthorizedRoutes: AuthorizedRoute[] = (() => {
-  const out: AuthorizedRoute[] = [];
-  const walk = (rts: AuthorizedRoute[]) => {
-    for (const r of rts) {
-      if (r.children && r.children.length) {
-        walk(r.children);
-      } else {
-        out.push(r);
-      }
-    }
-  };
-  walk(authorizedRoutes);
-  return out;
-})();
+// export const flatAuthorizedRoutes: AuthorizedRoute[] = (() => {
+//   const out: AuthorizedRoute[] = [];
+//   const walk = (rts: AuthorizedRoute[]) => {
+//     for (const r of rts) {
+//       if (r.children && r.children.length) {
+//         walk(r.children);
+//       } else {
+//         out.push(r);
+//       }
+//     }
+//   };
+//   walk(authorizedRoutes);
+//   return out;
+// })();
 
 // Flat list that includes container routes (menus) as well as leaves.
 // Cached once at module evaluation.
