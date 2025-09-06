@@ -26,7 +26,18 @@ export const authorizedRoutes: AuthorizedRoute[] = [
   { href: '/', label: 'Tasks', permissions: ['task:view_page'] },
 
   // Browse
-  { href: '/browse', label: 'Browse', permissions: ['browse:view_page'] },
+  {
+    href: '/browse',
+    label: 'Browse',
+    permissions: ['browse:view_page'],
+  },
+
+  // Single Task
+  {
+    href: '/browse/single-task',
+    label: 'Edit Single Task',
+    permissions: ['browse:edit_task'],
+  },
 
   // Admin (with nested pages)
   {
@@ -180,13 +191,6 @@ export const authorizedRoutes: AuthorizedRoute[] = [
         permissions: ['schedule:view_page'],
       },
     ],
-  },
-
-  // Password Change
-  {
-    href: '/my-account/change-password',
-    label: 'Change Password',
-    permissions: ['settings:change_password'],
   },
 
   // Account Settings

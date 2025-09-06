@@ -1,14 +1,14 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 function TestAndCorrection() {
@@ -22,6 +22,10 @@ function TestAndCorrection() {
   }, []);
 
   const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   async function getAllOrders() {
     try {
@@ -91,9 +95,7 @@ function TestAndCorrection() {
                   <tr key={String(order._id)}>
                     <td>{index + 1}</td>
                     <td>
-                      {['super', 'admin', 'manager'].includes(
-                        session?.user.role || '',
-                      ) ? (
+                      {hasPerm('browse:edit_task', userPermissions) ? (
                         <Link
                           className="hover:underline cursor-pointer"
                           href={

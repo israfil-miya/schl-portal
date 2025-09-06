@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import Linkify from '@/components/Linkify';
-import { fetchApi, verifyCookie } from '@/lib/utils';
+import { fetchApi, hasPerm, verifyCookie } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -36,7 +36,10 @@ const getOrderData = async (orderId: string) => {
   }
 };
 
-export default async function Protected({
+const session = await auth();
+const userPermissions = session?.user.permissions || [];
+
+export default async function EditSingleTask({
   searchParams,
 }: {
   searchParams: { id: string };
@@ -60,17 +63,19 @@ export default async function Protected({
       <h1 className="text-2xl font-semibold text-left underline underline-offset-4 uppercase">
         TASK DETAILS
       </h1>
-      <span className="mb-8 text-sm font-mono text-gray-400 flex flex-row gap-2 mt-1">
-        (for updating client code/name update from
-        <Link
-          href={'/browse'}
-          className="block hover:cursor-pointer hover:underline hover:opacity-100 text-blue-700"
-        >
-          Browse
-        </Link>{' '}
-        page)
-      </span>
 
+      {hasPerm('browse:view_page', userPermissions) && (
+        <span className="text-sm font-mono text-gray-400 flex flex-row gap-2 mt-1">
+          (for updating client code/name update from
+          <Link
+            href={'/browse'}
+            className="block hover:cursor-pointer hover:underline hover:opacity-100 text-blue-700"
+          >
+            Browse
+          </Link>{' '}
+          page)
+        </span>
+      )}
       <Suspense fallback={<p className="text-center">Loading...</p>}>
         <InputForm orderData={orderData} />
       </Suspense>

@@ -27,13 +27,12 @@ export const permissionOptions = [
     label: 'Browse',
     options: [
       { value: 'browse:view_page', label: 'View browse page' },
-      { value: 'browse:client_name', label: 'View client name' },
       { value: 'browse:edit_task', label: 'Edit task' },
-      {
-        value: 'browse:edit_task_approval',
-        label: 'Edit task (approval)',
-      },
-      { value: 'browse:delete_task', label: 'Delete task' },
+      // {
+      //   value: 'browse:edit_task_approval',
+      //   label: 'Edit task (approval)',
+      // },
+      // { value: 'browse:delete_task', label: 'Delete task' },
       {
         value: 'browse:delete_task_approval',
         label: 'Delet task (approval)',
@@ -113,6 +112,10 @@ export const permissionOptions = [
       {
         value: 'admin:view_client_name',
         label: 'View client name',
+      },
+      {
+        value: 'admin:view_task_rate',
+        label: 'View task rate',
       },
     ],
   },

@@ -4,7 +4,7 @@ import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
-import { cn, fetchApi } from '@/lib/utils';
+import { cn, fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
@@ -18,7 +18,7 @@ import {
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   validationSchema,
@@ -47,6 +47,12 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     items: [],
   });
 
+  const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
   const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -55,9 +61,6 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchVersion, setSearchVersion] = useState<number>(0);
-
-  const { data: session } = useSession();
-  const userRole = session?.user.role;
 
   const [filters, setFilters] = useState({
     fromDate: '',
@@ -332,20 +335,20 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     <>
       <div
         className={cn(
-          'flex flex-col sm:flex-row justify-between mb-4 gap-2',
-          userRole !== 'super' &&
-            userRole !== 'admin' &&
-            'justify-center sm:flex-row sm:justify-end',
+          'flex flex-col mb-4 gap-2',
+          hasPerm('admin:create_task', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
         )}
       >
-        {(userRole == 'super' || userRole == 'admin') && (
+        {hasPerm('admin:create_task', userPermissions) && (
           <button
             onClick={() =>
               router.push(process.env.NEXT_PUBLIC_BASE_URL + '/admin/tasks')
             }
             className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
           >
-            Add new task
+            Create new task
             <CirclePlus size={18} />
           </button>
         )}
@@ -388,7 +391,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                 <tr>
                   <th>S/N</th>
                   <th>Client Code</th>
-                  {(userRole == 'super' || userRole == 'admin') && (
+                  {hasPerm('admin:view_client_name', userPermissions) && (
                     <th>Client Name</th>
                   )}
                   <th>Folder</th>
@@ -412,7 +415,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
                     <td className="text-wrap">{order.client_code}</td>
 
-                    {(userRole == 'admin' || userRole == 'super') && (
+                    {hasPerm('admin:view_client_name', userPermissions) && (
                       <td className="text-wrap">{order.client_name}</td>
                     )}
 
@@ -470,46 +473,58 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                         />
                       )}
                     </td>
-                    <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          {(userRole == 'super' || userRole == 'admin') && (
-                            <>
+
+                    {hasAnyPerm(
+                      ['browse:edit_task', 'browse:delete_task_approval'],
+                      userPermissions,
+                    ) && (
+                      <td
+                        className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <div className="inline-block">
+                          <div className="flex gap-2">
+                            {hasPerm(
+                              'browse:delete_task_approval',
+                              userPermissions,
+                            ) && (
                               <DeleteButton
                                 orderData={order}
                                 submitHandler={deleteOrder}
                               />
-                              {order.status?.trim().toLocaleLowerCase() ==
-                              'finished' ? (
-                                <button
-                                  onClick={() => redoOrder(order)}
-                                  className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                                >
-                                  <Redo2 size={18} />
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => finishOrder(order)}
-                                  className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-                                >
-                                  <BookCheck size={18} />
-                                </button>
-                              )}
-                            </>
-                          )}
-
-                          <EditButton
-                            orderData={order as unknown as zod_OrderDataType}
-                            submitHandler={editOrder}
-                            loading={loading}
-                            clientsData={props.clientsData}
-                          />
+                            )}
+                            {hasPerm('browse:edit_task', userPermissions) && (
+                              <>
+                                {order.status?.trim().toLocaleLowerCase() ==
+                                'finished' ? (
+                                  <button
+                                    onClick={() => redoOrder(order)}
+                                    className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                  >
+                                    <Redo2 size={18} />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => finishOrder(order)}
+                                    className="rounded-md bg-green-600 hover:opacity-90 hover:ring-2 hover:ring-green-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
+                                  >
+                                    <BookCheck size={18} />
+                                  </button>
+                                )}
+                                <EditButton
+                                  orderData={
+                                    order as unknown as zod_OrderDataType
+                                  }
+                                  submitHandler={editOrder}
+                                  loading={loading}
+                                  clientsData={props.clientsData}
+                                />
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
