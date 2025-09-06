@@ -1,7 +1,4 @@
-import mongoose from 'mongoose';
 import type { NextAuthConfig } from 'next-auth';
-import { dbConnect } from './lib/utils';
-dbConnect();
 
 export const authConfig = {
   session: {

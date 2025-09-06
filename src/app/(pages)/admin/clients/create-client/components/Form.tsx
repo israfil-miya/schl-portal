@@ -1,17 +1,8 @@
 'use client';
-import {
-  priorityOptions,
-  statusOptions,
-  taskOptions,
-  typeOptions,
-} from '@/app/(pages)/browse/components/Edit';
+
 import { fetchApi } from '@/lib/utils';
-import {
-  setClassNameAndIsDisabled,
-  setMenuPortalTarget,
-} from '@/utility/selectHelpers';
+import { setMenuPortalTarget } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';

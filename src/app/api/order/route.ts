@@ -19,14 +19,6 @@ import { handleGetUnfinishedOrders } from './handlers/getUnfinishedOrders';
 import { handleEditOrder } from './handlers/newOrder';
 import { handleRedoOrder } from './handlers/redoOrder';
 
-export const countriesList = [
-  'Australia',
-  'Denmark',
-  'Finland',
-  'Norway',
-  'Sweden',
-];
-
 export async function POST(req: NextRequest) {
   let res: { data: string | Object | number; status: number };
 

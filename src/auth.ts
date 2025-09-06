@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';

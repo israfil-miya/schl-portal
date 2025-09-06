@@ -2,7 +2,7 @@ import Client from '@/models/Clients';
 import Order, { OrderDataType } from '@/models/Orders';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { countriesList } from '../route';
+import { countriesList } from '../constants';
 
 interface OrderDetails {
   details: (OrderDataType & { country: string })[];
