@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { countriesList } from '../constants';
 
-interface OrderDetails {
+export interface OrderDetails {
   details: (OrderDataType & { country: string })[];
   totalFiles: number;
 }

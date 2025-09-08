@@ -21,6 +21,7 @@ export function isRouteAuthorized(
 
 // Top-level (navigation bar) authorized routes. Some entries (like Admin / Accountancy / CRM) act
 // as menu containers and have children.
+// routes with multiple permissions require any one of them (OR logic).
 export const authorizedRoutes: AuthorizedRoute[] = [
   // Root tasks page
   { href: '/', label: 'Tasks', permissions: ['task:view_page'] },
@@ -58,7 +59,12 @@ export const authorizedRoutes: AuthorizedRoute[] = [
       {
         href: '/admin/clients',
         label: 'Clients',
-        permissions: ['admin:manage_client', 'admin:create_client'],
+        permissions: ['admin:manage_client'],
+      },
+      {
+        href: '/admin/clients/create-client',
+        label: 'Create Client',
+        permissions: ['admin:create_client'],
       },
       {
         href: '/admin/approvals',
@@ -75,27 +81,33 @@ export const authorizedRoutes: AuthorizedRoute[] = [
         ],
       },
       {
+        href: '/admin/users/create-user',
+        label: 'Create User',
+        permissions: ['admin:create_user_approval', 'admin:create_user'],
+      },
+      {
         href: '/admin/roles',
         label: 'Roles',
         permissions: ['admin:create_role', 'admin:delete_role'],
       },
       {
-        href: '/admin/notices/create-notice',
+        href: '/admin/notices',
         label: 'Create Notice',
         permissions: [
           'notice:send_notice_production',
           'notice:send_notice_marketers',
         ],
       },
-      {
-        href: '/admin/notices',
-        label: 'Notices',
-        permissions: [
-          'notice:view_notice',
-          'notice:send_notice_production',
-          'notice:send_notice_marketers',
-        ],
-      },
+    ],
+  },
+
+  {
+    href: '/notices',
+    label: 'Notices',
+    permissions: [
+      'notice:view_notice',
+      'notice:send_notice_production',
+      'notice:send_notice_marketers',
     ],
   },
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import {
   setClassNameAndIsDisabled,
   setMenuPortalTarget,
@@ -34,8 +34,8 @@ const Form: React.FC<PropsType> = props => {
     label: employee.e_id,
   }));
 
-  const userPerms = useMemo(
-    () => new Set(session?.user.permissions || []),
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
     [session?.user.permissions],
   );
 
@@ -44,13 +44,13 @@ const Form: React.FC<PropsType> = props => {
       const perms = role.permissions || [];
       if (
         perms.includes('settings:the_super_admin' as PermissionValue) &&
-        !userPerms.has('settings:the_super_admin' as PermissionValue)
+        !hasPerm('settings:the_super_admin', userPermissions)
       )
         return false;
       // Ensure editor can only assign roles whose permissions are subset of their own
-      return perms.every(p => userPerms.has(p as PermissionValue));
+      return perms.every(p => hasPerm(p as PermissionValue, userPermissions));
     });
-  }, [props.rolesData, userPerms]);
+  }, [props.rolesData, userPermissions]);
 
   let roleOptions = allowedRoles.map(role => ({
     value: role._id,
@@ -140,7 +140,7 @@ const Form: React.FC<PropsType> = props => {
 
       delete parsed.data.permissions;
 
-      if (session?.user.permissions.includes('admin:create_user')) {
+      if (hasPerm('admin:create_user', userPermissions)) {
         let url: string =
           process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
         let options: {} = {
@@ -160,9 +160,7 @@ const Form: React.FC<PropsType> = props => {
         } else {
           toast.error(response.data as string);
         }
-      } else if (
-        session?.user.permissions.includes('admin:create_user_approval')
-      ) {
+      } else if (hasPerm('admin:create_user_approval', userPermissions)) {
         let url: string =
           process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
         let options: {} = {

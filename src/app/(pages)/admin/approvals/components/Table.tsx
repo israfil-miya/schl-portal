@@ -315,6 +315,10 @@ const Table: React.FC = props => {
         >
           {approvalIds.length !== 0 && (
             <div className="align-middle text-center flex gap-1 ms-4">
+              <span className="text-sm">
+                {approvalIds.length} request{approvalIds.length > 1 ? 's' : ''}{' '}
+                selected
+              </span>
               <button
                 onClick={() => {
                   let confirmation = confirm(

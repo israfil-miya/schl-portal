@@ -8,7 +8,7 @@ import {
   EmployeeDataType,
   validationSchema,
 } from '@/app/(pages)/admin/employees/schema';
-import { OrderDetails } from '@/app/api/order/route';
+import { OrderDetails } from '@/app/api/order/handlers/getOrdersByCountry';
 import Badge from '@/components/Badge';
 import HiddenText from '@/components/HiddenText';
 import NoData, { Type } from '@/components/NoData';

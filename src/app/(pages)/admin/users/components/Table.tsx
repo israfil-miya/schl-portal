@@ -2,7 +2,7 @@
 
 import Badge from '@/components/Badge';
 import ExtendableTd from '@/components/ExtendableTd';
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 
 import NoData, { Type } from '@/components/NoData';
@@ -19,7 +19,14 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { use, useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { validationSchema, UserDataType as zod_UserDataType } from '../schema';
 import DeleteButton from './Delete';
@@ -55,12 +62,12 @@ const Table: React.FC<{
   const [loading, setLoading] = useState<boolean>(true);
   const [searchVersion, setSearchVersion] = useState<number>(0);
 
-  const prevPageCount = useRef<number>(0);
-  const prevPage = useRef<number>(1);
-
   const { data: session } = useSession();
-  const viewerPerms = new Set(session?.user.permissions || []);
-  const viewerIsSuper = viewerPerms.has('settings:the_super_admin' as any);
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const [filters, setFilters] = useState({
     generalSearchString: '',
@@ -248,18 +255,34 @@ const Table: React.FC<{
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <button
-          onClick={() =>
-            router.push(
-              process.env.NEXT_PUBLIC_BASE_URL + '/admin/users/create-user',
-            )
-          }
-          className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-        >
-          Add new user
-          <CirclePlus size={18} />
-        </button>
+      <div
+        className={cn(
+          'flex flex-col mb-4 gap-2',
+          hasAnyPerm(
+            ['admin:create_user_approval', 'admin:create_user'],
+            userPermissions,
+          )
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
+        )}
+      >
+        {hasAnyPerm(
+          ['admin:create_user_approval', 'admin:create_user'],
+          userPermissions,
+        ) && (
+          <button
+            onClick={() =>
+              router.push(
+                process.env.NEXT_PUBLIC_BASE_URL + '/admin/users/create-user',
+              )
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Add new user
+            <CirclePlus size={18} />
+          </button>
+        )}
+
         <div className="items-center flex gap-2">
           <Pagination
             page={page}
@@ -302,7 +325,10 @@ const Table: React.FC<{
                   <th>Username</th>
                   <th>Role</th>
                   <th>Comment</th>
-                  <th>Action</th>
+                  {hasAnyPerm(
+                    ['admin:edit_user', 'admin:delete_user_approval'],
+                    userPermissions,
+                  ) && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -316,7 +342,10 @@ const Table: React.FC<{
                     const isTargetSuper = Array.isArray(perms)
                       ? perms.includes('settings:the_super_admin')
                       : false;
-                    return viewerIsSuper || !isTargetSuper;
+                    return (
+                      hasPerm('settings:the_super_admin', userPermissions) ||
+                      !isTargetSuper
+                    );
                   })
                   .map((user, index) => (
                     <tr key={String(user._id)}>
@@ -339,55 +368,63 @@ const Table: React.FC<{
                       </td>
                       <ExtendableTd data={user?.comment || ''} />
 
-                      <td
-                        className="text-center"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <div className="inline-block">
-                          <div className="flex gap-2">
-                            {/* Delete allowed only with approval perm, and not on super-admin unless viewer is super */}
-                            {viewerPerms.has(
-                              'admin:delete_user_approval' as any,
-                            ) && (
-                              <DeleteButton
-                                userData={user}
-                                submitHandler={deleteUser}
-                              />
-                            )}
+                      {hasAnyPerm(
+                        ['admin:edit_user', 'admin:delete_user_approval'],
+                        userPermissions,
+                      ) && (
+                        <td
+                          className="text-center"
+                          style={{ verticalAlign: 'middle' }}
+                        >
+                          <div className="inline-block">
+                            <div className="flex gap-2">
+                              {/* Delete allowed only with approval perm, and not on super-admin unless viewer is super */}
+                              {hasPerm(
+                                'admin:delete_user_approval',
+                                userPermissions,
+                              ) && (
+                                <DeleteButton
+                                  userData={user}
+                                  submitHandler={deleteUser}
+                                />
+                              )}
 
-                            {/* Edit allowed only with edit perm, and not on super-admin unless viewer is super */}
-                            {viewerPerms.has('admin:edit_user' as any) && (
-                              <EditButton
-                                userData={user as unknown as zod_UserDataType}
-                                employeesData={props.employeesData}
-                                rolesData={props.rolesData}
-                                submitHandler={editUser}
-                                loading={loading}
-                              />
-                            )}
+                              {/* Edit allowed only with edit perm, and not on super-admin unless viewer is super */}
+                              {hasPerm('admin:edit_user', userPermissions) && (
+                                <EditButton
+                                  userData={user as unknown as zod_UserDataType}
+                                  employeesData={props.employeesData}
+                                  rolesData={props.rolesData}
+                                  submitHandler={editUser}
+                                  loading={loading}
+                                />
+                              )}
 
-                            {/* Copy credentials: block when masked (non–super) */}
-                            {viewerIsSuper ||
-                            (user as any)?.password !== '******' ? (
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(
-                                    `${user.name} ${(user as any).password}`,
-                                  );
-                                  toast.info('Copied to clipboard', {
-                                    position: 'bottom-right',
-                                  });
-                                }}
-                                className={cn(
-                                  'rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
-                                )}
-                              >
-                                <ClipboardCopy size={18} />
-                              </button>
-                            ) : null}
+                              {/* Copy credentials: block when masked (non–super) */}
+                              {hasPerm(
+                                'settings:the_super_admin',
+                                userPermissions,
+                              ) || (user as any)?.password !== '******' ? (
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      `${user.name} ${(user as any).password}`,
+                                    );
+                                    toast.info('Copied to clipboard', {
+                                      position: 'bottom-right',
+                                    });
+                                  }}
+                                  className={cn(
+                                    'rounded-md bg-orange-600 hover:opacity-90 hover:ring-2 hover:ring-orange-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center',
+                                  )}
+                                >
+                                  <ClipboardCopy size={18} />
+                                </button>
+                              ) : null}
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
+                      )}
                     </tr>
                   ))}
               </tbody>

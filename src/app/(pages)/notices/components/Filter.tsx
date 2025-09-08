@@ -1,15 +1,15 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn, hasPerm } from '@/lib/utils';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
   setMenuPortalTarget,
 } from '@/utility/selectHelpers';
 import { Filter, X } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import React, { useMemo, useRef, useState } from 'react';
 import Select from 'react-select';
-import { channelOptions } from '../create-notice/components/Form';
 
 const baseZIndex = 50; // 52
 
@@ -31,6 +31,36 @@ const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { filters, setFilters } = props;
   const popupRef = useRef<HTMLElement>(null);
+
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
+  const allowedChannelOptions = useMemo(() => {
+    const opts: { value: 'marketers' | 'production'; label: string }[] = [];
+    if (hasPerm('notice:send_notice_marketers', userPermissions)) {
+      opts.push({ value: 'marketers', label: 'Marketers' });
+    }
+    if (hasPerm('notice:send_notice_production', userPermissions)) {
+      opts.push({ value: 'production', label: 'Production' });
+    }
+    return opts;
+  }, [userPermissions]);
+
+  const displayedChannelOptions = useMemo(() => {
+    const out = [...allowedChannelOptions];
+    if (filters.channel && !out.find(o => o.value === filters.channel)) {
+      const current = filters.channel as 'marketers' | 'production';
+      out.push({
+        value: current,
+        label: current.charAt(0).toUpperCase() + current.slice(1),
+      });
+    }
+    return out;
+  }, [allowedChannelOptions, filters.channel]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -116,7 +146,7 @@ const FilterButton: React.FC<PropsType> = props => {
                 </label>
                 <Select
                   {...setClassNameAndIsDisabled(isOpen)}
-                  options={channelOptions}
+                  options={displayedChannelOptions}
                   closeMenuOnSelect={true}
                   classNamePrefix="react-select"
                   menuPortalTarget={setMenuPortalTarget}
@@ -124,8 +154,8 @@ const FilterButton: React.FC<PropsType> = props => {
                   menuPosition="fixed" // Prevent clipping by parent containers
                   styles={setCalculatedZIndex(baseZIndex)}
                   value={
-                    channelOptions.find(
-                      option => option.value === filters.channel,
+                    displayedChannelOptions.find(
+                      (option: any) => option.value === filters.channel,
                     ) || null
                   }
                   onChange={selectedOption =>

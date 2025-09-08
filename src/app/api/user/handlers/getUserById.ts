@@ -10,6 +10,9 @@ export async function handleGetUserById(
     if (!session) return { data: 'Unauthorized', status: 401 };
     const viewerPerms = new Set(session.user.permissions || []);
     const viewerIsSuper = viewerPerms.has('settings:the_super_admin' as any);
+    // allow users with edit permission to view passwords (non-super editors)
+    const viewerCanViewPassword =
+      viewerIsSuper || viewerPerms.has('admin:edit_user' as any);
     const { _id } = await req.json();
     const resData: any = await User.findById(_id)
       .populate('role_id', 'permissions name')
@@ -21,7 +24,8 @@ export async function handleGetUserById(
       if (targetIsSuper && !viewerIsSuper) {
         return { data: 'Forbidden', status: 403 };
       }
-      if (!viewerIsSuper && 'password' in resData) resData.password = '******';
+      if (!viewerCanViewPassword && 'password' in resData)
+        resData.password = '******';
       return { data: resData, status: 200 };
     }
     return { data: 'User not found', status: 400 };

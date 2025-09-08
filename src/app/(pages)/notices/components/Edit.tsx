@@ -1,7 +1,7 @@
 'use client';
 
 import NoticeBodyEditor from '@/components/RichText/RichTextEditor';
-import { cn } from '@/lib/utils';
+import { cn, hasPerm } from '@/lib/utils';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -11,12 +11,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { SquarePen, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
-import { channelOptions } from '../create-notice/components/Form';
-import { NoticeDataType, validationSchema } from '../schema';
+import { NoticeDataType, validationSchema } from '../../admin/notices/schema';
 
 const baseZIndex = 50; // 52
 
@@ -57,6 +57,50 @@ const EditButton: React.FC<PropsType> = props => {
     },
   });
 
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
+  const allowedChannelOptions = useMemo(() => {
+    const opts: {
+      value: 'marketers' | 'production';
+      label: string;
+      isDisabled?: boolean;
+    }[] = [];
+    if (hasPerm('notice:send_notice_marketers', userPermissions)) {
+      opts.push({ value: 'marketers', label: 'Marketers' });
+    }
+    if (hasPerm('notice:send_notice_production', userPermissions)) {
+      opts.push({ value: 'production', label: 'Production' });
+    }
+    return opts;
+  }, [userPermissions]);
+
+  // if current notice channel is not allowed for this user, include it as a disabled option
+  const displayedChannelOptions = useMemo(() => {
+    const out: {
+      value: 'marketers' | 'production';
+      label: string;
+      isDisabled?: boolean;
+    }[] = [...allowedChannelOptions];
+    const current = props.noticeData?.channel as
+      | 'marketers'
+      | 'production'
+      | undefined;
+    if (current && !out.find(o => o.value === current)) {
+      const isAllowed = out.find(o => o.value === current);
+      out.push({
+        value: current,
+        label: current.charAt(0).toUpperCase() + current.slice(1),
+        isDisabled: !isAllowed,
+      });
+    }
+    return out;
+  }, [allowedChannelOptions, props.noticeData]);
+
   useEffect(() => {
     initFlowbite();
   }, []);
@@ -70,7 +114,7 @@ const EditButton: React.FC<PropsType> = props => {
       reset(props.noticeData);
     }
     console.log(props.noticeData);
-  }, [isOpen]);
+  }, [isOpen, reset, props.noticeData]);
 
   const customStyles = {
     control: (provided: any) => ({
@@ -147,19 +191,19 @@ const EditButton: React.FC<PropsType> = props => {
                     <Select
                       {...field}
                       {...setClassNameAndIsDisabled(isOpen)}
-                      options={channelOptions}
+                      options={displayedChannelOptions}
                       closeMenuOnSelect={true}
                       placeholder="Select type"
                       classNamePrefix="react-select"
                       menuPortalTarget={setMenuPortalTarget}
                       styles={setCalculatedZIndex(baseZIndex)}
                       value={
-                        channelOptions.find(
-                          option => option.value === field.value,
+                        (displayedChannelOptions as any).find(
+                          (option: any) => option.value === field.value,
                         ) || null
                       }
-                      onChange={option =>
-                        field.onChange(option ? option.value : '')
+                      onChange={(option: any) =>
+                        field.onChange(option ? option.value : undefined)
                       }
                     />
                   )}

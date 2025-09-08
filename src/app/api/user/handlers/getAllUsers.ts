@@ -29,6 +29,9 @@ export const handleGetAllUsers = async (
     if (!session) return { data: 'Unauthorized', status: 401 };
     const viewerPerms = new Set(session.user.permissions || []);
     const viewerIsSuper = viewerPerms.has('settings:the_super_admin' as any);
+    // allow users with edit permission to view passwords (non-super editors)
+    const viewerCanViewPassword =
+      viewerIsSuper || viewerPerms.has('admin:edit_user' as any);
 
     const headersList = await headers();
     const page: number = Number(headersList.get('page')) || 1;
@@ -133,7 +136,7 @@ export const handleGetAllUsers = async (
       } else {
         // Never leak raw passwords to non-super-admins
         const safeItems = users.map((u: any) => {
-          if (!viewerIsSuper) {
+          if (!viewerCanViewPassword) {
             if ('password' in u) {
               // mask but keep shape
               return { ...u, password: '******' };

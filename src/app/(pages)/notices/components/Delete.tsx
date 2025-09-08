@@ -3,7 +3,7 @@
 import { Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
-import { NoticeDataType } from '../schema';
+import { NoticeDataType } from '../../admin/notices/schema';
 
 interface PropsType {
   noticeData: NoticeDataType;

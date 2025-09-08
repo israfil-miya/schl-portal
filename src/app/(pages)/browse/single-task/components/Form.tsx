@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 
-import { BookCheck, SquarePen, Trash2 } from 'lucide-react';
+import { BookCheck, Redo2, SquarePen, Trash2 } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 import { toast } from 'sonner';
 import {
@@ -600,7 +600,13 @@ const Form: React.FC<PropsType> = props => {
                 className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
                 type="button"
               >
-                {loading.redoOrder ? 'Redoing...' : 'Redo'}
+                {loading.redoOrder ? (
+                  'Redoing...'
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Redo <Redo2 size={18} />
+                  </span>
+                )}
               </button>
             ) : (
               <button

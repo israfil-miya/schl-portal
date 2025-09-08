@@ -51,7 +51,9 @@ const CountryDataTable: React.FC<CountryDataTableProps> = props => {
             <thead style={{ backgroundColor: '#7ba541', color: 'white' }}>
               <tr>
                 <th></th>
-                {dates?.map(date => <td key={date}>{date.split('-')[2]}</td>)}
+                {dates?.map(date => (
+                  <td key={date}>{date.split('-')[2]}</td>
+                ))}
                 <th className="font-bold">Total</th>
               </tr>
             </thead>
@@ -94,7 +96,9 @@ const CountryDataTable: React.FC<CountryDataTableProps> = props => {
                 <td style={{ backgroundColor: '#7ba541', color: 'white' }}>
                   Total
                 </td>
-                {dateTotals?.map((total, idx) => <td key={idx}>{total}</td>)}
+                {dateTotals?.map((total, idx) => (
+                  <td key={idx}>{total}</td>
+                ))}
                 <td>
                   {countryTotals.reduce(
                     (total, countryTotal) => total + countryTotal,

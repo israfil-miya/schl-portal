@@ -1,14 +1,14 @@
 'use client';
-import { constructFileName, fetchApi } from '@/lib/utils';
+import { constructFileName, fetchApi, hasPerm } from '@/lib/utils';
 import { setMenuPortalTarget } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, CloudUpload, Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
-import { NoticeDataType, validationSchema } from '../../schema';
+import { NoticeDataType, validationSchema } from '../schema';
 
 import NoticeBodyEditor from '@/components/RichText/RichTextEditor';
 
@@ -32,10 +32,10 @@ const Form: React.FC = () => {
     setValue,
     reset,
     formState: { errors },
-  } = useForm<NoticeDataType>({
+  } = useForm<Partial<NoticeDataType>>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
-      channel: 'marketers',
+      channel: undefined,
       notice_no: '',
       title: '',
       description: '',
@@ -44,7 +44,34 @@ const Form: React.FC = () => {
     },
   });
 
-  // You already have a constructFileName function; here's a local version:
+  // derive available channels from user permissions and hide channels
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
+  const allowedChannelOptions = useMemo(() => {
+    const opts: { value: 'marketers' | 'production'; label: string }[] = [];
+    if (hasPerm('notice:send_notice_marketers', userPermissions)) {
+      opts.push({ value: 'marketers', label: 'Marketers' });
+    }
+    if (hasPerm('notice:send_notice_production', userPermissions)) {
+      opts.push({ value: 'production', label: 'Production' });
+    }
+    return opts;
+  }, [userPermissions]);
+
+  // set sensible default channel once permissions load
+  useEffect(() => {
+    if (!watch('channel') && allowedChannelOptions.length > 0) {
+      // prefer production when available, otherwise pick the first allowed
+      const defaultVal =
+        allowedChannelOptions.find(o => o.value === 'production')?.value ||
+        allowedChannelOptions[0].value;
+      setValue('channel', defaultVal);
+    }
+  }, [allowedChannelOptions, setValue, watch]);
+
   let constructFileName = (file: File, notice_no: string) => {
     let file_name = file.name;
     let file_ext = file_name.split('.').pop();
@@ -119,8 +146,9 @@ const Form: React.FC = () => {
     }
   }
 
-  const onSubmit = async (data: NoticeDataType) => {
-    await createNotice(data);
+  const onSubmit = async (data: Partial<NoticeDataType>) => {
+    // validationSchema will ensure required fields are present before sending
+    await createNotice(data as NoticeDataType);
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,16 +222,19 @@ const Form: React.FC = () => {
             control={control}
             render={({ field }) => (
               <Select
-                options={channelOptions}
+                options={allowedChannelOptions}
                 closeMenuOnSelect={true}
                 placeholder="Select type"
                 classNamePrefix="react-select"
                 menuPortalTarget={setMenuPortalTarget}
                 value={
-                  channelOptions.find(option => option.value === field.value) ||
-                  null
+                  allowedChannelOptions.find(
+                    option => option.value === field.value,
+                  ) || null
                 }
-                onChange={option => field.onChange(option ? option.value : '')}
+                onChange={option =>
+                  field.onChange(option ? option.value : undefined)
+                }
               />
             )}
           />

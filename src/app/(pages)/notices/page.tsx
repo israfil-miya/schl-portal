@@ -1,14 +1,14 @@
 import React from 'react';
 import Table from './components/Table';
 
-const ClientsPage = async () => {
+const NoticesPage = async () => {
   return (
     <>
-      <div className="px-4 mt-8 mb-4">
+      <div className="px-4 mt-8 mb-4 container">
         <Table />
       </div>
     </>
   );
 };
 
-export default ClientsPage;
+export default NoticesPage;

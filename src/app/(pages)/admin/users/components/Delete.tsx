@@ -12,19 +12,12 @@ interface PropsType {
 }
 const DeleteButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { data: session } = useSession();
 
   return (
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={cn(
-          'rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center',
-          session?.user.role === 'admin' &&
-            (props.userData.role === 'admin' ||
-              props.userData.role === 'super') &&
-            'hidden',
-        )}
+        className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
       >
         <Trash2 size={18} />
       </button>

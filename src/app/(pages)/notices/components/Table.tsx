@@ -29,7 +29,7 @@ import React, {
   useState,
 } from 'react';
 import { toast } from 'sonner';
-import { NoticeDataType, validationSchema } from '../schema';
+import { NoticeDataType, validationSchema } from '../../admin/notices/schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
