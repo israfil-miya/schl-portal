@@ -1,7 +1,7 @@
 'use client';
 
 import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
-import { cn, generatePassword } from '@/lib/utils';
+import { cn, generatePassword, hasPerm } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { RoleDataType } from '@/models/Roles';
 import {
@@ -38,6 +38,11 @@ const EditButton: React.FC<PropsType> = props => {
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   let employeeIdOptions = (props.employeesData || []).map(employee => ({
     value: employee.e_id,
@@ -286,52 +291,48 @@ const EditButton: React.FC<PropsType> = props => {
                 </div>
               </div>
 
-              <div
-                className={cn(
-                  'grid grid-cols-1 gap-x-3 gap-y-4 mb-4',
-                  !session?.user.permissions.includes('admin:assign_role') &&
-                    'hidden',
-                )}
-              >
-                <div>
-                  <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-                    <span className="uppercase">Role*</span>
-                    <span className="text-red-700 text-wrap block text-xs">
-                      {errors.role_id && errors.role_id?.message}
-                    </span>
-                  </label>
-                  <Controller
-                    name="role_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        {...setClassNameAndIsDisabled(isOpen)}
-                        options={roleOptions}
-                        closeMenuOnSelect={true}
-                        placeholder="Select role"
-                        classNamePrefix="react-select"
-                        menuPortalTarget={setMenuPortalTarget}
-                        styles={setCalculatedZIndex(baseZIndex)}
-                        value={
-                          roleOptions.find(
-                            option => String(option.value) === field.value,
-                          ) || null
-                        }
-                        onChange={option => {
-                          field.onChange(option ? option.value : '');
-                          setValue(
-                            'permissions',
-                            props.rolesData.find(
-                              role => role._id === option?.value,
-                            )?.permissions,
-                          );
-                        }}
-                      />
-                    )}
-                  />
+              {hasPerm('admin:assign_role', userPermissions) && (
+                <div className={cn('grid grid-cols-1 gap-x-3 gap-y-4 mb-4')}>
+                  <div>
+                    <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
+                      <span className="uppercase">Role*</span>
+                      <span className="text-red-700 text-wrap block text-xs">
+                        {errors.role_id && errors.role_id?.message}
+                      </span>
+                    </label>
+                    <Controller
+                      name="role_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          {...setClassNameAndIsDisabled(isOpen)}
+                          options={roleOptions}
+                          closeMenuOnSelect={true}
+                          placeholder="Select role"
+                          classNamePrefix="react-select"
+                          menuPortalTarget={setMenuPortalTarget}
+                          styles={setCalculatedZIndex(baseZIndex)}
+                          value={
+                            roleOptions.find(
+                              option => String(option.value) === field.value,
+                            ) || null
+                          }
+                          onChange={option => {
+                            field.onChange(option ? option.value : '');
+                            setValue(
+                              'permissions',
+                              props.rolesData.find(
+                                role => role._id === option?.value,
+                              )?.permissions,
+                            );
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {watch('permissions')?.includes('login:crm') && (
                 <div>

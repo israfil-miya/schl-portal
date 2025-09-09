@@ -74,11 +74,7 @@ export const authorizedRoutes: AuthorizedRoute[] = [
       {
         href: '/admin/users',
         label: 'Users',
-        permissions: [
-          'admin:edit_user',
-          'admin:delete_user_approval',
-          'admin:assign_role',
-        ],
+        permissions: ['admin:edit_user', 'admin:delete_user_approval'],
       },
       {
         href: '/admin/users/create-user',

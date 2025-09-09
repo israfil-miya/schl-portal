@@ -1,9 +1,8 @@
 'use client';
 
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
-import { cn } from '@/lib/utils';
+import type { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 
-import { hasAnyPerm, hasPerm } from '@/lib/utils';
+import { cn, hasAnyPerm, hasPerm } from '@/lib/utils';
 import 'flowbite';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -137,9 +136,10 @@ const Nav: React.FC<PropsType> = props => {
             <li
               className={cn(
                 !hasAny([
-                  'admin:assign_role',
                   'admin:create_role',
                   'admin:delete_role',
+                  'admin:edit_user',
+                  'admin:delete_user_approval',
                 ]) && 'hidden',
               )}
             >
@@ -171,7 +171,6 @@ const Nav: React.FC<PropsType> = props => {
                       !hasAny([
                         'admin:edit_user',
                         'admin:delete_user_approval',
-                        'admin:assign_role',
                       ]) && 'hidden',
                     )}
                   >
@@ -202,67 +201,17 @@ const Nav: React.FC<PropsType> = props => {
             <li
               className={cn(
                 !hasAny([
-                  'notice:view_notice',
                   'notice:send_notice_production',
                   'notice:send_notice_marketers',
                 ]) && 'hidden',
               )}
             >
-              <span
-                role="button"
-                id="adminNoticesDropdownButton"
-                data-dropdown-toggle="adminNoticesDropdown"
-                data-dropdown-trigger="hover"
-                data-dropdown-placement="right-start"
-                className="block px-4 py-2 hover:bg-primary"
+              <Link
+                className={cn('block px-4 py-2 hover:bg-primary')}
+                href={'/admin/notices'}
               >
-                <span className="flex gap-1 items-end align-bottom justify-between">
-                  <span>Notices</span>
-                  <ChevronRight size={17} />
-                </span>
-              </span>
-
-              <div
-                id="adminNoticesDropdown"
-                className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
-              >
-                <ul
-                  className="py-2 text-white"
-                  aria-labelledby="adminNoticesDropdownButton"
-                >
-                  <li
-                    className={cn(
-                      !hasAny([
-                        'notice:send_notice_production',
-                        'notice:send_notice_marketers',
-                      ]) && 'hidden',
-                    )}
-                  >
-                    <Link
-                      className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/notices/create-notice'}
-                    >
-                      Send New
-                    </Link>
-                  </li>
-                  <li
-                    className={cn(
-                      !hasAny([
-                        'notice:view_notice',
-                        'notice:send_notice_production',
-                        'notice:send_notice_marketers',
-                      ]) && 'hidden',
-                    )}
-                  >
-                    <Link
-                      className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/notices'}
-                    >
-                      View All
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+                Notice
+              </Link>
             </li>
           </ul>
         </div>
@@ -366,7 +315,7 @@ const Nav: React.FC<PropsType> = props => {
                       href={'/accountancy/invoices/invoice-tracker'}
                       target="_blank"
                     >
-                      Invoice Tracker
+                      Track Invoices
                     </Link>
                   </li>
                 </ul>
@@ -449,7 +398,7 @@ const Nav: React.FC<PropsType> = props => {
             pathname === '/file-flow' || pathname.startsWith('/file-flow/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !has('fileflow:view_page') && 'hidden', // <-- inverted check fixed
+            !has('fileflow:view_page') && 'hidden',
           )}
           href={'/file-flow'}
         >
@@ -467,7 +416,8 @@ const Nav: React.FC<PropsType> = props => {
               pathname.startsWith('/work-schedule/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !has('schedule:view_page') && 'hidden', // <-- inverted check fixed
+            !hasAny(['schedule:view_page', 'schedule:create_schedule']) &&
+              'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -502,6 +452,19 @@ const Nav: React.FC<PropsType> = props => {
             </li>
           </ul>
         </div>
+
+        <Link
+          className={cn(
+            'py-3 px-5',
+            pathname === '/notices' || pathname.startsWith('/notices/')
+              ? 'bg-primary'
+              : 'hover:opacity-90',
+            !has('notice:view_notice') && 'hidden',
+          )}
+          href={'/notices'}
+        >
+          Notices
+        </Link>
       </div>
 
       <span className="max-lg:hidden">{msg}</span>

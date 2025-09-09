@@ -30,6 +30,7 @@ const Topbar: React.FC = () => {
           alt="logo"
           width={95}
           height={95}
+          unoptimized={true}
         />
       </Link>
 

@@ -41,7 +41,7 @@ interface PropsType {
   className?: string | undefined;
   LogoutAction: () => Promise<void>;
 }
-const FilterButton: React.FC<PropsType> = props => {
+const Sidebar: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState(false);
 
   const { data: session } = useSession();
@@ -65,13 +65,14 @@ const FilterButton: React.FC<PropsType> = props => {
   return (
     <div className={props.className}>
       <label
+        htmlFor="sidebar-toggle"
         className="font-bold cursor-pointer relative top-1"
         onClick={() => setIsOpen(true)}
       >
         <Menu size={40} />
       </label>
 
-      <Drawer title="Menu" isOpen={isOpen} setIsOpen={setIsOpen}>
+      <Drawer id="sidebar" title="Menu" isOpen={isOpen} setIsOpen={setIsOpen}>
         <nav className="flex flex-col space-y-1 overflow-y-scroll">
           {has('task:view_page') && (
             <Link
@@ -159,14 +160,15 @@ const FilterButton: React.FC<PropsType> = props => {
                       className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-11 group hover:bg-gray-100"
                     >
                       <Signature className="w-6 h-6 mr-2" />
-                      Approval
+                      Approvals
                     </Link>
                   </li>
                 )}
                 {hasAny([
-                  'admin:assign_role',
                   'admin:create_role',
                   'admin:delete_role',
+                  'admin:edit_user',
+                  'admin:delete_user_approval',
                 ]) && (
                   <li>
                     <span
@@ -190,7 +192,6 @@ const FilterButton: React.FC<PropsType> = props => {
                       {hasAny([
                         'admin:edit_user',
                         'admin:delete_user_approval',
-                        'admin:assign_role',
                       ]) && (
                         <li>
                           <Link
@@ -217,58 +218,17 @@ const FilterButton: React.FC<PropsType> = props => {
                   </li>
                 )}
                 {hasAny([
-                  'notice:view_notice',
                   'notice:send_notice_production',
                   'notice:send_notice_marketers',
                 ]) && (
                   <li>
-                    <span
-                      className={cn(
-                        'flex items-center justify-between w-full p-2 text-gray-900 transition duration-75 pl-11 group',
-                        pathname.includes('/admin/notices')
-                          ? 'bg-lime-100'
-                          : 'hover:bg-gray-100',
-                      )}
-                      aria-controls="dropdown-1-2"
-                      data-collapse-toggle="dropdown-1-2"
+                    <Link
+                      href="/admin/notices"
+                      className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-20 group2 hover:bg-gray-100"
                     >
-                      <span className="flex items-center">
-                        <Megaphone className="w-6 h-6 mr-2" />
-                        <span>Notices</span>
-                      </span>
-                      <ChevronDown size={17} />
-                    </span>
-                    <ul id="dropdown-1-2" className="hidden pb-2 space-y-1">
-                      {hasAny([
-                        'notice:send_notice_production',
-                        'notice:send_notice_marketers',
-                      ]) && (
-                        <li>
-                          <Link
-                            href="/admin/notices/create-notice"
-                            className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-20 group2 hover:bg-gray-100"
-                          >
-                            <SquarePlus className="w-6 h-6 mr-2" />
-                            Send New
-                          </Link>
-                        </li>
-                      )}
-                      {hasAny([
-                        'notice:view_notice',
-                        'notice:send_notice_production',
-                        'notice:send_notice_marketers',
-                      ]) && (
-                        <li>
-                          <Link
-                            href="/admin/notices"
-                            className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-20 group2 hover:bg-gray-100"
-                          >
-                            <TableOfContents className="w-6 h-6 mr-2" />
-                            View All
-                          </Link>
-                        </li>
-                      )}
-                    </ul>
+                      <Megaphone className="w-6 h-6 mr-2" />
+                      Notice
+                    </Link>
                   </li>
                 )}
               </ul>
@@ -457,6 +417,67 @@ const FilterButton: React.FC<PropsType> = props => {
               File Flow
             </Link>
           )}
+
+          {hasAny(['schedule:view_page', 'schedule:create_schedule']) && (
+            <>
+              <span
+                className={cn(
+                  'p-4 flex items-center justify-between',
+                  pathname.includes('/work-schedule/')
+                    ? 'bg-primary text-white'
+                    : 'hover:bg-gray-100',
+                )}
+                aria-controls="dropdown-parent-4"
+                data-collapse-toggle="dropdown-parent-4"
+              >
+                <span className="flex items-center">
+                  <Table2 className="w-6 h-6 mr-2" />
+                  <span>Work Schedule</span>
+                </span>
+                <ChevronDown size={17} />
+              </span>
+              <ul id="dropdown-parent-4" className="hidden pb-2 space-y-1">
+                {has('schedule:create_schedule') && (
+                  <li>
+                    <Link
+                      href="/work-schedule/schedule-task"
+                      className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-11 group hover:bg-gray-100"
+                    >
+                      <ChartBarBig className="w-6 h-6 mr-2" />
+                      Schedule Task
+                    </Link>
+                  </li>
+                )}
+                {has('schedule:view_page') && (
+                  <li>
+                    <Link
+                      href="/work-schedule/view-schedule"
+                      className="flex items-center w-full p-2 text-gray-900 transition duration-75 pl-11 group hover:bg-gray-100"
+                    >
+                      <FlaskConical className="w-6 h-6 mr-2" />
+                      View Schedule
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </>
+          )}
+
+          {has('notice:view_notice') && (
+            <Link
+              href="/notices"
+              className={cn(
+                'p-4 flex items-center',
+                pathname == '/notices'
+                  ? 'bg-primary text-white'
+                  : 'hover:bg-gray-100',
+              )}
+            >
+              <Megaphone className="w-6 h-6 mr-2" />
+              Notices
+            </Link>
+          )}
+
           <hr />
 
           {has('settings:view_page') && (
@@ -473,6 +494,7 @@ const FilterButton: React.FC<PropsType> = props => {
               Account
             </Link>
           )}
+
           {/* Logout */}
           <span
             onClick={navLogoutHandler}
@@ -489,4 +511,4 @@ const FilterButton: React.FC<PropsType> = props => {
   );
 };
 
-export default FilterButton;
+export default Sidebar;
