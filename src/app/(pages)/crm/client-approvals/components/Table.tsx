@@ -7,14 +7,20 @@ import {
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
 import { UserDataType } from '@/models/Users';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import DuplicateButton from './Duplicate';
 import FilterButton from './Filter';
@@ -37,6 +43,12 @@ const Table = () => {
     },
     items: React.useMemo(() => [], []),
   });
+
+  const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
@@ -353,7 +365,9 @@ const Table = () => {
                   <th>Company Name</th>
                   <th>Contact Person</th>
                   <th>Email Address</th>
-                  <th>Manage</th>
+                  {hasPerm('crm:check_client_request', userPermissions) && (
+                    <th>Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -366,37 +380,40 @@ const Table = () => {
                       <td className="text-wrap">{report.company_name}</td>
                       <td className="text-wrap">{report.contact_person}</td>
                       <td className="text-wrap">{report.email_address}</td>
-                      <td
-                        className="text-center"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <div className="inline-block">
-                          <div className="flex gap-2">
-                            <NewClient
-                              loading={loading}
-                              clientData={{
-                                country: report.country,
-                                client_name: report.company_name,
-                                contact_person: report.contact_person,
-                                designation: report.designation,
-                                contact_number: report.contact_number,
-                                email: report.email_address,
-                                category: report.category,
-                                marketer: report.marketer_name,
-                              }}
-                              submitHandler={convertToClient}
-                            />
-                            <RejectButton
-                              reportData={report}
-                              submitHandler={rejectClient}
-                            />
-                            <DuplicateButton
-                              reportData={report}
-                              submitHandler={markDuplicate}
-                            />
+
+                      {hasPerm('crm:check_client_request', userPermissions) && (
+                        <td
+                          className="text-center"
+                          style={{ verticalAlign: 'middle' }}
+                        >
+                          <div className="inline-block">
+                            <div className="flex gap-2">
+                              <NewClient
+                                loading={loading}
+                                clientData={{
+                                  country: report.country,
+                                  client_name: report.company_name,
+                                  contact_person: report.contact_person,
+                                  designation: report.designation,
+                                  contact_number: report.contact_number,
+                                  email: report.email_address,
+                                  category: report.category,
+                                  marketer: report.marketer_name,
+                                }}
+                                submitHandler={convertToClient}
+                              />
+                              <RejectButton
+                                reportData={report}
+                                submitHandler={rejectClient}
+                              />
+                              <DuplicateButton
+                                reportData={report}
+                                submitHandler={markDuplicate}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

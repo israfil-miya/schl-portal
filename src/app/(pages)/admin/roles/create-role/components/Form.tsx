@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import {
   setClassNameAndIsDisabled,
   setMenuPortalTarget,
@@ -50,7 +50,7 @@ const Form: React.FC = props => {
     [session?.user.permissions],
   );
   const canManageAny = useMemo(
-    () => userPermissions.includes('admin:create_role'),
+    () => hasPerm('admin:create_role', userPermissions),
     [userPermissions],
   );
 
@@ -63,7 +63,7 @@ const Form: React.FC = props => {
         label: opt.label,
       })),
     }));
-    const hasSuper = userPermissions.includes('settings:the_super_admin');
+    const hasSuper = hasPerm('settings:the_super_admin', userPermissions);
     const sanitized = groups.map(g => ({
       label: g.label,
       options: g.options.filter(
@@ -74,7 +74,7 @@ const Form: React.FC = props => {
     return sanitized
       .map(g => ({
         label: g.label,
-        options: g.options.filter(opt => userPermissions.includes(opt.value)),
+        options: g.options.filter(opt => hasPerm(opt.value, userPermissions)),
       }))
       .filter(g => g.options.length > 0);
   }, [canManageAny, userPermissions]);
@@ -94,7 +94,7 @@ const Form: React.FC = props => {
         return;
       }
 
-      if (!session?.user.permissions.includes('admin:create_role')) {
+      if (!hasPerm('admin:create_role', userPermissions)) {
         toast.error("You don't have the permission to create roles");
         return;
       }

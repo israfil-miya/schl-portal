@@ -2,13 +2,13 @@
 
 import ExtendableTd from '@/components/ExtendableTd';
 import Pagination from '@/components/Pagination';
-import { fetchApi } from '@/lib/utils';
+import { cn, fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { RoleDataType } from '@/models/Roles';
 import { UserDataType } from '@/models/Users';
 import { CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { PermissionValue } from '../create-role/components/Form';
 import { validationSchema, RoleDataType as zod_RoleDataType } from '../schema';
@@ -33,6 +33,13 @@ const Table: React.FC = props => {
     items: [] as RoleDataType[],
   });
 
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
   const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -43,8 +50,6 @@ const Table: React.FC = props => {
 
   const prevPageCount = useRef<number>(0);
   const prevPage = useRef<number>(1);
-
-  const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
     name: '',
@@ -266,18 +271,28 @@ const Table: React.FC = props => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <button
-          onClick={() =>
-            router.push(
-              process.env.NEXT_PUBLIC_BASE_URL + '/admin/roles/create-role',
-            )
-          }
-          className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-        >
-          Add new role
-          <CirclePlus size={18} />
-        </button>
+      <div
+        className={cn(
+          'flex flex-col mb-4 gap-2',
+          hasPerm('admin:create_role', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
+        )}
+      >
+        {hasPerm('admin:create_role', userPermissions) && (
+          <button
+            onClick={() =>
+              router.push(
+                process.env.NEXT_PUBLIC_BASE_URL + '/admin/roles/create-role',
+              )
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Add new role
+            <CirclePlus size={18} />
+          </button>
+        )}
+
         <div className="items-center flex gap-2">
           <Pagination
             page={page}
@@ -318,7 +333,10 @@ const Table: React.FC = props => {
                   <th>S/N</th>
                   <th>Role Name</th>
                   <th>Description</th>
-                  <th>Actions</th>
+                  {hasAnyPerm(
+                    ['admin:delete_role', 'admin:edit_role'],
+                    userPermissions,
+                  ) && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -334,14 +352,13 @@ const Table: React.FC = props => {
                     >
                       <div className="inline-block">
                         <div className="flex gap-2">
-                          {session?.user.permissions.includes(
-                            'admin:delete_role',
-                          ) &&
+                          {hasPerm('admin:delete_role', userPermissions) &&
                             (!role.permissions.includes(
                               'settings:the_super_admin',
                             ) ||
-                              session.user.permissions.includes(
+                              hasPerm(
                                 'settings:the_super_admin',
+                                userPermissions,
                               )) && (
                               <DeleteButton
                                 roleData={role}
@@ -349,11 +366,13 @@ const Table: React.FC = props => {
                               />
                             )}
 
-                          <EditButton
-                            roleData={role as unknown as zod_RoleDataType}
-                            submitHandler={editRole}
-                            loading={loading}
-                          />
+                          {hasPerm('admin:edit_role', userPermissions) && (
+                            <EditButton
+                              roleData={role as unknown as zod_RoleDataType}
+                              submitHandler={editRole}
+                              loading={loading}
+                            />
+                          )}
                         </div>
                       </div>
                     </td>

@@ -5,14 +5,20 @@ import Linkify from '@/components/Linkify';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
 import { UserDataType } from '@/models/Users';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import DeleteButton from './Delete';
 import FilterButton from './Filter';
@@ -34,6 +40,12 @@ const Table = () => {
     items: [] as ReportDataType[],
   });
 
+  const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
   const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -42,8 +54,6 @@ const Table = () => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchVersion, setSearchVersion] = useState<number>(0);
-
-  const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
     marketerName: '',
@@ -292,7 +302,10 @@ const Table = () => {
                   <th>LinkedIn</th>
                   <th>Test</th>
                   <th>Prospected</th>
-                  <th>Action</th>
+                  {hasAnyPerm(
+                    ['crm:delete_report_approval'],
+                    userPermissions,
+                  ) && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -355,19 +368,30 @@ const Table = () => {
                           ? `Yes (${item.followup_done ? 'Dealt' : 'Pending'})`
                           : 'No'}
                       </td>
-                      <td
-                        className="text-center"
-                        style={{ verticalAlign: 'middle' }}
-                      >
-                        <div className="inline-block">
-                          <div className="flex gap-2">
-                            <DeleteButton
-                              submitHandler={deleteReport}
-                              reportData={item}
-                            />
+
+                      {hasAnyPerm(
+                        ['crm:delete_report_approval'],
+                        userPermissions,
+                      ) && (
+                        <td
+                          className="text-center"
+                          style={{ verticalAlign: 'middle' }}
+                        >
+                          <div className="inline-block">
+                            <div className="flex gap-2">
+                              {hasPerm(
+                                'crm:delete_report_approval',
+                                userPermissions,
+                              ) && (
+                                <DeleteButton
+                                  submitHandler={deleteReport}
+                                  reportData={item}
+                                />
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

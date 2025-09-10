@@ -63,19 +63,19 @@ export const permissionOptions = [
   {
     label: 'CRM',
     options: [
-      // marketers
+      // crm
       { value: 'crm:create_report', label: 'Create report' },
       {
         value: 'crm:delete_report_approval',
         label: 'Delete report (approval)',
       },
       { value: 'crm:send_client_request', label: 'Send client request' },
-      // admins
-      { value: 'crm:view_reports', label: 'View reports (admin)' },
-      { value: 'crm:view_crm_stats', label: 'View crm stats (admin)' },
+      // portals
+      { value: 'crm:view_reports', label: 'View reports' },
+      { value: 'crm:view_crm_stats', label: 'View crm stats' },
       {
         value: 'crm:check_client_request',
-        label: 'Check client request (admin)',
+        label: 'Check client request',
       },
     ],
   },
@@ -101,6 +101,7 @@ export const permissionOptions = [
       { value: 'admin:check_approvals', label: 'Check approvals' },
       { value: 'admin:create_role', label: 'Create role' },
       { value: 'admin:delete_role', label: 'Delete role' },
+      { value: 'admin:edit_role', label: 'Edit role' },
       { value: 'admin:assign_role', label: 'Assign role' },
       { value: 'admin:create_user', label: 'Create user' },
       { value: 'admin:create_user_approval', label: 'Create user (approval)' },
