@@ -1,7 +1,7 @@
 'use client';
 
 import ExtendableTd from '@/components/ExtendableTd';
-import { fetchApi } from '@/lib/utils';
+import { cn, fetchApi, hasPerm } from '@/lib/utils';
 import { UserDataType } from '@/models/Users';
 
 import NoData, { Type } from '@/components/NoData';
@@ -11,7 +11,13 @@ import { ClientDataType } from '@/models/Clients';
 import { ChevronLeft, ChevronRight, CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import {
   validationSchema,
@@ -38,6 +44,13 @@ const Table: React.FC = () => {
     items: [] as ClientDataType[],
   });
 
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
   const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -46,8 +59,6 @@ const Table: React.FC = () => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchVersion, setSearchVersion] = useState(0);
-
-  const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
     marketerName: '',
@@ -280,18 +291,29 @@ const Table: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <button
-          onClick={() =>
-            router.push(
-              process.env.NEXT_PUBLIC_BASE_URL + '/admin/clients/create-client',
-            )
-          }
-          className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-        >
-          Add new client
-          <CirclePlus size={18} />
-        </button>
+      <div
+        className={cn(
+          'flex flex-col mb-4 gap-2',
+          hasPerm('admin:create_client', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
+        )}
+      >
+        {hasPerm('admin:create_client', userPermissions) && (
+          <button
+            onClick={() =>
+              router.push(
+                process.env.NEXT_PUBLIC_BASE_URL +
+                  '/admin/clients/create-client',
+              )
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Create new client
+            <CirclePlus size={18} />
+          </button>
+        )}
+
         <div className="items-center flex gap-2">
           <Pagination
             page={page}
@@ -339,7 +361,9 @@ const Table: React.FC = () => {
                   <th>Email</th>
                   <th>Country</th>
                   <th>Prices</th>
-                  <th>Action</th>
+                  {hasPerm('admin:manage_client', userPermissions) && (
+                    <th>Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -355,27 +379,30 @@ const Table: React.FC = () => {
                     <td className="text-wrap">{client.email}</td>
                     <td className="text-wrap">{client.country}</td>
                     <ExtendableTd data={client.prices || ''} />
+                    {hasPerm('admin:manage_client', userPermissions) && (
+                      <td
+                        className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <div className="inline-block">
+                          <div className="flex gap-2">
+                            <DeleteButton
+                              clientData={client}
+                              submitHandler={deleteClient}
+                            />
 
-                    <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          <DeleteButton
-                            clientData={client}
-                            submitHandler={deleteClient}
-                          />
-
-                          <EditButton
-                            clientData={client as unknown as zod_ClientDataType}
-                            marketerNames={marketerNames}
-                            submitHandler={editClient}
-                            loading={loading}
-                          />
+                            <EditButton
+                              clientData={
+                                client as unknown as zod_ClientDataType
+                              }
+                              marketerNames={marketerNames}
+                              submitHandler={editClient}
+                              loading={loading}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -1,11 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  setCalculatedZIndex,
-  setClassNameAndIsDisabled,
-  setMenuPortalTarget,
-} from '@/utility/selectHelpers';
+
 import { Filter, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
@@ -20,8 +16,6 @@ interface PropsType {
   setFilters: React.Dispatch<React.SetStateAction<any>>;
   loading: boolean;
 }
-
-import Select from 'react-select';
 
 const FilterButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -50,8 +44,7 @@ const FilterButton: React.FC<PropsType> = props => {
 
   const handleResetFilters = () => {
     setFilters({
-      role: '',
-      generalSearchString: '',
+      name: '',
     });
   };
 

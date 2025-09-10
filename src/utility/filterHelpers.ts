@@ -1,37 +1,51 @@
 import {
-  Query as client_Query,
-  RegexFields as client_RegexFields,
-  RegexQuery as client_RegexQuery,
-} from '@/app/api/client/route';
-import {
-  Query as invoice_Query,
-  RegexFields as invoice_RegexFields,
-  RegexQuery as invoice_RegexQuery,
-} from '@/app/api/invoice/route';
-import {
   Query as order_Query,
   RegexFields as order_RegexFields,
   RegexQuery as order_RegexQuery,
-} from '@/app/api/order/route';
+} from '@/app/api/order/handlers/getAllOrders';
+
 import {
   BooleanFields as report_BooleanFields,
   Query as report_Query,
   RegexFields as report_RegexFields,
   RegexQuery as report_RegexQuery,
-} from '@/app/api/report/route';
+} from '@/app/api/report/handlers/getAllReports';
+
+import {
+  Query as client_Query,
+  RegexFields as client_RegexFields,
+  RegexQuery as client_RegexQuery,
+} from '@/app/api/client/handlers/getAllClients';
+
+import {
+  Query as employee_Query,
+  RegexQuery as employee_RegexQuery,
+} from '@/app/api/employee/handlers/getAllEmployees';
+
+import {
+  Query as invoice_Query,
+  RegexFields as invoice_RegexFields,
+  RegexQuery as invoice_RegexQuery,
+} from '@/app/api/invoice/handlers/getAllInvoices';
 
 import {
   Query as notice_Query,
   RegexFields as notice_RegexFields,
   RegexQuery as notice_RegexQuery,
-} from '@/app/api/notice/route';
+} from '@/app/api/notice/handlers/getAllNotices';
+
 import { Query as role_Query } from '@/app/api/role/handlers/getAllRoles';
 
 import {
   Query as schedule_Query,
   RegexFields as schedule_RegexFields,
   RegexQuery as schedule_RegexQuery,
-} from '@/app/api/schedule/route';
+} from '@/app/api/schedule/handlers/getAllSchedules';
+
+import {
+  Query as user_Query,
+  RegexQuery as user_RegexQuery,
+} from '@/app/api/user/handlers/getAllUsers';
 
 import { escapeRegExp } from 'lodash';
 
@@ -41,7 +55,9 @@ type RegexQuery =
   | order_RegexQuery
   | invoice_RegexQuery
   | notice_RegexQuery
-  | schedule_RegexQuery;
+  | schedule_RegexQuery
+  | user_RegexQuery
+  | employee_RegexQuery;
 type Query =
   | report_Query
   | client_Query
@@ -49,7 +65,9 @@ type Query =
   | invoice_Query
   | notice_Query
   | role_Query
-  | schedule_Query;
+  | schedule_Query
+  | user_Query
+  | employee_Query;
 type RegexFields =
   | report_RegexFields
   | client_RegexFields
@@ -114,7 +132,6 @@ export const addRegexField = (
 };
 
 // Helper function to add fields if they are defined
-
 export const addIfDefined = <T extends Query>(
   query: T,
   key: keyof T,

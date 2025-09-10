@@ -1,6 +1,6 @@
 'use client';
 
-import { OrderData } from '@/app/api/order/route';
+import { OrderData } from '@/app/api/order/handlers/getOrdersQP';
 import { fetchApi } from '@/lib/utils';
 import { getDateRange } from '@/utility/date';
 import moment from 'moment-timezone';

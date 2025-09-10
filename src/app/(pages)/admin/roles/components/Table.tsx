@@ -1,23 +1,16 @@
 'use client';
 
-import Badge from '@/components/Badge';
 import ExtendableTd from '@/components/ExtendableTd';
-import { fetchApi } from '@/lib/utils';
-import { UserDataType } from '@/models/Users';
-
 import Pagination from '@/components/Pagination';
-import { cn } from '@/lib/utils';
+import { cn, fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { RoleDataType } from '@/models/Roles';
-import {
-  ChevronLeft,
-  ChevronRight,
-  CirclePlus,
-  ClipboardCopy,
-} from 'lucide-react';
+import { UserDataType } from '@/models/Users';
+import { CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { use, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { PermissionValue } from '../create-role/components/Form';
 import { validationSchema, RoleDataType as zod_RoleDataType } from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
@@ -31,7 +24,7 @@ type RolesState = {
   items: RoleDataType[];
 };
 
-const Table: React.FC<{ usersData: UserDataType[] }> = props => {
+const Table: React.FC = props => {
   const [roles, setRules] = useState<RolesState>({
     pagination: {
       count: 0,
@@ -39,6 +32,13 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
     },
     items: [] as RoleDataType[],
   });
+
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const router = useRouter();
 
@@ -50,8 +50,6 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
 
   const prevPageCount = useRef<number>(0);
   const prevPage = useRef<number>(1);
-
-  const { data: session } = useSession();
 
   const [filters, setFilters] = useState({
     name: '',
@@ -162,61 +160,79 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
     return;
   }
 
-  // async function editUser(
-  //   editedUserData: zod_UserDataType,
-  //   previousUserData: zod_UserDataType,
-  // ) {
-  //   try {
-  //     const parsed = validationSchema.safeParse(editedUserData);
+  async function editRole(
+    editedRoleData: zod_RoleDataType,
+    previousRoleData: zod_RoleDataType,
+  ) {
+    try {
+      const parsed = validationSchema.safeParse(editedRoleData);
 
-  //     if (!parsed.success) {
-  //       console.error(parsed.error.issues.map(issue => issue.message));
-  //       toast.error('Invalid form data');
-  //       return;
-  //     }
+      if (!parsed.success) {
+        console.error(parsed.error.issues.map(issue => issue.message));
+        toast.error('Invalid form data');
+        return;
+      }
 
-  //     if (
-  //       (session?.role.role === 'admin' &&
-  //         ['super', 'admin'].includes(parsed.data.role)) ||
-  //       (session?.role.db_id === parsed.data._id &&
-  //         session?.role.role !== parsed.data.role)
-  //     ) {
-  //       toast.error("You don't have the permission to edit this role");
-  //       return;
-  //     }
+      const userPerms = session?.user?.permissions || [];
+      const superAdminPerm = 'settings:the_super_admin';
 
-  //     setLoading(true);
+      // Cannot touch a role containing super-admin permission unless you have it
+      if (
+        !userPerms.includes(superAdminPerm) &&
+        (previousRoleData.permissions.includes(superAdminPerm) ||
+          parsed.data.permissions.includes(superAdminPerm))
+      ) {
+        toast.error("You can't modify a super admin role");
+        return;
+      }
 
-  //     let url: string =
-  //       process.env.NEXT_PUBLIC_BASE_URL + '/api/role?action=edit-role';
-  //     let options: {} = {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(parsed.data),
-  //     };
+      // Detect newly added permissions (those not originally on the role)
+      const addedPermissions = parsed.data.permissions.filter(
+        p => !previousRoleData.permissions.includes(p),
+      ) as PermissionValue[];
 
-  //     const response = await fetchApi(url, options);
+      // Any newly added permission must already be possessed by the editor
+      const invalidAdds = addedPermissions.filter(p => !userPerms.includes(p));
+      if (invalidAdds.length > 0) {
+        toast.error(
+          `You can't assign permissions you don't have: ${invalidAdds.join(', ')}`,
+        );
+        return;
+      }
 
-  //     if (response.ok) {
-  //       toast.success('Updated the role data');
+      setLoading(true);
 
-  //       if (!isFiltered) await getAllRules();
-  //       else await getAllRulesFiltered();
-  //     } else {
-  //       toast.error(response.data as string);
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error('An error occurred while updating the role');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
+      let url: string =
+        process.env.NEXT_PUBLIC_BASE_URL + '/api/role?action=edit-role';
+      let options: {} = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(parsed.data),
+      };
+
+      const response = await fetchApi(url, options);
+
+      if (response.ok) {
+        toast.success('Updated the role data');
+
+        if (!isFiltered) await getAllRoles();
+        else await getAllRolesFiltered();
+      } else {
+        toast.error(response.data as string);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An error occurred while updating the role');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     getAllRoles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -226,6 +242,7 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
       else getAllRolesFiltered();
     }
     prevPage.current = page;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   useEffect(() => {
@@ -238,6 +255,7 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
       prevPageCount.current = roles?.pagination?.pageCount;
       prevPage.current = 1;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roles?.pagination?.pageCount]);
 
   useEffect(() => {
@@ -248,22 +266,33 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
 
     if (!isFiltered) getAllRoles();
     else getAllRolesFiltered();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemPerPage]);
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
-        <button
-          onClick={() =>
-            router.push(
-              process.env.NEXT_PUBLIC_BASE_URL + '/admin/roles/create-role',
-            )
-          }
-          className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
-        >
-          Add new role
-          <CirclePlus size={18} />
-        </button>
+      <div
+        className={cn(
+          'flex flex-col mb-4 gap-2',
+          hasPerm('admin:create_role', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
+        )}
+      >
+        {hasPerm('admin:create_role', userPermissions) && (
+          <button
+            onClick={() =>
+              router.push(
+                process.env.NEXT_PUBLIC_BASE_URL + '/admin/roles/create-role',
+              )
+            }
+            className="flex justify-between items-center gap-2 rounded-md bg-primary hover:opacity-90 hover:ring-4 hover:ring-primary transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2"
+          >
+            Add new role
+            <CirclePlus size={18} />
+          </button>
+        )}
+
         <div className="items-center flex gap-2">
           <Pagination
             page={page}
@@ -304,7 +333,10 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
                   <th>S/N</th>
                   <th>Role Name</th>
                   <th>Description</th>
-                  <th>Actions</th>
+                  {hasAnyPerm(
+                    ['admin:delete_role', 'admin:edit_role'],
+                    userPermissions,
+                  ) && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -320,21 +352,27 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
                     >
                       <div className="inline-block">
                         <div className="flex gap-2">
-                          {session?.user.permissions.includes(
-                            'admin:delete_role',
-                          ) && (
-                            <DeleteButton
-                              roleData={role}
-                              submitHandler={deleteRole}
+                          {hasPerm('admin:delete_role', userPermissions) &&
+                            (!role.permissions.includes(
+                              'settings:the_super_admin',
+                            ) ||
+                              hasPerm(
+                                'settings:the_super_admin',
+                                userPermissions,
+                              )) && (
+                              <DeleteButton
+                                roleData={role}
+                                submitHandler={deleteRole}
+                              />
+                            )}
+
+                          {hasPerm('admin:edit_role', userPermissions) && (
+                            <EditButton
+                              roleData={role as unknown as zod_RoleDataType}
+                              submitHandler={editRole}
+                              loading={loading}
                             />
                           )}
-
-                          {/* <EditButton
-                            userData={role as unknown as zod_UserDataType}
-                            employeesData={props.employeesData}
-                            submitHandler={editUser}
-                            loading={loading}
-                          /> */}
                         </div>
                       </div>
                     </td>
@@ -347,7 +385,7 @@ const Table: React.FC<{ usersData: UserDataType[] }> = props => {
               <tbody>
                 <tr key={0}>
                   <td className="align-center text-center text-wrap">
-                    No Rules To Show.
+                    No Roles To Show.
                   </td>
                 </tr>
               </tbody>

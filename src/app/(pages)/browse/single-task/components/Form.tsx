@@ -1,17 +1,17 @@
 'use client';
 
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import {
   setClassNameAndIsDisabled,
   setMenuPortalTarget,
 } from '@/utility/selectHelpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 
-import { BookCheck, SquarePen, Trash2 } from 'lucide-react';
+import { BookCheck, Redo2, SquarePen, Trash2 } from 'lucide-react';
 import { useRouter } from 'nextjs-toploader/app';
 import { toast } from 'sonner';
 import {
@@ -34,6 +34,10 @@ const Form: React.FC<PropsType> = props => {
     finishOrder: false,
   });
   const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const router = useRouter();
 
@@ -219,7 +223,7 @@ const Form: React.FC<PropsType> = props => {
   };
 
   return (
-    <div className="overflow-x-hidden text-start">
+    <div className="overflow-x-hidden text-start mt-8">
       <div className="form">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
           <div>
@@ -251,7 +255,7 @@ const Form: React.FC<PropsType> = props => {
             />
           </div>
 
-          {['super', 'admin'].includes(session?.user.role || '') && (
+          {hasPerm('admin:view_task_rate', userPermissions) && (
             <div>
               <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                 <span className="uppercase">Rate</span>
@@ -573,38 +577,22 @@ const Form: React.FC<PropsType> = props => {
         </div>
       </div>
       <div className="flex gap-2 my-2 mx-1">
-        <button
-          onClick={() => editOrder(getValues())}
-          disabled={loading.editOrder}
-          className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
-          type="button"
-        >
-          {loading.editOrder ? (
-            'Updating...'
-          ) : (
-            <span className="flex items-center gap-2">
-              Update <SquarePen size={18} />
-            </span>
-          )}
-        </button>
-
-        {['super', 'admin'].includes(session?.user.role || '') && (
+        {hasPerm('browse:edit_task', userPermissions) && (
           <>
             <button
-              onClick={() => deleteOrder(props.orderData)}
-              disabled={loading.deleteOrder}
-              className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
+              onClick={() => editOrder(getValues())}
+              disabled={loading.editOrder}
+              className="rounded-md bg-blue-600 hover:opacity-90 hover:ring-2 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
               type="button"
             >
-              {loading.deleteOrder ? (
-                'Deleting...'
+              {loading.editOrder ? (
+                'Updating...'
               ) : (
                 <span className="flex items-center gap-2">
-                  Delete <Trash2 size={18} />
+                  Update <SquarePen size={18} />
                 </span>
               )}
             </button>
-
             {watch('status')?.trim().toLocaleLowerCase() === 'finished' ? (
               <button
                 onClick={() => redoOrder(getValues())}
@@ -612,7 +600,13 @@ const Form: React.FC<PropsType> = props => {
                 className="rounded-md bg-amber-600 hover:opacity-90 hover:ring-2 hover:ring-amber-600 transition duration-200 delay-300 hover:text-opacity-100 text-white p-2 items-center"
                 type="button"
               >
-                {loading.redoOrder ? 'Redoing...' : 'Redo'}
+                {loading.redoOrder ? (
+                  'Redoing...'
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Redo <Redo2 size={18} />
+                  </span>
+                )}
               </button>
             ) : (
               <button
@@ -631,6 +625,23 @@ const Form: React.FC<PropsType> = props => {
               </button>
             )}
           </>
+        )}
+
+        {hasPerm('browse:delete_task_approval', userPermissions) && (
+          <button
+            onClick={() => deleteOrder(props.orderData)}
+            disabled={loading.deleteOrder}
+            className="rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center"
+            type="button"
+          >
+            {loading.deleteOrder ? (
+              'Deleting...'
+            ) : (
+              <span className="flex items-center gap-2">
+                Delete <Trash2 size={18} />
+              </span>
+            )}
+          </button>
         )}
       </div>
     </div>

@@ -6,6 +6,7 @@ interface PropsType {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   title: string | undefined;
+  id?: string;
 }
 
 const Drawer: React.FC<PropsType> = ({
@@ -13,9 +14,15 @@ const Drawer: React.FC<PropsType> = ({
   isOpen,
   setIsOpen,
   title,
+  id,
 }) => {
   return (
     <main
+      id={id}
+      aria-hidden={isOpen ? 'false' : 'true'}
+      tabIndex={isOpen ? 0 : -1}
+      role="dialog"
+      aria-modal="true"
       onClick={() => setIsOpen(false)}
       className={
         'fixed overflow-hidden z-10  bg-opacity-25 inset-0 transform ease-in-out ' +

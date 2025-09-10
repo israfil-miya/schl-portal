@@ -1,6 +1,6 @@
 import { dbConnect, getQuery } from '@/lib/utils';
-import Role from '@/models/Roles';
 import { NextRequest, NextResponse } from 'next/server';
+
 dbConnect();
 
 import { handleCreateRole } from './handlers/createRole';

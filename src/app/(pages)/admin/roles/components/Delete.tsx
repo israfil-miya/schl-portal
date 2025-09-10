@@ -18,8 +18,18 @@ const DeleteButton: React.FC<PropsType> = props => {
     <>
       <button
         onClick={() => setIsOpen(true)}
+        disabled={
+          props.roleData.permissions.includes('settings:the_super_admin') &&
+          !session?.user.permissions.includes('settings:the_super_admin')
+        }
+        title={
+          props.roleData.permissions.includes('settings:the_super_admin') &&
+          !session?.user.permissions.includes('settings:the_super_admin')
+            ? 'You cannot delete a super admin role'
+            : undefined
+        }
         className={cn(
-          'rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center',
+          'rounded-md bg-destructive hover:opacity-90 hover:ring-2 hover:ring-destructive transition duration-200 delay-300 hover:text-opacity-100 text-destructive-foreground p-2 items-center disabled:opacity-50 disabled:cursor-not-allowed',
         )}
       >
         <Trash2 size={18} />

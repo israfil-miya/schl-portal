@@ -3,13 +3,13 @@
 import Badge from '@/components/Badge';
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
-import { cn, fetchApi } from '@/lib/utils';
+import { cn, fetchApi, hasPerm } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 import { ScheduleDataType } from '@/models/Schedule';
 import { CirclePlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
   validationSchema,
@@ -41,6 +41,13 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     items: [],
   });
 
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
   const router = useRouter();
 
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
@@ -49,9 +56,6 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
   const [itemPerPage, setItemPerPage] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchVersion, setSearchVersion] = useState<number>(0);
-
-  const { data: session } = useSession();
-  const userRole = session?.user.role;
 
   const [filters, setFilters] = useState({
     generalSearchString: '',
@@ -249,13 +253,13 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
     <>
       <div
         className={cn(
-          'flex flex-col sm:flex-row justify-between mb-4 gap-2',
-          userRole !== 'super' &&
-            userRole !== 'admin' &&
-            'justify-center sm:flex-row sm:justify-end',
+          'flex flex-col mb-4 gap-2',
+          hasPerm('schedule:create_schedule', userPermissions)
+            ? 'sm:flex-row sm:justify-between'
+            : 'sm:justify-end sm:flex-row',
         )}
       >
-        {(userRole == 'super' || userRole == 'admin') && (
+        {hasPerm('schedule:create_schedule', userPermissions) && (
           <button
             onClick={() =>
               router.push(
@@ -269,6 +273,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
             <CirclePlus size={18} />
           </button>
         )}
+
         <div className="items-center flex gap-2">
           <Pagination
             page={page}
@@ -310,12 +315,14 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                   <th>Receive Date</th>
                   <th>Delivery Date</th>
                   <th>Client Code</th>
-                  {(userRole == 'super' || userRole == 'admin') && (
+                  {hasPerm('admin:view_client_name', userPermissions) && (
                     <th>Client Name</th>
                   )}
                   <th>Task(s)</th>
                   <th>Comment</th>
-                  <th>Action</th>
+                  {hasPerm('schedule:manage_schedule', userPermissions) && (
+                    <th>Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -337,7 +344,7 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                       {formatDate(schedule.delivery_date)}
                     </td>
                     <td className="text-wrap">{schedule.client_code}</td>
-                    {(userRole == 'admin' || userRole == 'super') && (
+                    {hasPerm('admin:view_client_name', userPermissions) && (
                       <td className="text-wrap">{schedule.client_name}</td>
                     )}
                     <td
@@ -350,30 +357,31 @@ const Table: React.FC<{ clientsData: ClientDataType[] }> = props => {
                     </td>
 
                     <ExtendableTd data={schedule.comment} />
-                    <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          {(userRole == 'super' || userRole == 'admin') && (
+
+                    {hasPerm('schedule:manage_schedule', userPermissions) && (
+                      <td
+                        className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <div className="inline-block">
+                          <div className="flex gap-2">
                             <DeleteButton
                               scheduleData={schedule}
                               submitHandler={deleteSchedule}
                             />
-                          )}
 
-                          <EditButton
-                            scheduleData={
-                              schedule as unknown as zod_ScheduleDataType
-                            }
-                            submitHandler={editedSchedule}
-                            loading={loading}
-                            clientsData={props.clientsData}
-                          />
+                            <EditButton
+                              scheduleData={
+                                schedule as unknown as zod_ScheduleDataType
+                              }
+                              submitHandler={editedSchedule}
+                              loading={loading}
+                              clientsData={props.clientsData}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

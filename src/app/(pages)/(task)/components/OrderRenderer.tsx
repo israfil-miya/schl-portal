@@ -1,12 +1,13 @@
 import Badge from '@/components/Badge';
 import ClickToCopy from '@/components/CopyText';
 import ExtendableTd from '@/components/ExtendableTd';
+import { hasPerm } from '@/lib/utils';
 import { OrderDataType } from '@/models/Orders';
 import { formatDate, formatTime } from '@/utility/date';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface OrderRendererProps {
   order: OrderDataType;
@@ -20,6 +21,10 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
   const [statusColor, setStatusColor] = useState('');
 
   const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   useEffect(() => {
     // console.log('>>> ' + diff + ' <<<');
@@ -70,7 +75,7 @@ const OrderRenderer: React.FC<OrderRendererProps> = props => {
       <tr key={props.key} className={statusColor}>
         <td className="text-center">{props.index + 1}</td>
         <td>
-          {['super', 'admin', 'manager'].includes(session?.user.role || '') ? (
+          {hasPerm('browse:edit_task', userPermissions) ? (
             <Link
               className="hover:underline cursor-pointer"
               href={

@@ -1,3 +1,6 @@
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
+import { auth } from '@/auth';
+import { hasPerm } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
@@ -15,7 +18,11 @@ const timezones: string[] = [
   'Asia/Riyadh',
 ];
 
-const Topbar: React.FC = () => {
+const Topbar: React.FC = async () => {
+  const session = await auth();
+  const userPermissions = (session?.user.permissions ||
+    []) as PermissionValue[];
+
   return (
     <div className="w-full bg-white align-middle items-center border-b-2 p-3 max-lg:px-3 max-lg:py-2 flex flex-row justify-between">
       <Link href="/">
@@ -25,6 +32,7 @@ const Topbar: React.FC = () => {
           alt="logo"
           width={95}
           height={95}
+          unoptimized={true}
         />
       </Link>
 
@@ -33,7 +41,7 @@ const Topbar: React.FC = () => {
       <SideNavBar LogoutAction={LogoutAction} className="block lg:hidden" />
 
       <div className="max-lg:hidden flex gap-2">
-        <AccountButton />
+        {hasPerm('settings:view_page', userPermissions) && <AccountButton />}
         <LogOut />
       </div>
     </div>

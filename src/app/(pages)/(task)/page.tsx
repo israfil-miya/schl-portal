@@ -12,3 +12,4 @@ const TasksPage = async () => {
 };
 
 export default TasksPage;
+export const dynamic = 'force-dynamic';

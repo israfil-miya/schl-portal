@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import {
   setClassNameAndIsDisabled,
   setMenuPortalTarget,
@@ -12,113 +12,8 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
+import { permissionOptions } from '../../../../../../permissions';
 import { RoleDataType, validationSchema } from '../../schema';
-
-export const permissionOptions = [
-  {
-    label: 'Login',
-    options: [
-      { value: 'login:portal', label: 'Login at portal' },
-      { value: 'login:crm', label: 'Login at crm' },
-    ],
-  },
-
-  {
-    label: 'Task',
-    options: [
-      { value: 'task:view_page', label: 'View task page' },
-      { value: 'task:running_tasks', label: 'View running tasks' },
-      {
-        value: 'task:test_and_correction_tasks',
-        label: 'View test and correction tasks',
-      },
-    ],
-  },
-
-  {
-    label: 'Browse',
-    options: [
-      { value: 'browse:view_page', label: 'View browse page' },
-      { value: 'browse:client_name', label: 'View client name' },
-      { value: 'browse:edit_task', label: 'Edit task' },
-      {
-        value: 'browse:edit_task_approval',
-        label: 'Edit task (approval)',
-      },
-      { value: 'browse:delete_task', label: 'Delete task' },
-      {
-        value: 'browse:delete_task_approval',
-        label: 'Delet task (approval)',
-      },
-    ],
-  },
-
-  {
-    label: 'FileFlow',
-    options: [{ value: 'fileflow:view_page', label: 'View fileflow page' }],
-  },
-
-  {
-    label: 'Notice',
-    options: [
-      { value: 'notice:view_notice', label: 'View notice page' },
-      {
-        value: 'notice:send_notice_production',
-        label: 'Send notice to production',
-      },
-      {
-        value: 'notice:send_notice_marketers',
-        label: 'Send notice to marketers',
-      },
-    ],
-  },
-
-  {
-    label: 'CRM',
-    options: [
-      { value: 'crm:create_report', label: 'Create report' },
-      {
-        value: 'crm:delete_report_approval',
-        label: 'Delete report (approval)',
-      },
-      { value: 'crm:send_client_request', label: 'Send client request' },
-    ],
-  },
-
-  {
-    label: 'Admin',
-    options: [
-      { value: 'admin:create_employee', label: 'Create employee' },
-      { value: 'admin:manage_employee', label: 'Manage employee' },
-      { value: 'admin:create_client', label: 'Create client' },
-      { value: 'admin:manage_client', label: 'Mange client' },
-      { value: 'admin:create_invoice', label: 'Create invoice' },
-      { value: 'admin:download_invoice', label: 'Download invoice' },
-      { value: 'admin:delete_invoice', label: 'Delete invoice' },
-      { value: 'admin:check_approvals', label: 'Check approvals' },
-      {
-        value: 'admin:check_client_request',
-        label: 'Check client request',
-      },
-      { value: 'admin:view_reports', label: 'View reports' },
-      {
-        value: 'admin:delete_report_approval',
-        label: 'Delete report (approval)',
-      },
-      { value: 'admin:view_crm_stats', label: 'View crm stats' },
-      { value: 'admin:create_role', label: 'Create role' },
-      { value: 'admin:delete_role', label: 'Delete role' },
-      { value: 'admin:assign_role', label: 'Assign role' },
-      { value: 'admin:create_user', label: 'Create user' },
-      { value: 'admin:create_user_approval', label: 'Create user (approval)' },
-      { value: 'admin:edit_user', label: 'Edit user' },
-      {
-        value: 'admin:delete_user_approval',
-        label: 'Delete user (approval)',
-      },
-    ],
-  },
-] as const;
 
 type PermissionOptions = typeof permissionOptions;
 export type PermissionValue =
@@ -150,15 +45,43 @@ const Form: React.FC = props => {
     },
   });
 
-  const flatOptions = useMemo<FlatOption[]>(
-    () =>
-      permissionOptions.flatMap(group =>
-        group.options.map(option => ({
-          value: option.value,
-          label: option.label,
-        })),
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+  const canManageAny = useMemo(
+    () => hasPerm('admin:create_role', userPermissions),
+    [userPermissions],
+  );
+
+  // Build react-select compatible option groups
+  const filteredPermissionOptions = useMemo(() => {
+    const groups = permissionOptions.map(group => ({
+      label: group.label,
+      options: group.options.map(opt => ({
+        value: opt.value,
+        label: opt.label,
+      })),
+    }));
+    const hasSuper = hasPerm('settings:the_super_admin', userPermissions);
+    const sanitized = groups.map(g => ({
+      label: g.label,
+      options: g.options.filter(
+        opt => hasSuper || opt.value !== 'settings:the_super_admin',
       ),
-    [],
+    }));
+    if (canManageAny) return sanitized;
+    return sanitized
+      .map(g => ({
+        label: g.label,
+        options: g.options.filter(opt => hasPerm(opt.value, userPermissions)),
+      }))
+      .filter(g => g.options.length > 0);
+  }, [canManageAny, userPermissions]);
+
+  const flatOptions = useMemo<FlatOption[]>(
+    () => filteredPermissionOptions.flatMap(group => group.options),
+    [filteredPermissionOptions],
   );
 
   async function createRole(roleData: RoleDataType) {
@@ -171,7 +94,7 @@ const Form: React.FC = props => {
         return;
       }
 
-      if (!session?.user.permissions.includes('admin:create_role')) {
+      if (!hasPerm('admin:create_role', userPermissions)) {
         toast.error("You don't have the permission to create roles");
         return;
       }
@@ -258,7 +181,7 @@ const Form: React.FC = props => {
               {...field}
               isSearchable={true}
               isMulti={true}
-              options={permissionOptions}
+              options={filteredPermissionOptions}
               closeMenuOnSelect={false}
               placeholder="Select permission(s)"
               classNamePrefix="react-select"

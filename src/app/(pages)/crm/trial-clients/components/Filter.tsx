@@ -87,18 +87,20 @@ const FilterButton: React.FC<PropsType> = props => {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        type="button"
-        className={cn(
-          `flex items-center gap-2 rounded-md bg-blue-600 hover:opacity-90 hover:ring-4 hover:ring-blue-600 transition duration-200 delay-300 hover:text-opacity-100 text-white px-3 py-2`,
-          props.className,
-        )}
-      >
-        Filter
-        <Filter size={18} />
-      </button>
-
+      {isOpen && (
+        <section
+          onClick={handleClickOutside}
+          className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors bg-black/20 disable-page-scroll`}
+        >
+          <article
+            ref={popupRef}
+            onClick={e => e.stopPropagation()}
+            className="scale-100 opacity-100 bg-white rounded-lg lg:w-[35vw] md:w-[70vw] sm:w-[80vw] shadow relative"
+          >
+            {/* ...existing code... */}
+          </article>
+        </section>
+      )}
       <section
         onClick={handleClickOutside}
         className={`fixed z-${baseZIndex} inset-0 flex justify-center items-center transition-colors ${isOpen ? 'visible bg-black/20 disable-page-scroll' : 'invisible'} `}

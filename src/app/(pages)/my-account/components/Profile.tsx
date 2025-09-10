@@ -1,7 +1,7 @@
 'use client';
 
 import HiddenText from '@/components/HiddenText';
-import { cn } from '@/lib/utils';
+import { cn, hasPerm } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import {
   calculateSalaryComponents,
@@ -10,9 +10,10 @@ import {
 } from '@/utility/accountMatrics';
 import { Clock4, Coins, Mail } from 'lucide-react';
 import moment from 'moment-timezone';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface ProfilePropsTypes {
   avatarURI: string;
@@ -30,6 +31,13 @@ const Profile: React.FC<ProfilePropsTypes> = props => {
   });
 
   const [pfAmount, setPfAmount] = useState<number>(0);
+
+  const { data: session } = useSession();
+
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   useEffect(() => {
     if (employeeInfo?._id) {
@@ -71,12 +79,14 @@ const Profile: React.FC<ProfilePropsTypes> = props => {
             <Mail size={18} />
             <span className="text-sm">{employeeInfo.email}</span>
           </div>
-          <Link
-            href="/my-account/change-password"
-            className="text-blue-600 text-sm hover:underline"
-          >
-            Change your password
-          </Link>
+          {hasPerm('settings:change_password', userPermissions) && (
+            <Link
+              href="/my-account/change-password"
+              className="text-blue-600 text-sm hover:underline"
+            >
+              Change your password
+            </Link>
+          )}
         </div>
       </div>
 

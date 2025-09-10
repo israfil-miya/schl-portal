@@ -1,9 +1,9 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import type { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 
+import { cn, hasAnyPerm, hasPerm } from '@/lib/utils';
 import 'flowbite';
-import { initFlowbite } from 'flowbite';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -20,7 +20,13 @@ const Nav: React.FC<PropsType> = props => {
 
   let pathname = usePathname();
 
-  const userRole = session?.user.role;
+  const userPermissions = (session?.user.permissions ||
+    []) as PermissionValue[];
+
+  // Local permission helpers bound to current user's permissions
+  const has = (perm: PermissionValue) => hasPerm(perm, userPermissions || []);
+  const hasAny = (perms: PermissionValue[]) =>
+    hasAnyPerm(perms, userPermissions || []);
 
   // Use useEffect to safely initialize flowbite on the client
   useEffect(() => {
@@ -35,28 +41,34 @@ const Nav: React.FC<PropsType> = props => {
 
   return (
     <div
-      className={`w-full flex flex-row align-middle items-center justify-between bg-gray-900 px-5 text-white ${props.className}`}
+      className={cn(
+        `w-full flex flex-row align-middle items-center justify-between bg-gray-900 px-5 text-white`,
+        props.className,
+      )}
     >
       <div className="flex flex-row">
         <Link
           className={cn(
             'py-3 px-5',
-            pathname == '/' ? 'bg-primary' : 'hover:opacity-90',
+            pathname === '/' ? 'bg-primary' : 'hover:opacity-90',
+            !has('task:view_page') && 'hidden',
           )}
           href={'/'}
         >
           Tasks
         </Link>
+
         <Link
           className={cn(
             'py-3 px-5',
-            pathname == '/browse' ? 'bg-primary' : 'hover:opacity-90',
-            userRole === 'user' && 'hidden',
+            pathname === '/browse' ? 'bg-primary' : 'hover:opacity-90',
+            !has('browse:view_page') && 'hidden',
           )}
           href={'/browse'}
         >
           Browse
         </Link>
+
         <span
           role="button"
           id="adminDropdownButton"
@@ -64,8 +76,10 @@ const Nav: React.FC<PropsType> = props => {
           data-dropdown-trigger="hover"
           className={cn(
             'py-3 px-5 select-none',
-            pathname.includes('/admin/') ? 'bg-primary' : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+            pathname === '/admin' || pathname.startsWith('/admin/')
+              ? 'bg-primary'
+              : 'hover:opacity-90',
+            !has('admin:view_page') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -73,21 +87,22 @@ const Nav: React.FC<PropsType> = props => {
             <ChevronDown size={17} />
           </span>
         </span>
+
         <div
           id="adminDropdown"
           className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul className="py-2 text-white" aria-labelledby="adminDropdownButton">
-            <li>
+            <li className={cn(!has('admin:create_employee') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/employees'}
               >
-                {/* without salary*/}
                 Employee
               </Link>
             </li>
-            <li>
+
+            <li className={cn(!has('admin:create_task') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/tasks'}
@@ -95,7 +110,13 @@ const Nav: React.FC<PropsType> = props => {
                 Task
               </Link>
             </li>
-            <li>
+
+            <li
+              className={cn(
+                !hasAny(['admin:manage_client', 'admin:create_client']) &&
+                  'hidden',
+              )}
+            >
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/clients'}
@@ -103,7 +124,8 @@ const Nav: React.FC<PropsType> = props => {
                 Clients
               </Link>
             </li>
-            <li className={cn(!['super'].includes(userRole || '') && 'hidden')}>
+
+            <li className={cn(!has('admin:check_approvals') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/admin/approvals'}
@@ -111,7 +133,17 @@ const Nav: React.FC<PropsType> = props => {
                 Approvals
               </Link>
             </li>
-            <li>
+
+            <li
+              className={cn(
+                !hasAny([
+                  'admin:create_role',
+                  'admin:delete_role',
+                  'admin:edit_user',
+                  'admin:delete_user_approval',
+                ]) && 'hidden',
+              )}
+            >
               <span
                 role="button"
                 id="adminAccessDropdownButton"
@@ -125,6 +157,7 @@ const Nav: React.FC<PropsType> = props => {
                   <ChevronRight size={17} />
                 </span>
               </span>
+
               <div
                 id="adminAccessDropdown"
                 className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
@@ -133,7 +166,15 @@ const Nav: React.FC<PropsType> = props => {
                   className="py-2 text-white"
                   aria-labelledby="adminAccessDropdownButton"
                 >
-                  <li>
+                  {/* Per-link guards added below */}
+                  <li
+                    className={cn(
+                      !hasAny([
+                        'admin:edit_user',
+                        'admin:delete_user_approval',
+                      ]) && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/admin/users'}
@@ -141,7 +182,12 @@ const Nav: React.FC<PropsType> = props => {
                       Users
                     </Link>
                   </li>
-                  <li>
+                  <li
+                    className={cn(
+                      !hasAny(['admin:create_role', 'admin:delete_role']) &&
+                        'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/admin/roles'}
@@ -152,49 +198,25 @@ const Nav: React.FC<PropsType> = props => {
                 </ul>
               </div>
             </li>
-            <li>
-              <span
-                role="button"
-                id="adminNoticesDropdownButton"
-                data-dropdown-toggle="adminNoticesDropdown"
-                data-dropdown-trigger="hover"
-                data-dropdown-placement="right-start"
-                className="block px-4 py-2 hover:bg-primary"
+
+            <li
+              className={cn(
+                !hasAny([
+                  'notice:send_notice_production',
+                  'notice:send_notice_marketers',
+                ]) && 'hidden',
+              )}
+            >
+              <Link
+                className={cn('block px-4 py-2 hover:bg-primary')}
+                href={'/admin/notices'}
               >
-                <span className="flex gap-1 items-end align-bottom justify-between">
-                  <span>Notices</span>
-                  <ChevronRight size={17} />
-                </span>
-              </span>
-              <div
-                id="adminNoticesDropdown"
-                className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
-              >
-                <ul
-                  className="py-2 text-white"
-                  aria-labelledby="adminNoticesDropdownButton"
-                >
-                  <li>
-                    <Link
-                      className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/notices/create-notice'}
-                    >
-                      Send New
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      className={cn('block px-4 py-2 hover:bg-primary')}
-                      href={'/admin/notices'}
-                    >
-                      View All
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+                Notice
+              </Link>
             </li>
           </ul>
         </div>
+
         <span
           role="button"
           id="accountancyDropdownButton"
@@ -202,10 +224,10 @@ const Nav: React.FC<PropsType> = props => {
           data-dropdown-trigger="hover"
           className={cn(
             'py-3 px-5 select-none',
-            pathname.includes('/accountancy/')
+            pathname === '/accountancy' || pathname.startsWith('/accountancy/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !['super'].includes(userRole || '') && 'hidden',
+            !has('accountancy:view_page') && 'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -213,6 +235,7 @@ const Nav: React.FC<PropsType> = props => {
             <ChevronDown size={17} />
           </span>
         </span>
+
         <div
           id="accountancyDropdown"
           className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
@@ -221,15 +244,15 @@ const Nav: React.FC<PropsType> = props => {
             className="py-2 text-white"
             aria-labelledby="accountancyDropdownButton"
           >
-            <li>
+            <li className={cn(!has('accountancy:manage_employee') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/accountancy/employees'}
               >
-                {/* with salary */}
                 Employees
               </Link>
             </li>
+
             <li>
               <span
                 role="button"
@@ -237,13 +260,20 @@ const Nav: React.FC<PropsType> = props => {
                 data-dropdown-toggle="accountancyInvoicesDropdown"
                 data-dropdown-trigger="hover"
                 data-dropdown-placement="right-start"
-                className="block px-4 py-2 hover:bg-primary"
+                className={cn(
+                  'block px-4 py-2 hover:bg-primary',
+                  !hasAny([
+                    'accountancy:create_invoice',
+                    'accountancy:download_invoice',
+                  ]) && 'hidden',
+                )}
               >
                 <span className="flex gap-1 items-end align-bottom justify-between">
                   <span>Invoices</span>
                   <ChevronRight size={17} />
                 </span>
               </span>
+
               <div
                 id="accountancyInvoicesDropdown"
                 className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
@@ -252,7 +282,11 @@ const Nav: React.FC<PropsType> = props => {
                   className="py-2 text-white"
                   aria-labelledby="accountancyInvoicesDropdownButton"
                 >
-                  <li>
+                  <li
+                    className={cn(
+                      !has('accountancy:create_invoice') && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/accountancy/invoices/create-invoice'}
@@ -260,7 +294,11 @@ const Nav: React.FC<PropsType> = props => {
                       Create New
                     </Link>
                   </li>
-                  <li>
+                  <li
+                    className={cn(
+                      !has('accountancy:download_invoice') && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/accountancy/invoices'}
@@ -268,13 +306,17 @@ const Nav: React.FC<PropsType> = props => {
                       View All
                     </Link>
                   </li>
-                  <li>
+                  <li
+                    className={cn(
+                      !has('accountancy:create_invoice') && 'hidden',
+                    )}
+                  >
                     <Link
                       className={cn('block px-4 py-2 hover:bg-primary')}
                       href={'/accountancy/invoices/invoice-tracker'}
                       target="_blank"
                     >
-                      Invoice Tracker
+                      Track Invoices
                     </Link>
                   </li>
                 </ul>
@@ -282,6 +324,7 @@ const Nav: React.FC<PropsType> = props => {
             </li>
           </ul>
         </div>
+
         <span
           role="button"
           id="crmDropdownButton"
@@ -289,8 +332,11 @@ const Nav: React.FC<PropsType> = props => {
           data-dropdown-trigger="hover"
           className={cn(
             'py-3 px-5 select-none',
-            pathname.includes('/crm/') ? 'bg-primary' : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+            pathname === '/crm' || pathname.startsWith('/crm/')
+              ? 'bg-primary'
+              : 'hover:opacity-90',
+            !hasAny(['crm:view_reports', 'crm:check_client_request']) &&
+              'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -298,12 +344,13 @@ const Nav: React.FC<PropsType> = props => {
             <ChevronDown size={17} />
           </span>
         </span>
+
         <div
           id="crmDropdown"
           className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
         >
           <ul className="py-2 text-white" aria-labelledby="crmDropdownButton">
-            <li>
+            <li className={cn(!has('crm:view_crm_stats') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/statistics'}
@@ -311,7 +358,7 @@ const Nav: React.FC<PropsType> = props => {
                 Statistics
               </Link>
             </li>
-            <li>
+            <li className={cn(!has('crm:view_reports') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/trial-clients'}
@@ -319,7 +366,7 @@ const Nav: React.FC<PropsType> = props => {
                 Trial Clients
               </Link>
             </li>
-            <li>
+            <li className={cn(!has('crm:view_reports') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/pending-prospects'}
@@ -327,7 +374,7 @@ const Nav: React.FC<PropsType> = props => {
                 Pending Prospects
               </Link>
             </li>
-            <li>
+            <li className={cn(!has('crm:view_reports') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/potential-leads'}
@@ -335,7 +382,7 @@ const Nav: React.FC<PropsType> = props => {
                 Potential Leads
               </Link>
             </li>
-            <li>
+            <li className={cn(!has('crm:check_client_request') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/crm/client-approvals'}
@@ -345,16 +392,20 @@ const Nav: React.FC<PropsType> = props => {
             </li>
           </ul>
         </div>
+
         <Link
           className={cn(
             'py-3 px-5',
-            pathname.includes('/file-flow') ? 'bg-primary' : 'hover:opacity-90',
-            ['user', 'manager'].includes(userRole || '') && 'hidden',
+            pathname === '/file-flow' || pathname.startsWith('/file-flow/')
+              ? 'bg-primary'
+              : 'hover:opacity-90',
+            !has('fileflow:view_page') && 'hidden',
           )}
           href={'/file-flow'}
         >
           File Flow
         </Link>
+
         <span
           role="button"
           id="scheduleDropdownButton"
@@ -362,10 +413,12 @@ const Nav: React.FC<PropsType> = props => {
           data-dropdown-trigger="hover"
           className={cn(
             'py-3 px-5 select-none',
-            pathname.includes('/work-schedule/')
+            pathname === '/work-schedule' ||
+              pathname.startsWith('/work-schedule/')
               ? 'bg-primary'
               : 'hover:opacity-90',
-            !['super', 'admin'].includes(userRole || '') && 'hidden',
+            !hasAny(['schedule:view_page', 'schedule:create_schedule']) &&
+              'hidden',
           )}
         >
           <span className="flex gap-1 items-center justify-between">
@@ -373,6 +426,7 @@ const Nav: React.FC<PropsType> = props => {
             <ChevronDown size={17} />
           </span>
         </span>
+
         <div
           id="scheduleDropdown"
           className="z-10 hidden bg-gray-900 divide-y divide-gray-100 rounded-md shadow w-44"
@@ -381,7 +435,7 @@ const Nav: React.FC<PropsType> = props => {
             className="py-2 text-white"
             aria-labelledby="scheduleDropdownButton"
           >
-            <li>
+            <li className={cn(!has('schedule:create_schedule') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/work-schedule/schedule-task'}
@@ -389,7 +443,7 @@ const Nav: React.FC<PropsType> = props => {
                 Schedule Task
               </Link>
             </li>
-            <li>
+            <li className={cn(!has('schedule:view_page') && 'hidden')}>
               <Link
                 className={cn('block px-4 py-2 hover:bg-primary')}
                 href={'/work-schedule/view-schedule'}
@@ -399,6 +453,19 @@ const Nav: React.FC<PropsType> = props => {
             </li>
           </ul>
         </div>
+
+        <Link
+          className={cn(
+            'py-3 px-5',
+            pathname === '/notices' || pathname.startsWith('/notices/')
+              ? 'bg-primary'
+              : 'hover:opacity-90',
+            !has('notice:view_notice') && 'hidden',
+          )}
+          href={'/notices'}
+        >
+          Notices
+        </Link>
       </div>
 
       <span className="max-lg:hidden">{msg}</span>

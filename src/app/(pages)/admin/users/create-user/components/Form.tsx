@@ -1,6 +1,6 @@
 'use client';
 
-import { fetchApi } from '@/lib/utils';
+import { fetchApi, hasPerm } from '@/lib/utils';
 import {
   setClassNameAndIsDisabled,
   setMenuPortalTarget,
@@ -34,7 +34,41 @@ const Form: React.FC<PropsType> = props => {
     label: employee.e_id,
   }));
 
-  let roleOptions = (props.rolesData || []).map(role => ({
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
+
+  const allowedRoles = useMemo(() => {
+    // If the current user can create users (directly or via approval), they should be
+    // allowed to assign any role. However, roles that include the super-admin
+    // permission must still be blocked unless the assigner also has that permission.
+    const canAssignAnyRole =
+      hasPerm('admin:create_user' as PermissionValue, userPermissions) ||
+      hasPerm('admin:create_user_approval' as PermissionValue, userPermissions);
+
+    return (props.rolesData || []).filter(role => {
+      const perms = role.permissions || [];
+
+      // Always block roles that grant the super-admin permission unless the
+      // current user also has that permission.
+      if (
+        perms.includes('settings:the_super_admin' as PermissionValue) &&
+        !hasPerm('settings:the_super_admin' as PermissionValue, userPermissions)
+      ) {
+        return false;
+      }
+
+      if (canAssignAnyRole) {
+        return true;
+      }
+
+      // Otherwise ensure editor can only assign roles whose permissions are subset of their own
+      return perms.every(p => hasPerm(p as PermissionValue, userPermissions));
+    });
+  }, [props.rolesData, userPermissions]);
+
+  let roleOptions = allowedRoles.map(role => ({
     value: role._id,
     label: role.name,
   }));
@@ -118,19 +152,11 @@ const Form: React.FC<PropsType> = props => {
         return;
       }
 
-      // if (
-      //   session?.user.role == 'admin' &&
-      //   (parsed.data.role == 'super' || parsed.data.role == 'admin')
-      // ) {
-      //   toast.error("You don't have the permission to create this user");
-      //   return;
-      // }
-
       setLoading(true);
 
       delete parsed.data.permissions;
 
-      if (session?.user.permissions.includes('admin:create_user')) {
+      if (hasPerm('admin:create_user', userPermissions)) {
         let url: string =
           process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
         let options: {} = {
@@ -150,9 +176,7 @@ const Form: React.FC<PropsType> = props => {
         } else {
           toast.error(response.data as string);
         }
-      } else if (
-        session?.user.permissions.includes('admin:create_user_approval')
-      ) {
+      } else if (hasPerm('admin:create_user_approval', userPermissions)) {
         let url: string =
           process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
         let options: {} = {
