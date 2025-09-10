@@ -20,7 +20,8 @@ const Nav: React.FC<PropsType> = props => {
 
   let pathname = usePathname();
 
-  const userPermissions = session?.user.permissions;
+  const userPermissions = (session?.user.permissions ||
+    []) as PermissionValue[];
 
   // Local permission helpers bound to current user's permissions
   const has = (perm: PermissionValue) => hasPerm(perm, userPermissions || []);

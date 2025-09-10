@@ -9,8 +9,6 @@ interface PropsType {
 }
 
 const Header: React.FC<PropsType> = async props => {
-  let session = await auth();
-
   return (
     <>
       <Topbar />

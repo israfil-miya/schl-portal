@@ -36,14 +36,11 @@ const getOrderData = async (orderId: string) => {
   }
 };
 
-const session = await auth();
-const userPermissions = session?.user.permissions || [];
-
-export default async function EditSingleTask({
+const EditSingleTask = async ({
   searchParams,
 }: {
   searchParams: { id: string };
-}) {
+}) => {
   const orderid = decodeURIComponent(searchParams.id);
 
   if (!orderid) {
@@ -57,6 +54,9 @@ export default async function EditSingleTask({
     console.error('Order data is null');
     redirect('/');
   }
+
+  const session = await auth();
+  const userPermissions = session?.user.permissions || [];
 
   return (
     <div className="px-4 mt-8 mb-4 flex flex-col justify-center md:w-[70vw] mx-auto">
@@ -81,4 +81,7 @@ export default async function EditSingleTask({
       </Suspense>
     </div>
   );
-}
+};
+
+export default EditSingleTask;
+export const dynamic = 'force-dynamic';
