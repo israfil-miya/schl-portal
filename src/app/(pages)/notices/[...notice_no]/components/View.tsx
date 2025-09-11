@@ -1,11 +1,11 @@
 'use client';
 
-import { constructFileName, fetchApi } from '@/lib/utils';
+import { constructFileName, fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { formatDate } from '@/utility/date';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import parse, {
@@ -96,8 +96,12 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   async function getNotice() {
     try {
@@ -117,7 +121,8 @@ const ViewNotice: React.FC<ViewNoticeProps> = props => {
 
       if (response.ok) {
         if (response.data?.channel != 'production') {
-          if (userRole !== 'admin' && userRole !== 'super') {
+          // currently acknowledging only "marketing" channel exists besides production
+          if (!hasAnyPerm(['notice:send_notice_marketers'], userPermissions)) {
             toast.error("The notice doesn't belong to this channel", {
               id: 'notice-channel',
             });

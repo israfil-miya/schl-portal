@@ -345,37 +345,41 @@ const Table: React.FC = props => {
                     <td>{index + 1 + itemPerPage * (page - 1)}</td>
                     <td className="text-wrap">{role.name}</td>
                     <ExtendableTd data={role?.description || ''} />
-
-                    <td
-                      className="text-center"
-                      style={{ verticalAlign: 'middle' }}
-                    >
-                      <div className="inline-block">
-                        <div className="flex gap-2">
-                          {hasPerm('admin:delete_role', userPermissions) &&
-                            (!role.permissions.includes(
-                              'settings:the_super_admin',
-                            ) ||
-                              hasPerm(
+                    {hasAnyPerm(
+                      ['admin:delete_role', 'admin:edit_role'],
+                      userPermissions,
+                    ) && (
+                      <td
+                        className="text-center"
+                        style={{ verticalAlign: 'middle' }}
+                      >
+                        <div className="inline-block">
+                          <div className="flex gap-2">
+                            {hasPerm('admin:delete_role', userPermissions) &&
+                              (!role.permissions.includes(
                                 'settings:the_super_admin',
-                                userPermissions,
-                              )) && (
-                              <DeleteButton
-                                roleData={role}
-                                submitHandler={deleteRole}
+                              ) ||
+                                hasPerm(
+                                  'settings:the_super_admin',
+                                  userPermissions,
+                                )) && (
+                                <DeleteButton
+                                  roleData={role}
+                                  submitHandler={deleteRole}
+                                />
+                              )}
+
+                            {hasPerm('admin:edit_role', userPermissions) && (
+                              <EditButton
+                                roleData={role as unknown as zod_RoleDataType}
+                                submitHandler={editRole}
+                                loading={loading}
                               />
                             )}
-
-                          {hasPerm('admin:edit_role', userPermissions) && (
-                            <EditButton
-                              roleData={role as unknown as zod_RoleDataType}
-                              submitHandler={editRole}
-                              loading={loading}
-                            />
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

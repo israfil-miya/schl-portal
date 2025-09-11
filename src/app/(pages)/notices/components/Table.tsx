@@ -437,7 +437,7 @@ const Table = () => {
                               onClick={() => {
                                 window.open(
                                   process.env.NEXT_PUBLIC_BASE_URL +
-                                    `/admin/notices/${encodeURIComponent(notice.notice_no)}`,
+                                    `/notices/${encodeURIComponent(notice.notice_no)}`,
                                   '_blank',
                                 );
                               }}

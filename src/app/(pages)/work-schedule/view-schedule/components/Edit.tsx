@@ -1,7 +1,7 @@
 'use client';
 
 import { taskOptions } from '@/app/(pages)/browse/components/Edit';
-import { cn } from '@/lib/utils';
+import { cn, hasPerm } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
 import {
   setCalculatedZIndex,
@@ -13,7 +13,7 @@ import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { SquarePen, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
@@ -36,6 +36,10 @@ const EditButton: React.FC<PropsType> = props => {
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const { data: session } = useSession();
+  const userPermissions = useMemo(
+    () => session?.user.permissions || [],
+    [session?.user.permissions],
+  );
 
   const clientNames = props.clientsData.map(client => client.client_name);
   const clientCodes = props.clientsData.map(client => client.client_code);
@@ -240,8 +244,7 @@ const EditButton: React.FC<PropsType> = props => {
                 </div>
               </div>
 
-              {(session?.user?.role === 'admin' ||
-                session?.user?.role === 'super') && (
+              {hasPerm('admin:view_client_name', userPermissions) && (
                 <div>
                   <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                     <span className="uppercase">Client Name*</span>
