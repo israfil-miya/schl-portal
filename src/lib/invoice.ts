@@ -1,3 +1,12 @@
+import {
+  BankAustralia,
+  BankBangladesh,
+  BankEurozone,
+  BankUK,
+  BankUSA,
+  CustomerDataType,
+  VendorDataType,
+} from '@/app/(pages)/accountancy/invoices/bank-details';
 import ExcelJS, {
   Alignment,
   Borders,
@@ -9,24 +18,10 @@ import ExcelJS, {
 } from 'exceljs';
 import moment from 'moment-timezone';
 
-export interface CustomerDataType {
-  client_name: string;
-  client_code: string;
-  contact_person: string;
-  address: string;
-  contact_number: string;
-  email: string;
-  invoice_number: string;
-  currency: string;
-}
-export interface VendorDataType {
-  company_name: string;
-  contact_person: string;
-  street_address: string;
-  city: string;
-  contact_number: string;
-  email: string;
-}
+export type BankAccountsType = [
+  BankBangladesh,
+  BankEurozone | BankUK | BankUSA | BankAustralia | BankBangladesh,
+];
 
 export interface BillDataType {
   date: string;
@@ -109,21 +104,22 @@ async function addHeader(
 export default async function generateInvoice(
   invoiceData: InvoiceDataType,
   billData: BillDataType[],
+  bankAccounts: BankAccountsType,
 ): Promise<Blob | false> {
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('INVOICE', {
-      properties: { tabColor: { argb: 'FFC0000' } },
+      properties: { tabColor: { argb: 'C4D79B' } },
     });
     sheet.columns = [
-      { width: 6.5 },
-      { width: 6.5 },
-      { width: 12.5 },
-      { width: 28 },
-      { width: 12 },
-      { width: 13 },
-      { width: 7 },
-      { width: 5 },
+      { width: 6.14 }, // A - 48 px
+      { width: 6.43 }, // B - 50 px
+      { width: 12.57 }, // C - 93 px
+      { width: 17.43 }, // D - 127 px
+      { width: 17.43 }, // E - 127 px
+      { width: 10.71 }, // F - 80 px
+      { width: 5.71 }, // G - 45 px
+      { width: 4.29 }, // H - 35 px
     ];
 
     // VALUES
@@ -131,8 +127,7 @@ export default async function generateInvoice(
       vendor: [
         invoiceData.vendor.company_name,
         invoiceData.vendor.contact_person,
-        invoiceData.vendor.street_address,
-        invoiceData.vendor.city,
+        invoiceData.vendor.address,
         invoiceData.vendor.contact_number,
         invoiceData.vendor.email,
       ],
@@ -147,8 +142,7 @@ export default async function generateInvoice(
       vendorConstants: [
         'Company Name: ',
         'Contact Person: ',
-        'Street Address: ',
-        'City: ',
+        'Address: ',
         'Phone: ',
         'Email: ',
       ],
@@ -171,6 +165,16 @@ export default async function generateInvoice(
     const todayDate = moment().format('MMMM D, YYYY');
     const invoiceNo = invoiceData.customer.invoice_number;
 
+    // ExcelJS expects image ext width/height in pixels (assume 96 DPI)
+    const targetHeightInches = 1.44 * 0.94; // original height of the logo = 1.44"
+    const targetWidthInches = 2.38 * 0.79; // original width of the logo = 2.38"
+    const PX_PER_INCH = 96;
+
+    const pixelHeight = Math.round(targetHeightInches * PX_PER_INCH);
+    const pixelWidth = Math.round(targetWidthInches * PX_PER_INCH);
+
+    console.log({ pixelHeight, pixelWidth });
+
     // ensure at least 10 rows in bill
     if (billData.length <= 10) {
       for (let i = billData.length; i < 10; i++)
@@ -183,13 +187,16 @@ export default async function generateInvoice(
         });
     }
 
+    /**/
     /* START OF EXCEL FILE MAIN SHEET DESIGN */
+    /**/
 
     // LOGO
     const logoCell = {
-      tl: { col: 2, row: 0.5 },
-      ext: { width: 210, height: 150 },
+      tl: { col: 1, row: 0 },
+      ext: { width: pixelWidth, height: pixelHeight },
     };
+
     const file = await getFileFromUrl('/images/logo-grey.png', 'logo.png');
 
     const logoDataUrl = await new Promise<string>((resolve, reject) => {
@@ -215,7 +222,7 @@ export default async function generateInvoice(
     // HEADING
     addHeader(
       sheet,
-      'E2:H5',
+      'E1:H4',
       'INVOICE',
       {
         name: 'Arial Black',
@@ -230,7 +237,7 @@ export default async function generateInvoice(
 
     addHeader(
       sheet,
-      'E6:H6',
+      'E5:H5',
       'DATE: ' + todayDate,
       {
         name: 'Arial',
@@ -245,8 +252,8 @@ export default async function generateInvoice(
 
     addHeader(
       sheet,
-      'E7:H7',
-      'INVOICE NO: ' + invoiceNo,
+      'E6:H6',
+      'INVOICE #: ' + invoiceNo,
       {
         name: 'Arial',
         size: 10,
@@ -258,7 +265,7 @@ export default async function generateInvoice(
       },
     );
 
-    let contactTableHeadingRow = 10;
+    let contactTableHeadingRow = 9;
 
     // CONTACT TABLE HEADING
     addHeader(

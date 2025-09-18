@@ -30,9 +30,9 @@ export const currencyOptions = [
   { value: '£', label: 'Pound (£)' },
   { value: 'A$', label: 'Australian Dollar (A$)' },
   { value: 'C$', label: 'Canadian Dollar (C$)' },
-  { value: 'Nkr', label: 'Norwegian Krone (Nkr)' },
-  { value: 'Dkr', label: 'Danish Krone (Dkr)' },
-  { value: 'Skr', label: 'Swedish Krona (Skr)' },
+  { value: 'NOK', label: 'Norwegian Krone (NOK)' },
+  { value: 'DKK', label: 'Danish Krone (DKK)' },
+  { value: 'SEK', label: 'Swedish Krona (SEK)' },
 ];
 
 const Form: React.FC<PropsType> = props => {

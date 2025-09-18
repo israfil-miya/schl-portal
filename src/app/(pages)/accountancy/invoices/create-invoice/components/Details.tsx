@@ -1,9 +1,8 @@
 'use client';
 import generateInvoice, {
+  BankAccountsType,
   BillDataType,
-  CustomerDataType,
   InvoiceDataType,
-  VendorDataType,
 } from '@/lib/invoice';
 import { cn, fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
@@ -16,6 +15,13 @@ import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  BankAustraliaAccount,
+  BankBangladeshAccount,
+  BankEurozoneAccount,
+  BankUKAccount,
+  BankUSAAccount,
+} from '../../bank-details';
 
 const baseZIndex = 50; // 52
 
@@ -61,8 +67,8 @@ const Details: React.FC<DetailsProps> = props => {
   const [vendor, setVendor] = useState({
     companyName: 'Studio Click House Ltd.',
     contactPerson: 'Raiyan Abrar',
-    streetAddress: 'Tengra Road, Ma HolyCity Tower, Level 2',
-    city: 'Demra, Dhaka-1361, Bangladesh',
+    companyAddress:
+      'Level 1, AB Tower, West Boxnagar, Sarulia, Dmera, Dhaka-1361, Bangladesh',
     contactNumber: '+46855924212, +8801819727117',
     email: 'info@studioclickhouse.com',
   });
@@ -128,18 +134,53 @@ const Details: React.FC<DetailsProps> = props => {
         vendor: {
           company_name: vendor.companyName,
           contact_person: vendor.contactPerson,
-          street_address: vendor.streetAddress,
-          city: vendor.city,
+          address: vendor.companyAddress,
           contact_number: vendor.contactNumber,
           email: vendor.email,
         },
       };
 
+      let secondaryBankAccount = null;
+      switch (clientDetails?.currency) {
+        case '$':
+          secondaryBankAccount = BankUSAAccount;
+          break;
+        case 'C$':
+          secondaryBankAccount = BankUSAAccount;
+          break;
+        case 'A$':
+          secondaryBankAccount = BankAustraliaAccount;
+          break;
+        case '£':
+          secondaryBankAccount = BankUKAccount;
+          break;
+        case '€':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        case 'NOK':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        case 'DKK':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        case 'SEK':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        default:
+          secondaryBankAccount = BankBangladeshAccount;
+          break;
+      }
+
+      const bankDetails: BankAccountsType = [
+        BankBangladeshAccount,
+        secondaryBankAccount,
+      ];
+
       const fileName = `invoice_studioclickhouse_${customer.invoiceNumber}.xlsx`;
 
       let toastId = toast.loading('Generating invoice...');
 
-      const invoice = await generateInvoice(invoiceData, billData);
+      const invoice = await generateInvoice(invoiceData, billData, bankDetails);
       if (!invoice) {
         toast.error('Unable to generate invoice', { id: toastId });
         return;
@@ -629,38 +670,21 @@ const Details: React.FC<DetailsProps> = props => {
                       placeholder="Enter contact number"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label
-                      htmlFor="vendorStreetAddress"
+                      htmlFor="vendorCompanyAddress"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Street Address
+                      Company Address
                     </label>
-                    <input
-                      id="vendorStreetAddress"
-                      name="streetAddress"
+                    <textarea
+                      id="vendorCompanyAddress"
+                      rows={3}
+                      name="companyAddress"
                       onChange={handleChangeVendor}
                       className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      value={vendor.streetAddress}
-                      type="text"
-                      placeholder="Enter street address"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="vendorCity"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      City
-                    </label>
-                    <input
-                      id="vendorCity"
-                      name="city"
-                      onChange={handleChangeVendor}
-                      className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                      value={vendor.city}
-                      type="text"
-                      placeholder="Enter city name"
+                      value={vendor.companyAddress}
+                      placeholder="Enter company address"
                     />
                   </div>
                 </div>
