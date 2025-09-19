@@ -7,6 +7,7 @@ import {
   CustomerDataType,
   VendorDataType,
 } from '@/app/(pages)/accountancy/invoices/bank-details';
+
 import ExcelJS, {
   Alignment,
   Borders,
@@ -111,6 +112,14 @@ export default async function generateInvoice(
     const sheet = workbook.addWorksheet('INVOICE', {
       properties: { tabColor: { argb: 'C4D79B' } },
     });
+    // Reusable thin border style (full box)
+    const thinBorder = {
+      top: { style: 'thin', color: { argb: '000000' } },
+      left: { style: 'thin', color: { argb: '000000' } },
+      bottom: { style: 'thin', color: { argb: '000000' } },
+      right: { style: 'thin', color: { argb: '000000' } },
+    } as const;
+
     sheet.columns = [
       { width: 6.14 }, // A - 48 px
       { width: 6.43 }, // B - 50 px
@@ -287,14 +296,10 @@ export default async function generateInvoice(
         bottom: { style: 'thin', color: { argb: '000000' } },
         right: { style: 'thin', color: { argb: '000000' } },
       },
-      'gradient',
+      'pattern',
       {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
 
@@ -317,34 +322,15 @@ export default async function generateInvoice(
         bottom: { style: 'thin', color: { argb: '000000' } },
         right: { style: 'thin', color: { argb: '000000' } },
       },
-      'gradient',
+      'pattern',
       {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
-    sheet.addConditionalFormatting({
-      ref: `A${contactTableHeadingRow}:H${contactTableHeadingRow}`,
-      rules: [
-        {
-          priority: 1,
-          type: 'expression',
-          formulae: ['true'],
-          style: {
-            border: {
-              left: { style: 'thin', color: { argb: '000000' } },
-              right: { style: 'thin', color: { argb: '000000' } },
-              bottom: { style: 'thin', color: { argb: '000000' } },
-              top: { style: 'thin', color: { argb: '000000' } },
-            },
-          },
-        },
-      ],
-    });
+
+    // Set contact table heading row height to approx 22 pixels (~16.5 points)
+    sheet.getRow(contactTableHeadingRow).height = 16.5;
 
     let contactTableLoopEndIndex = 0;
     let customerContactRowNeeded = [];
@@ -399,7 +385,7 @@ export default async function generateInvoice(
       );
 
       let row = sheet.getRow(indexRow);
-      row.height = 17;
+      row.height = 16.5;
 
       if (contactDetails.vendor[i])
         addHeader(
@@ -423,6 +409,7 @@ export default async function generateInvoice(
             horizontal: 'left',
             wrapText: true,
           },
+          thinBorder,
         );
       else
         addHeader(
@@ -438,6 +425,7 @@ export default async function generateInvoice(
             horizontal: 'left',
             wrapText: true,
           },
+          thinBorder,
         );
       if (contactDetails.customer[i] && customerContactRowNeeded[i])
         addHeader(
@@ -461,6 +449,7 @@ export default async function generateInvoice(
             horizontal: 'left',
             wrapText: true,
           },
+          thinBorder,
         );
       else if (customerContactRowNeeded[i])
         addHeader(
@@ -476,6 +465,7 @@ export default async function generateInvoice(
             horizontal: 'left',
             wrapText: true,
           },
+          thinBorder,
         );
     }
 
@@ -493,31 +483,8 @@ export default async function generateInvoice(
         horizontal: 'left',
         wrapText: true,
       },
-      {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
+      thinBorder,
     );
-    sheet.addConditionalFormatting({
-      ref: `A${contactTableHeadingRow}:H${afterContactTableRowNumber}`,
-      rules: [
-        {
-          priority: 1,
-          type: 'expression',
-          formulae: ['true'],
-          style: {
-            border: {
-              left: { style: 'thin', color: { argb: '000000' } },
-              right: { style: 'thin', color: { argb: '000000' } },
-              top: { style: 'thin', color: { argb: '000000' } },
-              bottom: { style: 'thin', color: { argb: '000000' } },
-            },
-          },
-        },
-      ],
-    });
 
     // Contact table closing gradient
     addHeader(
