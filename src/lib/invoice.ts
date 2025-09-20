@@ -8,15 +8,17 @@ import {
   VendorDataType,
 } from '@/app/(pages)/accountancy/invoices/bank-details';
 
-import ExcelJS, {
-  Alignment,
-  Borders,
-  CellFormulaValue,
-  CellRichTextValue,
-  Fill,
-  Font,
-  Worksheet,
-} from 'exceljs';
+import {
+  addHeader,
+  computeContactRowSpans,
+  getFileFromUrl,
+  pxToExcelWidth,
+  pxToPoints,
+  thinBorder,
+} from '@/utility/invoiceHelpers';
+
+import ExcelJS from 'exceljs';
+
 import moment from 'moment-timezone';
 
 export type BankAccountsType = [
@@ -37,71 +39,6 @@ export interface InvoiceDataType {
   customer: CustomerDataType;
 }
 
-async function getFileFromUrl(
-  url: string,
-  name: string,
-  defaultType: string = 'image/png',
-): Promise<File> {
-  const response = await fetch(url);
-  const data = await response.blob();
-  return new File([data], name, {
-    type: data.type || defaultType,
-  });
-}
-
-const getTextWidth = (text: string, font?: string): number => {
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) {
-    throw new Error('Failed to get canvas context');
-  }
-
-  context.font = font || getComputedStyle(document.body).font;
-  return context.measureText(text).width;
-};
-
-async function addHeader(
-  sheet: Worksheet,
-  cell: string,
-  value?: string | number | CellRichTextValue | CellFormulaValue,
-  font?: Partial<Font>,
-  alignment?: Partial<Alignment>,
-  borderStyle?: Partial<Borders>,
-  fillType?: 'pattern' | 'gradient',
-  fillOptions?:
-    | {
-        pattern?:
-          | 'solid'
-          | 'darkVertical'
-          | 'darkGray'
-          | 'lightGray'
-          | 'lightVertical';
-        fgColor?: { argb: string };
-        bgColor?: { argb: string };
-      }
-    | {
-        gradient: 'angle' | 'path';
-        degree?: number;
-        stops: { position: number; color: { argb: string } }[];
-      },
-): Promise<void> {
-  sheet.mergeCells(cell);
-
-  const targetCell = sheet.getCell(cell);
-
-  if (font) targetCell.font = font;
-  if (alignment) targetCell.alignment = alignment;
-  if (value) targetCell.value = value;
-  if (borderStyle) targetCell.border = borderStyle;
-
-  if (fillType && fillOptions) {
-    targetCell.fill = {
-      type: fillType,
-      ...fillOptions,
-    } as Fill; // Explicitly cast to the `Fill` type to satisfy TypeScript.
-  }
-}
-
 export default async function generateInvoice(
   invoiceData: InvoiceDataType,
   billData: BillDataType[],
@@ -112,23 +49,16 @@ export default async function generateInvoice(
     const sheet = workbook.addWorksheet('INVOICE', {
       properties: { tabColor: { argb: 'C4D79B' } },
     });
-    // Reusable thin border style (full box)
-    const thinBorder = {
-      top: { style: 'thin', color: { argb: '000000' } },
-      left: { style: 'thin', color: { argb: '000000' } },
-      bottom: { style: 'thin', color: { argb: '000000' } },
-      right: { style: 'thin', color: { argb: '000000' } },
-    } as const;
 
     sheet.columns = [
-      { width: 6.14 }, // A - 48 px
-      { width: 6.43 }, // B - 50 px
-      { width: 12.57 }, // C - 93 px
-      { width: 17.43 }, // D - 127 px
-      { width: 17.43 }, // E - 127 px
-      { width: 10.71 }, // F - 80 px
-      { width: 5.71 }, // G - 45 px
-      { width: 4.29 }, // H - 35 px
+      { width: pxToExcelWidth(48) }, // A - 48 px
+      { width: pxToExcelWidth(50) }, // B - 50 px
+      { width: pxToExcelWidth(93) }, // C - 93 px
+      { width: pxToExcelWidth(127) }, // D - 127 px
+      { width: pxToExcelWidth(127) }, // E - 127 px
+      { width: pxToExcelWidth(93.6848) }, // F - 88 px
+      { width: pxToExcelWidth(45) }, // G - 45 px
+      { width: pxToExcelWidth(35) }, // H - 35 px
     ];
 
     // VALUES
@@ -228,7 +158,10 @@ export default async function generateInvoice(
 
     sheet.addImage(logoImage, logoCell);
 
+    /**/
     // HEADING
+    /**/
+
     addHeader(
       sheet,
       'E1:H4',
@@ -276,6 +209,10 @@ export default async function generateInvoice(
 
     let contactTableHeadingRow = 9;
 
+    /**/
+    // CONTACT TABLE
+    /**/
+
     // CONTACT TABLE HEADING
     addHeader(
       sheet,
@@ -285,6 +222,7 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
@@ -311,6 +249,7 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
@@ -329,153 +268,105 @@ export default async function generateInvoice(
       },
     );
 
-    // Set contact table heading row height to approx 22 pixels (~16.5 points)
-    sheet.getRow(contactTableHeadingRow).height = 16.5;
+    // Set contact table heading row height to 22px
+    sheet.getRow(contactTableHeadingRow).height = pxToPoints(22);
 
-    let contactTableLoopEndIndex = 0;
-    let customerContactRowNeeded = [];
-    let lastEnd = contactTableHeadingRow + 1;
+    // Compute dynamic row spans (moved utility)
+    const contactRowSpans = computeContactRowSpans(
+      sheet,
+      contactDetails,
+      contactTableHeadingRow + 1,
+    );
 
-    for (
-      let i = 0;
-      i <=
-      (contactDetails.customer.length >= contactDetails.vendor.length
-        ? contactDetails.customer.length - 1
-        : contactDetails.vendor.length - 1);
-      i++
-    ) {
-      let rowNeeded =
-        Math.round(getTextWidth(contactDetails.customer?.[i]) / 210) || 1;
-
-      contactTableLoopEndIndex += rowNeeded;
-      console.log(rowNeeded, contactDetails.customer[i]);
-      customerContactRowNeeded.push({
-        start: lastEnd,
-        end: lastEnd + rowNeeded - 1,
-      });
-      lastEnd += rowNeeded;
-    }
+    const contactTableLoopEndIndex = contactRowSpans.reduce(
+      (sum, s) => sum + s.rows,
+      0,
+    );
 
     let afterContactTableRowNumber =
       contactTableHeadingRow +
       1 +
       (contactTableLoopEndIndex <= 5
-        ? contactDetails.vendor.length
+        ? Math.max(contactDetails.vendor.length, contactDetails.customer.length)
         : contactTableLoopEndIndex);
     let afterBillTableRowNumber = afterContactTableRowNumber + 5;
 
-    console.log('customerContactRowNeeded', customerContactRowNeeded);
+    console.log('contactRowSpans', contactRowSpans);
     console.log('contactTableLoopEndIndex', contactTableLoopEndIndex);
 
-    // CONTACT TABLE
-    for (
-      let i = 0;
-      i <=
-      (contactTableLoopEndIndex >= contactDetails.vendor.length
-        ? contactTableLoopEndIndex
-        : contactDetails.vendor.length - 1);
-      i++
-    ) {
-      let indexRow = i + contactTableHeadingRow + 1;
+    // CONTACT TABLE RENDERING (using unified spans)
+    for (let i = 0; i < contactRowSpans.length; i++) {
+      const span = contactRowSpans[i];
+      // Vertically merged (span over multiple rows) => each underlying row gets 20px.
+      // Single-row (no vertical merge) => leave row height default so caller can control independently.
+      if (span.rows > 1) {
+        for (let r = span.start; r <= span.end; r++) {
+          sheet.getRow(r).height = pxToPoints(20);
+        }
+      } else {
+        sheet.getRow(span.start).height = pxToPoints(22);
+      }
 
-      console.log(i);
-
-      console.log(
-        `E${customerContactRowNeeded[i]?.start}:H${customerContactRowNeeded[i]?.end}`,
-      );
-
-      let row = sheet.getRow(indexRow);
-      row.height = 16.5;
-
-      if (contactDetails.vendor[i])
+      // Vendor cell occupies only the first physical row of its span (to mimic previous single-row appearance) unless vendorRows > 1, then merge
+      if (contactDetails.vendor[i] !== undefined) {
+        const vendorRange =
+          span.vendorRows > 1
+            ? `A${span.start}:D${span.end}`
+            : `A${span.start}:D${span.start}`;
         addHeader(
           sheet,
-          `A${indexRow}:D${indexRow}`,
-          {
-            richText: [
-              {
-                font: { bold: true },
-                text: contactDetails.vendorConstants[i],
-              },
-              { text: contactDetails.vendor[i] },
-            ],
-          },
-          {
-            name: 'Arial',
-            size: 9,
-          },
-          {
-            vertical: 'middle',
-            horizontal: 'left',
-            wrapText: true,
-          },
+          vendorRange,
+          contactDetails.vendor[i]
+            ? {
+                richText: [
+                  {
+                    font: { bold: true },
+                    text: contactDetails.vendorConstants[i],
+                  },
+                  { text: contactDetails.vendor[i] },
+                ],
+              }
+            : undefined,
+          { name: 'Calibri', size: 9 },
+          { vertical: 'middle', horizontal: 'left', wrapText: true },
           thinBorder,
         );
-      else
+      }
+
+      // Customer cell merges across its required span
+      if (contactDetails.customer[i] !== undefined) {
+        const customerRange =
+          span.customerRows > 1
+            ? `E${span.start}:H${span.end}`
+            : `E${span.start}:H${span.start}`;
         addHeader(
           sheet,
-          `A${indexRow}:D${indexRow}`,
-          undefined,
-          {
-            name: 'Arial',
-            size: 9,
-          },
-          {
-            vertical: 'middle',
-            horizontal: 'left',
-            wrapText: true,
-          },
+          customerRange,
+          contactDetails.customer[i]
+            ? {
+                richText: [
+                  {
+                    font: { bold: true },
+                    text: contactDetails.customerConstants[i],
+                  },
+                  { text: contactDetails.customer[i] },
+                ],
+              }
+            : undefined,
+          { name: 'Calibri', size: 9 },
+          { vertical: 'middle', horizontal: 'left', wrapText: true },
           thinBorder,
         );
-      if (contactDetails.customer[i] && customerContactRowNeeded[i])
-        addHeader(
-          sheet,
-          `E${customerContactRowNeeded[i]?.start}:H${customerContactRowNeeded[i]?.end}`,
-          {
-            richText: [
-              {
-                font: { bold: true },
-                text: contactDetails.customerConstants[i],
-              },
-              { text: contactDetails.customer[i] },
-            ],
-          },
-          {
-            name: 'Arial',
-            size: 9,
-          },
-          {
-            vertical: 'middle',
-            horizontal: 'left',
-            wrapText: true,
-          },
-          thinBorder,
-        );
-      else if (customerContactRowNeeded[i])
-        addHeader(
-          sheet,
-          `E${customerContactRowNeeded[i]?.start}:H${customerContactRowNeeded[i]?.end}`,
-          undefined,
-          {
-            name: 'Arial',
-            size: 9,
-          },
-          {
-            vertical: 'middle',
-            horizontal: 'left',
-            wrapText: true,
-          },
-          thinBorder,
-        );
+      }
     }
 
-    // Extra row, E - H column merge
+    // Extra spacer row: add both vendor (A:D) and customer (E:H) halves so borders appear continuous
     addHeader(
       sheet,
-      `E${afterContactTableRowNumber}:H${afterContactTableRowNumber}`,
+      `A${afterContactTableRowNumber}:D${afterContactTableRowNumber}`,
       undefined,
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
       },
       {
@@ -485,8 +376,24 @@ export default async function generateInvoice(
       },
       thinBorder,
     );
+    addHeader(
+      sheet,
+      `E${afterContactTableRowNumber}:H${afterContactTableRowNumber}`,
+      undefined,
+      {
+        name: 'Calibri',
+        size: 9,
+      },
+      {
+        vertical: 'middle',
+        horizontal: 'left',
+        wrapText: true,
+      },
+      thinBorder,
+    );
+    sheet.getRow(afterContactTableRowNumber).height = pxToPoints(22);
 
-    // Contact table closing gradient
+    // Contact table closing solid fill
     addHeader(
       sheet,
       `A${afterContactTableRowNumber + 1}:H${afterContactTableRowNumber + 1}`,
@@ -500,22 +407,14 @@ export default async function generateInvoice(
         vertical: 'middle',
         horizontal: 'center',
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'FFFFFF' } },
-          { position: 1, color: { argb: 'D9D9D9' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
+    sheet.getRow(afterContactTableRowNumber + 1).height = pxToPoints(22);
 
     // BILL TABLE HEADING
     addHeader(
@@ -526,25 +425,17 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
 
@@ -556,25 +447,17 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
 
@@ -586,25 +469,17 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
 
@@ -616,25 +491,17 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
 
@@ -646,58 +513,51 @@ export default async function generateInvoice(
         name: 'Arial',
         size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
+
+    // Ensure the two physical rows that make up the vertically merged bill table header are 20px each
+    const billHeaderRowTop = afterBillTableRowNumber - 2;
+    const billHeaderRowBottom = afterBillTableRowNumber - 1;
+    sheet.getRow(billHeaderRowTop).height = pxToPoints(20);
+    sheet.getRow(billHeaderRowBottom).height = pxToPoints(20);
 
     billData.forEach((data, index) => {
       index = afterBillTableRowNumber;
       let row = sheet.getRow(index);
-      row.height = 20;
+      row.height = 26;
 
       addHeader(
         sheet,
         `A${index}:B${index}`,
         data.date,
         {
-          name: 'Arial',
+          name: 'Calibri',
           size: 9,
         },
         {
           vertical: 'middle',
           horizontal: 'center',
         },
-        {
-          top: { style: 'thin', color: { argb: '000000' } },
-          left: { style: 'thin', color: { argb: '000000' } },
-          bottom: { style: 'thin', color: { argb: '000000' } },
-          right: { style: 'thin', color: { argb: '000000' } },
-        },
+        thinBorder,
       );
       addHeader(
         sheet,
         `C${index}:D${index}`,
         data.job_name,
         {
-          name: 'Arial',
+          name: 'Calibri',
           size: 9,
         },
         {
@@ -705,69 +565,49 @@ export default async function generateInvoice(
           horizontal: 'left',
           wrapText: true,
         },
-        {
-          top: { style: 'thin', color: { argb: '000000' } },
-          left: { style: 'thin', color: { argb: '000000' } },
-          bottom: { style: 'thin', color: { argb: '000000' } },
-          right: { style: 'thin', color: { argb: '000000' } },
-        },
+        thinBorder,
       );
       addHeader(
         sheet,
         `E${index}`,
         data.quantity,
         {
-          name: 'Arial',
+          name: 'Calibri',
           size: 9,
         },
         {
           vertical: 'middle',
           horizontal: 'center',
         },
-        {
-          top: { style: 'thin', color: { argb: '000000' } },
-          left: { style: 'thin', color: { argb: '000000' } },
-          bottom: { style: 'thin', color: { argb: '000000' } },
-          right: { style: 'thin', color: { argb: '000000' } },
-        },
+        thinBorder,
       );
       addHeader(
         sheet,
         `F${index}`,
         data.unit_price,
         {
-          name: 'Arial',
+          name: 'Calibri',
           size: 9,
         },
         {
           vertical: 'middle',
           horizontal: 'center',
         },
-        {
-          top: { style: 'thin', color: { argb: '000000' } },
-          left: { style: 'thin', color: { argb: '000000' } },
-          bottom: { style: 'thin', color: { argb: '000000' } },
-          right: { style: 'thin', color: { argb: '000000' } },
-        },
+        thinBorder,
       );
       addHeader(
         sheet,
         `G${index}:H${index}`,
         { formula: `E${index}*F${index}`, result: data.total() },
         {
-          name: 'Arial',
+          name: 'Calibri',
           size: 9,
         },
         {
           vertical: 'middle',
           horizontal: 'center',
         },
-        {
-          top: { style: 'thin', color: { argb: '000000' } },
-          left: { style: 'thin', color: { argb: '000000' } },
-          bottom: { style: 'thin', color: { argb: '000000' } },
-          right: { style: 'thin', color: { argb: '000000' } },
-        },
+        thinBorder,
       );
 
       sheet.getCell(`A${index}:B${index}`).numFmt = 'dd/mm/yyyy';
@@ -790,27 +630,20 @@ export default async function generateInvoice(
       undefined,
       {
         name: 'Arial',
-        size: 9,
+        size: 10,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'left',
         wrapText: true,
       },
+
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
     addHeader(
@@ -819,28 +652,21 @@ export default async function generateInvoice(
       'TOTAL FILES',
       {
         name: 'Arial',
-        size: 9,
+        size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
         wrapText: true,
       },
+
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
     addHeader(
@@ -854,28 +680,20 @@ export default async function generateInvoice(
       },
       {
         name: 'Arial',
-        size: 9,
+        size: 10,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
         wrapText: true,
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
     addHeader(
@@ -884,27 +702,19 @@ export default async function generateInvoice(
       undefined,
       {
         name: 'Arial',
-        size: 9,
+        size: 10,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'left',
         wrapText: true,
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
     addHeader(
@@ -913,36 +723,30 @@ export default async function generateInvoice(
       undefined,
       {
         name: 'Arial',
-        size: 9,
+        size: 10,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'left',
         wrapText: true,
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
+
+    sheet.getRow(afterBillTableRowNumber).height = pxToPoints(22);
 
     addHeader(
       sheet,
       `A${afterBillTableRowNumber + 2}:D${afterBillTableRowNumber + 4}`,
       'Please make the payment available within 5 business days from the receipt of this Invoice.',
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
       },
       {
@@ -957,10 +761,9 @@ export default async function generateInvoice(
       `F${afterBillTableRowNumber + 1}`,
       'SUBTOTAL',
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
         bold: true,
-        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -977,7 +780,7 @@ export default async function generateInvoice(
         result: subtotal,
       },
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
       },
       {
@@ -985,21 +788,7 @@ export default async function generateInvoice(
         horizontal: 'center',
         wrapText: true,
       },
-      {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
-      },
+      thinBorder,
     );
     sheet.getCell(
       `G${afterBillTableRowNumber + 1}:H${afterBillTableRowNumber + 1}`,
@@ -1010,10 +799,9 @@ export default async function generateInvoice(
       `F${afterBillTableRowNumber + 2}`,
       'DISCOUNT',
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
         bold: true,
-        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -1028,7 +816,7 @@ export default async function generateInvoice(
         result: subtotal * discount,
       },
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
       },
       {
@@ -1036,21 +824,7 @@ export default async function generateInvoice(
         horizontal: 'center',
         wrapText: true,
       },
-      {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
-      },
+      thinBorder,
     );
     sheet.getCell(
       `G${afterBillTableRowNumber + 2}:H${afterBillTableRowNumber + 2}`,
@@ -1061,10 +835,9 @@ export default async function generateInvoice(
       `F${afterBillTableRowNumber + 3}`,
       'SALES TAX.',
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
         bold: true,
-        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -1079,7 +852,7 @@ export default async function generateInvoice(
         result: subtotal * salesTax,
       },
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
       },
       {
@@ -1087,21 +860,7 @@ export default async function generateInvoice(
         horizontal: 'center',
         wrapText: true,
       },
-      {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
-      },
+      thinBorder,
     );
     sheet.getCell(
       `G${afterBillTableRowNumber + 3}:H${afterBillTableRowNumber + 3}`,
@@ -1112,7 +871,7 @@ export default async function generateInvoice(
       `F${afterBillTableRowNumber + 4}`,
       'GRAND TOTAL',
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
         bold: true,
       },
@@ -1131,29 +890,21 @@ export default async function generateInvoice(
         result: salesTax * subtotal + subtotal - subtotal * discount,
       },
       {
-        name: 'Arial',
+        name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: 'FFFFFF' },
       },
       {
         vertical: 'middle',
         horizontal: 'center',
         wrapText: true,
       },
+      thinBorder,
+      'pattern',
       {
-        top: { style: 'thin', color: { argb: '000000' } },
-        left: { style: 'thin', color: { argb: '000000' } },
-        bottom: { style: 'thin', color: { argb: '000000' } },
-        right: { style: 'thin', color: { argb: '000000' } },
-      },
-      'gradient',
-      {
-        gradient: 'angle',
-        degree: 90,
-        stops: [
-          { position: 0, color: { argb: 'D9D9D9' } },
-          { position: 1, color: { argb: 'FFFFFF' } },
-        ],
+        pattern: 'solid',
+        fgColor: { argb: '7BA541' },
       },
     );
     sheet.getCell(
@@ -1161,6 +912,16 @@ export default async function generateInvoice(
     ).numFmt = `${'"' + currencySymbol + '"'}#,##0.00;[Red]\-${
       '"' + currencySymbol + '"'
     }#,##0.00`;
+
+    // Force consistent 22px height for each of the summary section rows (SUBTOTAL, DISCOUNT, SALES TAX, GRAND TOTAL)
+    // plus the multi-row message block (rows +2 to +4 already covered in the loop range)
+    for (
+      let r = afterBillTableRowNumber + 1;
+      r <= afterBillTableRowNumber + 4;
+      r++
+    ) {
+      sheet.getRow(r).height = pxToPoints(22);
+    }
 
     // Write the workbook to a Blob and create a download link
     const fileName = `invoice_studioclickhouse_${invoiceData.customer.invoice_number}.xlsx`;
