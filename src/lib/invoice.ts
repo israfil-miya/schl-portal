@@ -764,6 +764,7 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -802,6 +803,7 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -838,6 +840,7 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -924,7 +927,7 @@ export default async function generateInvoice(
     }
 
     // Write the workbook to a Blob and create a download link
-    const fileName = `invoice_studioclickhouse_${invoiceData.customer.invoice_number}.xlsx`;
+    // const fileName = `invoice_studioclickhouse_${invoiceData.customer.invoice_number}.xlsx`;
     const data = await workbook.xlsx.writeBuffer();
     console.log(data);
     const blob = new Blob([data], {

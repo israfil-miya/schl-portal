@@ -123,6 +123,49 @@ export function computeContactRowSpans(
   return spans;
 }
 
+/**
+ * Generic two-column span calculator (used for Bank Details section).
+ * Accepts arrays of tuple [label, value]. Either side may have a different number of entries.
+ * Rows are only generated for indices where at least one side contains a non-empty value.
+ */
+export function computeBankRowSpans(
+  sheet: Worksheet,
+  leftDetails: [string, string | undefined][],
+  rightDetails: [string, string | undefined][],
+  firstDataRow: number,
+): ContactRowSpan[] {
+  const spans: ContactRowSpan[] = [];
+  const longest = Math.max(leftDetails.length, rightDetails.length);
+  let lastEnd = firstDataRow;
+
+  for (let i = 0; i < longest; i++) {
+    const left = leftDetails[i];
+    const right = rightDetails[i];
+    const leftValue = left?.[1];
+    const rightValue = right?.[1];
+
+    // Skip completely empty row (both sides missing or empty)
+    if (!leftValue && !rightValue) continue;
+
+    const leftLabel = left?.[0];
+    const rightLabel = right?.[0];
+
+    const vendorRows = estimateRows(sheet, 1, 4, leftLabel, leftValue); // reuse column ranges A:D
+    const customerRows = estimateRows(sheet, 5, 8, rightLabel, rightValue); // reuse column ranges E:H
+    const rows = Math.max(vendorRows, customerRows);
+    const span: ContactRowSpan = {
+      start: lastEnd,
+      end: lastEnd + rows - 1,
+      vendorRows,
+      customerRows,
+      rows,
+    };
+    spans.push(span);
+    lastEnd += rows;
+  }
+  return spans;
+}
+
 // Convert pixels to points (1pt = 1/72 inch). Default assumes 96 DPI display.
 export function pxToPoints(pixels: number, dpi: number = 96): number {
   return (pixels * 72) / dpi;
