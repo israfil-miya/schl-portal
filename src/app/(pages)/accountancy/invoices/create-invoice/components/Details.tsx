@@ -51,7 +51,6 @@ const Details: React.FC<DetailsProps> = props => {
   const [invoiceCreating, setInvoiceCreating] = useState<boolean>(false);
 
   const popupRef = useRef<HTMLElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
   const [customer, setCustomer] = useState({
     companyName: '',
@@ -69,8 +68,8 @@ const Details: React.FC<DetailsProps> = props => {
     contactPerson: 'Raiyan Abrar',
     companyAddress:
       'Level 1, AB Tower, West Boxnagar, Sarulia, Dmera, Dhaka-1361, Bangladesh',
-    contactNumber: '+46855924212, +8801819727117',
-    email: 'info@studioclickhouse.com',
+    contactNumber: '+8809609777111',
+    email: 'accounts@studioclickhouse.com',
   });
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -141,7 +140,7 @@ const Details: React.FC<DetailsProps> = props => {
       };
 
       let secondaryBankAccount = null;
-      switch (clientDetails?.currency) {
+      switch (customer.currency) {
         case '$':
           secondaryBankAccount = BankUSAAccount;
           break;

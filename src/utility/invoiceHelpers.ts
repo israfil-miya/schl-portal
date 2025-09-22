@@ -18,6 +18,12 @@ export const thinBorder = {
   right: { style: 'thin', color: { argb: '000000' } },
 } as const;
 
+// Border style for table divider cells: show both left and right vertical dividers
+export const dividerBorder = {
+  right: { style: 'thin', color: { argb: '000000' } },
+  left: { style: 'thin', color: { argb: '000000' } },
+} as const;
+
 /** Heuristic tuning constants (kept small & documented) */
 const CELL_HORIZONTAL_PADDING_PX = 12; // Approx left+right text padding allowance
 const MIN_USABLE_WIDTH_PX = 60; // Guardrail for very narrow merged regions

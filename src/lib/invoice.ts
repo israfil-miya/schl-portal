@@ -10,7 +10,9 @@ import {
 
 import {
   addHeader,
+  computeBankRowSpans,
   computeContactRowSpans,
+  dividerBorder,
   getFileFromUrl,
   pxToExcelWidth,
   pxToPoints,
@@ -764,7 +766,6 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
-        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -803,7 +804,6 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
-        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -840,7 +840,6 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
-        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -925,6 +924,257 @@ export default async function generateInvoice(
     ) {
       sheet.getRow(r).height = pxToPoints(22);
     }
+
+    /**
+     * BANK DETAILS SECTION (Dynamic like contact table)
+     * Left: First bank account (Bangladesh)
+     * Right: Second bank account (could be Eurozone / UK / USA / Australia / Bangladesh)
+     */
+
+    const bankSectionStartRow = afterBillTableRowNumber + 6; // leave a small gap after totals & message
+
+    // Heading full width
+    await addHeader(
+      sheet,
+      `A${bankSectionStartRow}:H${bankSectionStartRow}`,
+      'STUDIO CLICK HOUSE BANK DETAILS',
+      { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFF' } },
+      { vertical: 'middle', horizontal: 'center' },
+      thinBorder,
+      'pattern',
+      { pattern: 'solid', fgColor: { argb: '7BA541' } },
+    );
+    sheet.getRow(bankSectionStartRow).height = pxToPoints(20);
+
+    // Sub headings (country titles) - row below heading
+    const bankSubHeadingRow = bankSectionStartRow + 1;
+    const leftBank = bankAccounts[0];
+    const rightBank = bankAccounts[1];
+    await addHeader(
+      sheet,
+      `A${bankSubHeadingRow}:D${bankSubHeadingRow}`,
+      leftBank.header_in_invoice || 'Bank Details',
+      { name: 'Arial', size: 9, bold: true },
+      { vertical: 'middle', horizontal: 'center' },
+      thinBorder,
+      'pattern',
+      { pattern: 'solid', fgColor: { argb: 'C4D79B' } },
+    );
+
+    await addHeader(
+      sheet,
+      `E${bankSubHeadingRow}:H${bankSubHeadingRow}`,
+      rightBank.header_in_invoice || 'Other Bank Details',
+      { name: 'Arial', size: 9, bold: true },
+      { vertical: 'middle', horizontal: 'center' },
+      thinBorder,
+      'pattern',
+      { pattern: 'solid', fgColor: { argb: 'C4D79B' } },
+    );
+    sheet.getRow(bankSubHeadingRow).height = pxToPoints(20);
+
+    // Build ordered label/value pairs using provided field_labels arrays
+    const LABEL_TO_KEY: Record<string, string> = {
+      'Bank Name': 'bank_name',
+      'Beneficiary Name': 'beneficiary_name',
+      'Account Number': 'account_number',
+      'SWIFT Code': 'swift_code',
+      'Routing Number': 'routing_number',
+      Branch: 'branch',
+      'Bank Address': 'bank_address',
+      IBAN: 'iban',
+      BIC: 'bic',
+      'Sort Code': 'sort_code',
+      'Routing Number (ABA)': 'routing_number_aba',
+      'Account Type': 'account_type',
+      'Branch Code (BSB)': 'branch_code_bsb',
+    };
+
+    function buildPairs(bank: any): [string, string | undefined][] {
+      const labels: string[] = Array.isArray(bank.field_labels)
+        ? bank.field_labels
+        : [];
+      return labels
+        .map(label => {
+          const key =
+            LABEL_TO_KEY[label] ||
+            label
+              .toLowerCase()
+              .replace(/\s*\(.*?\)/g, '')
+              .replace(/\s+/g, '_');
+          const value = bank[key];
+          return [label + ': ', value as string | undefined] as [
+            string,
+            string | undefined,
+          ];
+        })
+        .filter(([, v]) => v !== undefined && v !== null && v !== '');
+    }
+
+    const leftPairs = buildPairs(leftBank);
+    const rightPairs = buildPairs(rightBank);
+
+    const bankDataFirstRow = bankSubHeadingRow + 1;
+    const bankSpans = computeBankRowSpans(
+      sheet,
+      leftPairs,
+      rightPairs,
+      bankDataFirstRow,
+    );
+
+    // Render bank rows similar to contact table (right side first); only middle divider borders as requested
+    for (let i = 0; i < bankSpans.length; i++) {
+      const span = bankSpans[i];
+      if (span.rows > 1) {
+        for (let r = span.start; r <= span.end; r++) {
+          sheet.getRow(r).height = pxToPoints(20);
+        }
+      } else {
+        sheet.getRow(span.start).height = pxToPoints(22);
+      }
+      const right = rightPairs[i];
+      const rightRange =
+        span.customerRows > 1
+          ? `E${span.start}:H${span.end}`
+          : `E${span.start}:H${span.start}`;
+      await addHeader(
+        sheet,
+        rightRange,
+        right && right[1]
+          ? {
+              richText: [
+                { font: { bold: true }, text: right[0] },
+                { text: right[1] || '' },
+              ],
+            }
+          : undefined,
+        { name: 'Calibri', size: 9 },
+        { vertical: 'middle', horizontal: 'left', wrapText: true },
+        dividerBorder,
+      );
+    }
+
+    // Re-pack LEFT bank entries so they fill any blank rows created by right-side multi-row spans.
+    let leftItemIndex = 0;
+    for (const span of bankSpans) {
+      for (let r = span.start; r <= span.end; r++) {
+        if (leftItemIndex < leftPairs.length) {
+          const [label, value] = leftPairs[leftItemIndex++];
+          await addHeader(
+            sheet,
+            `A${r}:D${r}`,
+            value
+              ? {
+                  richText: [
+                    { font: { bold: true }, text: label },
+                    { text: value || '' },
+                  ],
+                }
+              : undefined,
+            { name: 'Calibri', size: 9 },
+            { vertical: 'middle', horizontal: 'left', wrapText: true },
+            dividerBorder,
+          );
+        } else {
+          await addHeader(
+            sheet,
+            `A${r}:D${r}`,
+            undefined,
+            { name: 'Calibri', size: 9 },
+            { vertical: 'middle', horizontal: 'left', wrapText: true },
+            dividerBorder,
+          );
+        }
+      }
+    }
+
+    // closing solid fill (split into two merged halves to keep center vertical border visible)
+    const afterBankTableRow = bankSpans.length
+      ? bankSpans[bankSpans.length - 1].end + 1
+      : bankDataFirstRow;
+    await addHeader(
+      sheet,
+      `A${afterBankTableRow}:H${afterBankTableRow}`,
+      undefined,
+      { name: 'Arial', size: 10, bold: true },
+      { vertical: 'middle', horizontal: 'center' },
+      thinBorder,
+      'pattern',
+      { pattern: 'solid', fgColor: { argb: 'C4D79B' } },
+    );
+
+    sheet.getRow(afterBankTableRow).height = pxToPoints(22);
+
+    // FOOTER SECTION (Questions / Contact / Thank You)
+    const footerSpacerRow = afterBankTableRow + 1;
+    const footerQuestionRow = footerSpacerRow + 1;
+    const footerContactRow = footerSpacerRow + 2;
+    const footerThanksRow = footerSpacerRow + 3;
+
+    // Spacer (no border / optional height)
+    sheet.getRow(footerSpacerRow).height = pxToPoints(20);
+
+    await addHeader(
+      sheet,
+      `A${footerQuestionRow}:H${footerQuestionRow}`,
+      'If you have any questions about this invoice, please contact',
+      { name: 'Calibri', size: 9, color: { argb: '595959' }, bold: true },
+      { vertical: 'middle', horizontal: 'center', wrapText: true },
+    );
+    sheet.getRow(footerQuestionRow).height = pxToPoints(20);
+
+    await addHeader(
+      sheet,
+      `A${footerContactRow}:H${footerContactRow}`,
+      {
+        richText: [
+          { font: { bold: true }, text: invoiceData.vendor.contact_person },
+          {
+            text: `, ${invoiceData.vendor.email}, ${invoiceData.vendor.contact_number}`,
+          },
+        ],
+      },
+      { name: 'Calibri', size: 9 },
+      { vertical: 'middle', horizontal: 'center', wrapText: true },
+    );
+    sheet.getRow(footerContactRow).height = pxToPoints(20);
+
+    await addHeader(
+      sheet,
+      `A${footerThanksRow}:H${footerThanksRow}`,
+      {
+        richText: [
+          {
+            font: { italic: true, bold: true },
+            text: 'Thank You For Your Business!',
+          },
+        ],
+      },
+      { name: 'Calibri', size: 9 },
+      { vertical: 'middle', horizontal: 'center', wrapText: true },
+    );
+    sheet.getRow(footerThanksRow).height = pxToPoints(20);
+
+    // Set print area (may help some viewers)
+    sheet.pageSetup.printArea = `A1:H${footerThanksRow}`;
+
+    // Set some page setup options
+    sheet.pageSetup = {
+      orientation: 'portrait',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: {
+        left: 0.25,
+        right: 0.25,
+        top: 0.75,
+        bottom: 0.75,
+        header: 0.3,
+        footer: 0.3,
+      },
+      horizontalCentered: true,
+      verticalCentered: false,
+    };
 
     // Write the workbook to a Blob and create a download link
     // const fileName = `invoice_studioclickhouse_${invoiceData.customer.invoice_number}.xlsx`;
