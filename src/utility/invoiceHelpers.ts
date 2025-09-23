@@ -65,10 +65,16 @@ function estimateRows(
   value: string | undefined,
 ): number {
   const totalMerged = mergedWidthPixels(sheet, startCol, endCol);
-  const labelWidth = measure(label || '');
+  // Option A implementation: We render label + value inside the same merged cell.
+  // Subtracting the measured label width (previous heuristic) often underestimates
+  // remaining horizontal space on narrower (right-side) blocks and forces an
+  // unnecessary second row for perfectly short single-line values. We therefore
+  // treat the whole merged width (minus a small padding allowance) as available
+  // to the combined text. This keeps genuinely long values wrapping while
+  // preventing false positives like a Beneficiary Name taking 2 rows.
   const usable = Math.max(
     MIN_USABLE_WIDTH_PX,
-    totalMerged - labelWidth - CELL_HORIZONTAL_PADDING_PX,
+    totalMerged - CELL_HORIZONTAL_PADDING_PX,
   );
   const divisor = usable || FALLBACK_DIVISOR_PX;
   const valueWidth = measure(value || '');

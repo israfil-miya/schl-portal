@@ -49,18 +49,18 @@ export default async function generateInvoice(
   try {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('INVOICE', {
-      properties: { tabColor: { argb: 'C4D79B' } },
+      properties: { tabColor: { argb: '7BA541' } },
     });
 
     sheet.columns = [
       { width: pxToExcelWidth(48) }, // A - 48 px
       { width: pxToExcelWidth(50) }, // B - 50 px
       { width: pxToExcelWidth(93) }, // C - 93 px
-      { width: pxToExcelWidth(127) }, // D - 127 px
-      { width: pxToExcelWidth(127) }, // E - 127 px
+      { width: pxToExcelWidth(193) }, // D - 193 px
+      { width: pxToExcelWidth(75) }, // E - 75 px
       { width: pxToExcelWidth(93.6848) }, // F - 88 px
-      { width: pxToExcelWidth(45) }, // G - 45 px
-      { width: pxToExcelWidth(35) }, // H - 35 px
+      { width: pxToExcelWidth(40) }, // G - 45 px
+      { width: pxToExcelWidth(80) }, // H - 35 px
     ];
 
     // VALUES
@@ -107,8 +107,8 @@ export default async function generateInvoice(
     const invoiceNo = invoiceData.customer.invoice_number;
 
     // ExcelJS expects image ext width/height in pixels (assume 96 DPI)
-    const targetHeightInches = 1.44 * 0.94; // original height of the logo = 1.44"
-    const targetWidthInches = 2.38 * 0.79; // original width of the logo = 2.38"
+    const targetHeightInches = 1.44 * 0.73; // original height of the logo = 1.44"
+    const targetWidthInches = 2.38 * 0.65; // original width of the logo = 2.38"
     const PX_PER_INCH = 96;
 
     const pixelHeight = Math.round(targetHeightInches * PX_PER_INCH);
@@ -134,7 +134,7 @@ export default async function generateInvoice(
 
     // LOGO
     const logoCell = {
-      tl: { col: 1, row: 0 },
+      tl: { col: 2, row: 0 },
       ext: { width: pixelWidth, height: pixelHeight },
     };
 
@@ -166,7 +166,7 @@ export default async function generateInvoice(
 
     addHeader(
       sheet,
-      'E1:H4',
+      'E1:H3',
       'INVOICE',
       {
         name: 'Arial Black',
@@ -181,7 +181,7 @@ export default async function generateInvoice(
 
     addHeader(
       sheet,
-      'E5:H5',
+      'E4:H4',
       'DATE: ' + todayDate,
       {
         name: 'Arial',
@@ -196,7 +196,7 @@ export default async function generateInvoice(
 
     addHeader(
       sheet,
-      'E6:H6',
+      'E5:H5',
       'INVOICE #: ' + invoiceNo,
       {
         name: 'Arial',
@@ -209,7 +209,7 @@ export default async function generateInvoice(
       },
     );
 
-    let contactTableHeadingRow = 9;
+    let contactTableHeadingRow = 7;
 
     /**/
     // CONTACT TABLE
@@ -288,10 +288,10 @@ export default async function generateInvoice(
     let afterContactTableRowNumber =
       contactTableHeadingRow +
       1 +
-      (contactTableLoopEndIndex <= 5
+      (contactTableLoopEndIndex <= 3
         ? Math.max(contactDetails.vendor.length, contactDetails.customer.length)
         : contactTableLoopEndIndex);
-    let afterBillTableRowNumber = afterContactTableRowNumber + 5;
+    let afterBillTableRowNumber = afterContactTableRowNumber + 3;
 
     console.log('contactRowSpans', contactRowSpans);
     console.log('contactTableLoopEndIndex', contactTableLoopEndIndex);
@@ -363,60 +363,60 @@ export default async function generateInvoice(
     }
 
     // Extra spacer row: add both vendor (A:D) and customer (E:H) halves so borders appear continuous
-    addHeader(
-      sheet,
-      `A${afterContactTableRowNumber}:D${afterContactTableRowNumber}`,
-      undefined,
-      {
-        name: 'Calibri',
-        size: 9,
-      },
-      {
-        vertical: 'middle',
-        horizontal: 'left',
-        wrapText: true,
-      },
-      thinBorder,
-    );
-    addHeader(
-      sheet,
-      `E${afterContactTableRowNumber}:H${afterContactTableRowNumber}`,
-      undefined,
-      {
-        name: 'Calibri',
-        size: 9,
-      },
-      {
-        vertical: 'middle',
-        horizontal: 'left',
-        wrapText: true,
-      },
-      thinBorder,
-    );
-    sheet.getRow(afterContactTableRowNumber).height = pxToPoints(22);
+    // addHeader(
+    //   sheet,
+    //   `A${afterContactTableRowNumber}:D${afterContactTableRowNumber}`,
+    //   undefined,
+    //   {
+    //     name: 'Calibri',
+    //     size: 9,
+    //   },
+    //   {
+    //     vertical: 'middle',
+    //     horizontal: 'left',
+    //     wrapText: true,
+    //   },
+    //   thinBorder,
+    // );
+    // addHeader(
+    //   sheet,
+    //   `E${afterContactTableRowNumber}:H${afterContactTableRowNumber}`,
+    //   undefined,
+    //   {
+    //     name: 'Calibri',
+    //     size: 9,
+    //   },
+    //   {
+    //     vertical: 'middle',
+    //     horizontal: 'left',
+    //     wrapText: true,
+    //   },
+    //   thinBorder,
+    // );
+    // sheet.getRow(afterContactTableRowNumber).height = pxToPoints(22);
 
     // Contact table closing solid fill
-    addHeader(
-      sheet,
-      `A${afterContactTableRowNumber + 1}:H${afterContactTableRowNumber + 1}`,
-      undefined,
-      {
-        name: 'Arial',
-        size: 10,
-        bold: true,
-      },
-      {
-        vertical: 'middle',
-        horizontal: 'center',
-      },
-      thinBorder,
-      'pattern',
-      {
-        pattern: 'solid',
-        fgColor: { argb: '7BA541' },
-      },
-    );
-    sheet.getRow(afterContactTableRowNumber + 1).height = pxToPoints(22);
+    // addHeader(
+    //   sheet,
+    //   `A${afterContactTableRowNumber + 1}:H${afterContactTableRowNumber + 1}`,
+    //   undefined,
+    //   {
+    //     name: 'Arial',
+    //     size: 10,
+    //     bold: true,
+    //   },
+    //   {
+    //     vertical: 'middle',
+    //     horizontal: 'center',
+    //   },
+    //   thinBorder,
+    //   'pattern',
+    //   {
+    //     pattern: 'solid',
+    //     fgColor: { argb: '7BA541' },
+    //   },
+    // );
+    // sheet.getRow(afterContactTableRowNumber + 1).height = pxToPoints(22);
 
     // BILL TABLE HEADING
     addHeader(
@@ -529,11 +529,11 @@ export default async function generateInvoice(
       },
     );
 
-    // Ensure the two physical rows that make up the vertically merged bill table header are 20px each
+    // bill table heading row heights
     const billHeaderRowTop = afterBillTableRowNumber - 2;
     const billHeaderRowBottom = afterBillTableRowNumber - 1;
     sheet.getRow(billHeaderRowTop).height = pxToPoints(20);
-    sheet.getRow(billHeaderRowBottom).height = pxToPoints(20);
+    sheet.getRow(billHeaderRowBottom).height = pxToPoints(8);
 
     billData.forEach((data, index) => {
       index = afterBillTableRowNumber;
@@ -675,7 +675,7 @@ export default async function generateInvoice(
       sheet,
       `E${afterBillTableRowNumber}`,
       {
-        formula: `SUM(E${afterContactTableRowNumber + 5}:E${
+        formula: `SUM(E${afterContactTableRowNumber + 3}:E${
           afterBillTableRowNumber - 1
         })`,
         result: totalFiles,
