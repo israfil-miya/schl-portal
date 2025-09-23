@@ -931,7 +931,35 @@ export default async function generateInvoice(
      * Right: Second bank account (could be Eurozone / UK / USA / Australia / Bangladesh)
      */
 
-    const bankSectionStartRow = afterBillTableRowNumber + 6; // leave a small gap after totals & message
+    // Dynamically position Bank Details so they always begin on a fresh printed page.
+    // Strategy:
+    // 1. Compute a tentative start row (after totals + message block + desired gap).
+    // 2. If that row would still fall on page 1 (too early), pad with blank rows up to a
+    //    target first-page end row so the break feels natural (avoids huge empty lower space).
+    // 3. Add a manual page break right before the bank section heading so it always prints at top of page 2.
+    // 4. If the invoice body is already long enough, just add the page break (no padding needed).
+
+    const BASE_BANK_GAP = 6; // existing intended gap after totals/message area
+    let bankSectionStartRow = afterBillTableRowNumber + BASE_BANK_GAP;
+
+    // Approximate number of rows that nicely fills first page with current fonts/margins.
+    // Adjust if design changes (row heights, margins, fonts) significantly.
+    const FIRST_PAGE_TARGET_END_ROW = 38;
+
+    if (bankSectionStartRow < FIRST_PAGE_TARGET_END_ROW) {
+      // Insert / define blank filler rows (give them a modest height so page isn't too sparse)
+      for (let r = bankSectionStartRow; r < FIRST_PAGE_TARGET_END_ROW; r++) {
+        const filler = sheet.getRow(r);
+        // Use a 14px-ish height (≈ 14 px -> ~10.5 pt) to avoid an excessive tall void yet still consume space.
+        filler.height = pxToPoints(14);
+      }
+      bankSectionStartRow = FIRST_PAGE_TARGET_END_ROW;
+    }
+
+    // Ensure a page break so Bank Details starts top of next page regardless of length.
+    if (bankSectionStartRow > 1) {
+      sheet.getRow(bankSectionStartRow - 1).addPageBreak();
+    }
 
     // Heading full width
     await addHeader(
