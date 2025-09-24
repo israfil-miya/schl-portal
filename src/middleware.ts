@@ -87,6 +87,6 @@ export default authMiddleware((req: any) => {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|icon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!api|_next/static|_next/image|icon.ico|sitemap.xml|robots.txt|images).*)',
   ],
 };

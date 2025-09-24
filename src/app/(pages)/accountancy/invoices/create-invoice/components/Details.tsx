@@ -1,9 +1,8 @@
 'use client';
 import generateInvoice, {
+  BankAccountsType,
   BillDataType,
-  CustomerDataType,
   InvoiceDataType,
-  VendorDataType,
 } from '@/lib/invoice';
 import { cn, fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
@@ -16,6 +15,13 @@ import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  BankAustraliaAccount,
+  BankBangladeshAccount,
+  BankEurozoneAccount,
+  BankUKAccount,
+  BankUSAAccount,
+} from '../../bank-details';
 
 const baseZIndex = 50; // 52
 
@@ -45,7 +51,6 @@ const Details: React.FC<DetailsProps> = props => {
   const [invoiceCreating, setInvoiceCreating] = useState<boolean>(false);
 
   const popupRef = useRef<HTMLElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
   const [customer, setCustomer] = useState({
     companyName: '',
@@ -62,9 +67,9 @@ const Details: React.FC<DetailsProps> = props => {
     companyName: 'Studio Click House Ltd.',
     contactPerson: 'Raiyan Abrar',
     companyAddress:
-      'Maa Holycity Tower, Tengra road, Sarulia, Demra, Dhaka-1361, Dhaka, Bangladesh',
-    contactNumber: '+46855924212, +8801819727117',
-    email: 'info@studioclickhouse.com',
+      'Level 1, AB Tower, West Boxnagar, Sarulia, Dmera, Dhaka-1361, Bangladesh',
+    contactNumber: '+8809609777111',
+    email: 'accounts@studioclickhouse.com',
   });
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -134,11 +139,47 @@ const Details: React.FC<DetailsProps> = props => {
         },
       };
 
+      let secondaryBankAccount = null;
+      switch (customer.currency) {
+        case '$':
+          secondaryBankAccount = BankUSAAccount;
+          break;
+        case 'C$':
+          secondaryBankAccount = BankUSAAccount;
+          break;
+        case 'A$':
+          secondaryBankAccount = BankAustraliaAccount;
+          break;
+        case '£':
+          secondaryBankAccount = BankUKAccount;
+          break;
+        case '€':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        case 'NOK':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        case 'DKK':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        case 'SEK':
+          secondaryBankAccount = BankEurozoneAccount;
+          break;
+        default:
+          secondaryBankAccount = BankBangladeshAccount;
+          break;
+      }
+
+      const bankDetails: BankAccountsType = [
+        BankBangladeshAccount,
+        secondaryBankAccount,
+      ];
+
       const fileName = `invoice_studioclickhouse_${customer.invoiceNumber}.xlsx`;
 
       let toastId = toast.loading('Generating invoice...');
 
-      const invoice = await generateInvoice(invoiceData, billData);
+      const invoice = await generateInvoice(invoiceData, billData, bankDetails);
       if (!invoice) {
         toast.error('Unable to generate invoice', { id: toastId });
         return;
@@ -630,7 +671,7 @@ const Details: React.FC<DetailsProps> = props => {
                   </div>
                   <div className="md:col-span-2">
                     <label
-                      htmlFor="companyAddress"
+                      htmlFor="vendorCompanyAddress"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
                       Company Address
