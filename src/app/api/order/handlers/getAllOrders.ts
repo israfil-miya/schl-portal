@@ -1,6 +1,7 @@
 import Order, { OrderDataType } from '@/models/Orders';
 import {
   addIfDefined,
+  addPlusSeparatedContainsAllField,
   addRegexField,
   createRegexQuery,
 } from '@/utility/filterHelpers';
@@ -77,7 +78,12 @@ export const handleGetAllOrders = async (
 
     addRegexField(query, 'folder', folder);
     addRegexField(query, 'client_code', clientCode, isForInvoice ?? false);
-    addRegexField(query, 'task', task);
+    // For tasks like "A+B+C" we want to match records containing all tokens in any order, possibly with extra tokens
+    if (task && task.includes('+')) {
+      addPlusSeparatedContainsAllField(query, 'task', task);
+    } else {
+      addRegexField(query, 'task', task);
+    }
     addRegexField(query, 'type', type, true);
     addRegexField(query, 'status', status, true);
 

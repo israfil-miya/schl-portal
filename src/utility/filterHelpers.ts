@@ -146,3 +146,32 @@ export const addIfDefined = <T extends Query>(
     query[key] = value;
   }
 };
+
+// Helper to match '+'-separated lists where all tokens in `value` must be present in any order.
+// Example: value = "Color correction+Retouch+Banner" will match:
+// - "Color correction+Retouch+Banner+Shadow"
+// - "Banner+Shadow+Color correction+Retouch"
+// It tolerates flexible spacing and is case-insensitive.
+export const addPlusSeparatedContainsAllField = (
+  query: Query,
+  key: RegexFields,
+  value?: string,
+) => {
+  if (!value || !value.trim()) return;
+
+  const tokens = value
+    .split('+')
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  if (tokens.length === 0) return;
+
+  // Build positive lookaheads for each token, with boundaries on '+' or string edges, allowing flexible spaces inside tokens
+  const lookaheads = tokens.map(token => {
+    const escaped = escapeRegExp(token).replace(/\s+/g, '\\s*');
+    return `(?=.*(?:^|\\s*\\+\\s*)${escaped}(?:\\s*\\+\\s*|$))`;
+  });
+
+  const pattern = `^${lookaheads.join('')}.*$`;
+  (query as any)[key] = { $regex: pattern, $options: 'i' } as any;
+};

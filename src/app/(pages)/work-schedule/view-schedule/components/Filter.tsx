@@ -187,17 +187,22 @@ const FilterButton: React.FC<PropsType> = props => {
                   {...setClassNameAndIsDisabled(isOpen)}
                   options={taskOptions}
                   closeMenuOnSelect={true}
+                  isMulti={true}
                   classNamePrefix="react-select"
                   menuPortalTarget={setMenuPortalTarget}
                   styles={setCalculatedZIndex(baseZIndex)}
                   value={
-                    taskOptions.find(option => option.value === filters.task) ||
-                    null
+                    taskOptions.filter(option =>
+                      filters.task?.split('+').includes(option.value),
+                    ) || null
                   }
-                  onChange={selectedOption =>
+                  onChange={selectedOptions =>
                     setFilters((prevFilters: PropsType['filters']) => ({
                       ...prevFilters,
-                      task: selectedOption?.value || '',
+                      task:
+                        selectedOptions
+                          ?.map(option => option.value)
+                          .join('+') || '',
                     }))
                   }
                   placeholder="Select task"
