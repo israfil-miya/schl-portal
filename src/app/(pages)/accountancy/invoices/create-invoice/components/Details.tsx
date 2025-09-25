@@ -67,7 +67,7 @@ const Details: React.FC<DetailsProps> = props => {
     companyName: 'Studio Click House Ltd.',
     contactPerson: 'Raiyan Abrar',
     companyAddress:
-      'Level 1, AB Tower, West Boxnagar, Sarulia, Dmera, Dhaka-1361, Bangladesh',
+      'AB Tower, Level 1, West Boxnagar, Sarulia, Dmera, Dhaka-1361, Bangladesh',
     contactNumber: '+8809609777111',
     email: 'accounts@studioclickhouse.com',
   });
