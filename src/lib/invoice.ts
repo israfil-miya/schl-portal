@@ -362,62 +362,6 @@ export default async function generateInvoice(
       }
     }
 
-    // Extra spacer row: add both vendor (A:D) and customer (E:H) halves so borders appear continuous
-    // addHeader(
-    //   sheet,
-    //   `A${afterContactTableRowNumber}:D${afterContactTableRowNumber}`,
-    //   undefined,
-    //   {
-    //     name: 'Calibri',
-    //     size: 9,
-    //   },
-    //   {
-    //     vertical: 'middle',
-    //     horizontal: 'left',
-    //     wrapText: true,
-    //   },
-    //   thinBorder,
-    // );
-    // addHeader(
-    //   sheet,
-    //   `E${afterContactTableRowNumber}:H${afterContactTableRowNumber}`,
-    //   undefined,
-    //   {
-    //     name: 'Calibri',
-    //     size: 9,
-    //   },
-    //   {
-    //     vertical: 'middle',
-    //     horizontal: 'left',
-    //     wrapText: true,
-    //   },
-    //   thinBorder,
-    // );
-    // sheet.getRow(afterContactTableRowNumber).height = pxToPoints(22);
-
-    // Contact table closing solid fill
-    // addHeader(
-    //   sheet,
-    //   `A${afterContactTableRowNumber + 1}:H${afterContactTableRowNumber + 1}`,
-    //   undefined,
-    //   {
-    //     name: 'Arial',
-    //     size: 10,
-    //     bold: true,
-    //   },
-    //   {
-    //     vertical: 'middle',
-    //     horizontal: 'center',
-    //   },
-    //   thinBorder,
-    //   'pattern',
-    //   {
-    //     pattern: 'solid',
-    //     fgColor: { argb: '7BA541' },
-    //   },
-    // );
-    // sheet.getRow(afterContactTableRowNumber + 1).height = pxToPoints(22);
-
     // BILL TABLE HEADING
     addHeader(
       sheet,
@@ -766,6 +710,7 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -804,6 +749,7 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
@@ -840,6 +786,7 @@ export default async function generateInvoice(
         name: 'Calibri',
         size: 9,
         bold: true,
+        color: { argb: '595959' },
       },
       {
         vertical: 'middle',
