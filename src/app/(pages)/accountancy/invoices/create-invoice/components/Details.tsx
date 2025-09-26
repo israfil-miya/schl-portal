@@ -68,7 +68,7 @@ const Details: React.FC<DetailsProps> = props => {
     contactPerson: 'Raiyan Abrar',
     companyAddress:
       'AB Tower, Level 1, West Boxnagar, Sarulia, Dmera, Dhaka-1361, Bangladesh',
-    contactNumber: '+8809609777111',
+    contactNumber: '+8809609777111, +8801819727117',
     email: 'accounts@studioclickhouse.com',
   });
 
