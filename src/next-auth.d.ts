@@ -17,6 +17,7 @@ declare module 'next-auth' {
     permissions: PermissionValue[];
     role: string;
     db_role_id: string;
+    accessToken: string;
   }
 }
 
@@ -29,5 +30,6 @@ declare module 'next-auth/jwt' {
     permissions: PermissionValue[];
     role: string;
     db_role_id: string;
+    accessToken: string;
   }
 }

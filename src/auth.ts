@@ -1,7 +1,10 @@
+import jwt from 'jsonwebtoken';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
 import { authConfig } from './auth.config';
+
+const ACCESS_TOKEN_EXPIRES = '15m'; // short-lived
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 export interface UserSessionType {
@@ -11,6 +14,7 @@ export interface UserSessionType {
   permissions: PermissionValue[];
   role: string;
   db_role_id: string;
+  accessToken: string;
 }
 
 async function getUser(
@@ -29,7 +33,7 @@ async function getUser(
 
     const userData = await res.json();
 
-    const user: UserSessionType = {
+    const user = {
       db_id: userData._id,
       real_name: userData.real_name,
       cred_name: userData.name,
@@ -38,7 +42,21 @@ async function getUser(
       db_role_id: userData.role_id._id,
     };
 
-    return user;
+    const accessToken = jwt.sign(
+      {
+        sub: user.db_id,
+        db_id: user.db_id,
+        real_name: user.real_name,
+        cred_name: user.cred_name,
+        permissions: user.permissions,
+        role: user.role,
+        db_role_id: user.db_role_id,
+      },
+      process.env.AUTH_SECRET as string,
+      { expiresIn: ACCESS_TOKEN_EXPIRES },
+    );
+
+    return { ...user, accessToken };
   } catch (e) {
     console.error(e);
     return null;
@@ -59,7 +77,7 @@ export const {
         username: { label: 'username', type: 'text' },
         password: { label: 'password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, _request) {
         const user = await getUser(
           credentials.username as string,
           credentials.password as string,
