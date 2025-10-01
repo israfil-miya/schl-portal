@@ -78,34 +78,22 @@ type RegexFields =
 type BooleanFields = report_BooleanFields;
 
 export const createFlexibleSearchPattern = (searchString: string): string => {
-  // 1. Escape special regex characters
-  const escaped = escapeRegExp(searchString);
-
-  // 2. Create two patterns:
-  // - One with all spaces removed
-  // - One allowing flexible spacing (zero or more spaces)
-  const withoutSpaces = escaped.replace(/\s+/g, '');
-  const withFlexibleSpaces = escaped.replace(/\s+/g, '\\s*');
-
-  // 3. Use custom "word boundary" simulation:
-  const pattern = `(?<![A-Za-z])(${withoutSpaces}|${withFlexibleSpaces})`;
-
-  return pattern;
+  const escaped = escapeRegExp(searchString.trim());
+  const flexibleSpaces = escaped.replace(/\s+/g, '\\s*');
+  const compact = escaped.replace(/\s+/g, '');
+  return `(?<![A-Za-z])(${compact}|${flexibleSpaces})`;
 };
 
-// Helper function to create a regex query
 export const createRegexQuery = (
   value?: string,
-  exactMatch: boolean = false,
-): RegexQuery | undefined =>
-  value?.trim()
-    ? {
-        $regex: exactMatch
-          ? `^${escapeRegExp(value.trim())}$`
-          : createFlexibleSearchPattern(value),
-        $options: 'i',
-      }
-    : undefined;
+  exactMatch = false,
+): RegexQuery | undefined => {
+  if (!value?.trim()) return undefined;
+  const pattern = exactMatch
+    ? `^\\s*${escapeRegExp(value.trim())}\\s*$`
+    : createFlexibleSearchPattern(value);
+  return { $regex: pattern, $options: 'i' };
+};
 
 // Helper function to add boolean fields to the query
 export const addBooleanField = (
