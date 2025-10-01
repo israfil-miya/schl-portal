@@ -29,14 +29,30 @@ const CELL_HORIZONTAL_PADDING_PX = 12; // Approx left+right text padding allowan
 const MIN_USABLE_WIDTH_PX = 60; // Guardrail for very narrow merged regions
 const FALLBACK_DIVISOR_PX = 210; // Old magic number kept as final fallback
 
-/** Canvas measuring helper (isolated for future caching if needed) */
+/**
+ * Canvas measuring helper with caching & SSR guard.
+ * Falls back to simple char multiplier when DOM is unavailable.
+ */
+let _canvas: HTMLCanvasElement | null = null;
+let _ctx: CanvasRenderingContext2D | null = null;
+const _measureCache = new Map<string, number>();
 function measure(text: string): number {
   if (!text) return 0;
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return text.length * 7; // crude fallback
-  ctx.font = getComputedStyle(document.body).font;
-  return ctx.measureText(text).width;
+  if (typeof document === 'undefined') {
+    // SSR fallback heuristic
+    return text.length * 7;
+  }
+  const key = text;
+  if (_measureCache.has(key)) return _measureCache.get(key)!;
+  if (!_canvas) {
+    _canvas = document.createElement('canvas');
+    _ctx = _canvas.getContext('2d');
+    if (_ctx) _ctx.font = getComputedStyle(document.body).font;
+  }
+  if (!_ctx) return text.length * 7; // final fallback
+  const w = _ctx.measureText(text).width;
+  _measureCache.set(key, w);
+  return w;
 }
 
 function columnWidthToPixels(charWidth: number | undefined): number {
@@ -220,20 +236,26 @@ export async function addHeader(
         stops: { position: number; color: { argb: string } }[];
       },
 ): Promise<void> {
-  sheet.mergeCells(cell);
+  // Conditional merge: only merge if range spans more than one distinct cell.
+  if (cell.includes(':')) {
+    const [start, end] = cell.split(':');
+    if (start !== end) {
+      sheet.mergeCells(cell);
+    }
+  }
 
-  const targetCell = sheet.getCell(cell);
+  const targetCell = sheet.getCell(cell.split(':')[0]); // anchor cell
 
   if (font) targetCell.font = font;
   if (alignment) targetCell.alignment = alignment;
-  if (value) targetCell.value = value;
+  if (value !== undefined) targetCell.value = value;
   if (borderStyle) targetCell.border = borderStyle;
 
   if (fillType && fillOptions) {
     targetCell.fill = {
       type: fillType,
       ...fillOptions,
-    } as Fill; // Explicitly cast to the `Fill` type to satisfy TypeScript.
+    } as Fill;
   }
 }
 
