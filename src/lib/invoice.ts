@@ -51,6 +51,8 @@ export interface GenerateInvoiceOptions {
   safetyMarginPts?: number;
   /** Be more tolerant: allow fitting even when predicted height is close to page limit (default: true) */
   aggressiveSamePageFit?: boolean;
+  /** Blank row gap (count) between GRAND TOTAL row and Bank heading when on same page (default: 3) */
+  samePageBankGapRows?: number;
 }
 
 export default async function generateInvoice(
@@ -537,10 +539,13 @@ export default async function generateInvoice(
         : (PAGE_HEIGHT_INCHES - (MARGIN_TOP_IN + MARGIN_BOTTOM_IN)) *
           POINTS_PER_INCH;
     const DEFAULT_ROW_HEIGHT_POINTS = 15;
-    // Gap rules:
-    // - If bank section stays on same page: exactly ONE blank row before heading.
-    // - If bank section starts a new page: NO gap (heading is first row on that page).
-    const SAME_PAGE_GAP_ROWS = 1;
+    // Gap rules (dynamic):
+    // We attempt to keep the bank section on the same page using the LARGEST acceptable gap first.
+    // Requirement: "if I can afford 2 gaps while having space to fit in the same page then give the gap else keep it 1 row gap".
+    // Implementation:
+    //   1. If user explicitly sets samePageBankGapRows, we honor that value only (no fallback).
+    //   2. Otherwise we try gap=2, then gap=1. If neither fits, we move the bank section to a new page (gap=0).
+    // NEW_PAGE_GAP_ROWS always 0 because heading should start at the top of the new page.
     const NEW_PAGE_GAP_ROWS = 0;
 
     // Build bank pairs to know spans & exact height before rendering
@@ -605,49 +610,62 @@ export default async function generateInvoice(
     const remainingHeightOnCurrentPage =
       PRINTABLE_HEIGHT_POINTS - currentPageUsedHeight;
 
-    // Predict bank data spans using a temporary start row reference (not final)
-    // For preview we assume same-page scenario (gap = 1); if we later decide to move to new page
-    // we will omit that gap (slightly reducing height) which can only improve fitting.
-    const tempBankDataFirstRow = grandTotalRow + SAME_PAGE_GAP_ROWS + 2; // gap + heading + subheading
-    const tempBankSpans = computeBankRowSpans(
+    // Preview spans once (row offsets do not affect span lengths / wrapping logic)
+    const previewStartRow = grandTotalRow + 3; // arbitrary placeholder (grandTotal + gap(1) + heading + subheading)
+    const previewSpans = computeBankRowSpans(
       sheet,
       leftPairsPreview,
       rightPairsPreview,
-      tempBankDataFirstRow,
+      previewStartRow,
     );
 
-    // Height components (match actual rendering):
+    // Constant height components (independent of gap except heading offset)
     const headingHeightPts = pxToPoints(20);
     const subHeadingHeightPts = pxToPoints(20);
-    const dataHeightPts = tempBankSpans.reduce((acc: number, span: any) => {
-      if (span.rows > 1) return acc + span.rows * pxToPoints(20);
-      return acc + pxToPoints(22);
+    const dataHeightPts = previewSpans.reduce((acc: number, span: any) => {
+      return (
+        acc + (span.rows > 1 ? span.rows * pxToPoints(20) : pxToPoints(22))
+      );
     }, 0);
     const closingFillHeightPts = pxToPoints(22);
     const spacerHeightPts = pxToPoints(20); // spacer before footer message
     const footerLineHeightPts = pxToPoints(20) * 3; // 3 footer lines
-    const gapHeightPts = SAME_PAGE_GAP_ROWS * DEFAULT_ROW_HEIGHT_POINTS; // used only for fit calculation
 
-    const bankSectionHeightPts =
-      gapHeightPts +
-      headingHeightPts +
-      subHeadingHeightPts +
-      dataHeightPts +
-      closingFillHeightPts +
-      spacerHeightPts +
-      footerLineHeightPts;
-
-    const fitsSamePage =
-      keepBankOnSamePage &&
-      !forceNewPageForBank &&
-      bankSectionHeightPts + safetyMarginPts <= remainingHeightOnCurrentPage;
+    // Decide chosen gap dynamically
+    let chosenSamePageGapRows = 0;
+    let fitsSamePage = false;
+    if (!forceNewPageForBank && keepBankOnSamePage) {
+      const candidateGaps =
+        options.samePageBankGapRows !== undefined
+          ? [Math.max(0, options.samePageBankGapRows)]
+          : [2, 1];
+      for (const g of candidateGaps) {
+        const gapHeightPts = g * DEFAULT_ROW_HEIGHT_POINTS;
+        const bankSectionHeightPts =
+          gapHeightPts +
+          headingHeightPts +
+          subHeadingHeightPts +
+          dataHeightPts +
+          closingFillHeightPts +
+          spacerHeightPts +
+          footerLineHeightPts;
+        if (
+          bankSectionHeightPts + safetyMarginPts <=
+          remainingHeightOnCurrentPage
+        ) {
+          chosenSamePageGapRows = g;
+          fitsSamePage = true;
+          break;
+        }
+      }
+    }
 
     let bankSectionStartRow: number;
     if (fitsSamePage) {
-      bankSectionStartRow = grandTotalRow + SAME_PAGE_GAP_ROWS + 1; // grand total row + 1 gap + heading
+      bankSectionStartRow = grandTotalRow + chosenSamePageGapRows + 1; // grand total + gap + heading
     } else {
       sheet.getRow(grandTotalRow).addPageBreak();
-      bankSectionStartRow = grandTotalRow + 1; // first row on new page is heading (no gap)
+      bankSectionStartRow = grandTotalRow + 1; // new page (no gap)
     }
 
     // Heading full width

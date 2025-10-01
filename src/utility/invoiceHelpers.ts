@@ -81,7 +81,7 @@ function estimateRows(
   value: string | undefined,
 ): number {
   const totalMerged = mergedWidthPixels(sheet, startCol, endCol);
-  // Option A implementation: We render label + value inside the same merged cell.
+  // We render label + value inside the same merged cell.
   // Subtracting the measured label width (previous heuristic) often underestimates
   // remaining horizontal space on narrower (right-side) blocks and forces an
   // unnecessary second row for perfectly short single-line values. We therefore
