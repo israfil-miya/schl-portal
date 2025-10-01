@@ -41,10 +41,26 @@ export interface InvoiceDataType {
   customer: CustomerDataType;
 }
 
+export interface GenerateInvoiceOptions {
+  /** Try to keep bank & footer on same page as totals if they fit (default: true) */
+  keepBankOnSamePage?: boolean;
+  /** Force bank section to a new page regardless of available space (overrides keepBankOnSamePage) */
+  forceNewPageForBank?: boolean;
+  /** Page type used to compute printable height. Only 'letter' or 'a4' supported. (default: 'letter') */
+  pageType?: 'letter' | 'a4';
+  /** Override computed printable height (points) if provided */
+  printableHeightOverridePts?: number;
+  /** Safety buffer (points) to avoid printing right at page edge (default: 10) */
+  safetyMarginPts?: number;
+  /** Be more tolerant: allow fitting even when predicted height is close to page limit (default: true) */
+  aggressiveSamePageFit?: boolean;
+}
+
 export default async function generateInvoice(
   invoiceData: InvoiceDataType,
   billData: BillDataType[],
   bankAccounts: BankAccountsType,
+  options: GenerateInvoiceOptions = {},
 ): Promise<Blob | false> {
   try {
     const workbook = new ExcelJS.Workbook();
@@ -721,7 +737,7 @@ export default async function generateInvoice(
       sheet,
       `G${afterBillTableRowNumber + 1}:H${afterBillTableRowNumber + 1}`,
       {
-        formula: `SUM(G${afterContactTableRowNumber + 5}:H${
+        formula: `SUM(G${afterContactTableRowNumber + 3}:H${
           afterBillTableRowNumber - 1
         })`,
         result: subtotal,
@@ -878,34 +894,144 @@ export default async function generateInvoice(
      * Right: Second bank account (could be Eurozone / UK / USA / Australia / Bangladesh)
      */
 
-    // Dynamically position Bank Details so they always begin on a fresh printed page.
-    // Strategy:
-    // 1. Compute a tentative start row (after totals + message block + desired gap).
-    // 2. If that row would still fall on page 1 (too early), pad with blank rows up to a
-    //    target first-page end row so the break feels natural (avoids huge empty lower space).
-    // 3. Add a manual page break right before the bank section heading so it always prints at top of page 2.
-    // 4. If the invoice body is already long enough, just add the page break (no padding needed).
+    // Dynamically decide whether Bank Details can fit on the current page.
+    // Goal: Keep bank details + closing/footer on the same page as the bill summary IF they fit entirely.
+    // Otherwise, push them to the next page (single block) without artificial filler padding.
+    // Heuristic approach based on row counts (simpler & fast). If needed we could
+    // later refine using accumulated row heights in points for higher fidelity.
 
-    const BASE_BANK_GAP = 6; // existing intended gap after totals/message area
-    let bankSectionStartRow = afterBillTableRowNumber + BASE_BANK_GAP;
+    // --- Two-pass pagination ---
+    const {
+      keepBankOnSamePage = true,
+      forceNewPageForBank = false,
+      pageType = 'letter',
+      printableHeightOverridePts,
+      safetyMarginPts = 10,
+    } = options;
 
-    // Approximate number of rows that nicely fills first page with current fonts/margins.
-    // Adjust if design changes (row heights, margins, fonts) significantly.
-    const FIRST_PAGE_TARGET_END_ROW = 38;
+    const PAGE_HEIGHT_INCHES = pageType === 'a4' ? 11.69 : 11; // letter vs a4
+    const MARGIN_TOP_IN = 0.75;
+    const MARGIN_BOTTOM_IN = 0.75;
+    const POINTS_PER_INCH = 72;
+    const PRINTABLE_HEIGHT_POINTS =
+      printableHeightOverridePts !== undefined
+        ? printableHeightOverridePts
+        : (PAGE_HEIGHT_INCHES - (MARGIN_TOP_IN + MARGIN_BOTTOM_IN)) *
+          POINTS_PER_INCH;
+    const DEFAULT_ROW_HEIGHT_POINTS = 15;
+    // Gap rules:
+    // - If bank section stays on same page: exactly ONE blank row before heading.
+    // - If bank section starts a new page: NO gap (heading is first row on that page).
+    const SAME_PAGE_GAP_ROWS = 1;
+    const NEW_PAGE_GAP_ROWS = 0;
 
-    if (bankSectionStartRow < FIRST_PAGE_TARGET_END_ROW) {
-      // Insert / define blank filler rows (give them a modest height so page isn't too sparse)
-      for (let r = bankSectionStartRow; r < FIRST_PAGE_TARGET_END_ROW; r++) {
-        const filler = sheet.getRow(r);
-        // Use a 14px-ish height (≈ 14 px -> ~10.5 pt) to avoid an excessive tall void yet still consume space.
-        filler.height = pxToPoints(14);
+    // Build bank pairs to know spans & exact height before rendering
+    const LABEL_TO_KEY: Record<string, string> = {
+      'Bank Name': 'bank_name',
+      'Beneficiary Name': 'beneficiary_name',
+      'Account Number': 'account_number',
+      'SWIFT Code': 'swift_code',
+      'Routing Number': 'routing_number',
+      Branch: 'branch',
+      'Bank Address': 'bank_address',
+      IBAN: 'iban',
+      BIC: 'bic',
+      'Sort Code': 'sort_code',
+      'Routing Number (ABA)': 'routing_number_aba',
+      'Account Type': 'account_type',
+      'Branch Code (BSB)': 'branch_code_bsb',
+    };
+
+    function buildPairs(bank: any): [string, string | undefined][] {
+      const labels: string[] = Array.isArray(bank.field_labels)
+        ? bank.field_labels
+        : [];
+      const pairs: [string, string | undefined][] = [];
+      for (const label of labels) {
+        const key =
+          LABEL_TO_KEY[label] ||
+          label
+            .toLowerCase()
+            .replace(/\s*\(.*?\)/g, '')
+            .replace(/\s+/g, '_');
+        const value = bank[key];
+        if (value !== undefined && value !== null && value !== '') {
+          pairs.push([label + ': ', value as string | undefined]);
+        }
       }
-      bankSectionStartRow = FIRST_PAGE_TARGET_END_ROW;
+      return pairs;
     }
 
-    // Ensure a page break so Bank Details starts top of next page regardless of length.
-    if (bankSectionStartRow > 1) {
-      sheet.getRow(bankSectionStartRow - 1).addPageBreak();
+    const leftBank = bankAccounts[0];
+    const rightBank = bankAccounts[1];
+    const leftPairsPreview = buildPairs(leftBank);
+    const rightPairsPreview = buildPairs(rightBank);
+
+    // Determine end row of previous content
+    const grandTotalRow = afterBillTableRowNumber + 4;
+
+    // Simulate pagination up to the grandTotalRow to know how much height is used on the CURRENT page (not cumulative total)
+    let pageHeights: number[] = [0];
+    let currentPageIndex = 0;
+    const EPS = 0.5; // small epsilon to avoid floating rounding pushing rows prematurely
+    for (let r = 1; r <= grandTotalRow; r++) {
+      const row = sheet.getRow(r);
+      const h = row.height ? row.height : DEFAULT_ROW_HEIGHT_POINTS;
+      if (pageHeights[currentPageIndex] + h > PRINTABLE_HEIGHT_POINTS + EPS) {
+        // Start new page
+        pageHeights.push(h);
+        currentPageIndex++;
+      } else {
+        pageHeights[currentPageIndex] += h;
+      }
+    }
+    const currentPageUsedHeight = pageHeights[currentPageIndex];
+    const remainingHeightOnCurrentPage =
+      PRINTABLE_HEIGHT_POINTS - currentPageUsedHeight;
+
+    // Predict bank data spans using a temporary start row reference (not final)
+    // For preview we assume same-page scenario (gap = 1); if we later decide to move to new page
+    // we will omit that gap (slightly reducing height) which can only improve fitting.
+    const tempBankDataFirstRow = grandTotalRow + SAME_PAGE_GAP_ROWS + 2; // gap + heading + subheading
+    const tempBankSpans = computeBankRowSpans(
+      sheet,
+      leftPairsPreview,
+      rightPairsPreview,
+      tempBankDataFirstRow,
+    );
+
+    // Height components (match actual rendering):
+    const headingHeightPts = pxToPoints(20);
+    const subHeadingHeightPts = pxToPoints(20);
+    const dataHeightPts = tempBankSpans.reduce((acc: number, span: any) => {
+      if (span.rows > 1) return acc + span.rows * pxToPoints(20);
+      return acc + pxToPoints(22);
+    }, 0);
+    const closingFillHeightPts = pxToPoints(22);
+    const spacerHeightPts = pxToPoints(20); // spacer before footer message
+    const footerLineHeightPts = pxToPoints(20) * 3; // 3 footer lines
+    const gapHeightPts = SAME_PAGE_GAP_ROWS * DEFAULT_ROW_HEIGHT_POINTS; // used only for fit calculation
+
+    const bankSectionHeightPts =
+      gapHeightPts +
+      headingHeightPts +
+      subHeadingHeightPts +
+      dataHeightPts +
+      closingFillHeightPts +
+      spacerHeightPts +
+      footerLineHeightPts;
+
+    const fitsSamePage =
+      keepBankOnSamePage &&
+      !forceNewPageForBank &&
+      bankSectionHeightPts + safetyMarginPts <= remainingHeightOnCurrentPage;
+
+    let bankSectionStartRow: number;
+    if (fitsSamePage) {
+      bankSectionStartRow = grandTotalRow + SAME_PAGE_GAP_ROWS + 1; // grand total row + 1 gap + heading
+    } else {
+      sheet.getRow(grandTotalRow).addPageBreak();
+      bankSectionStartRow = grandTotalRow + 1; // first row on new page is heading (no gap)
     }
 
     // Heading full width
@@ -923,8 +1049,7 @@ export default async function generateInvoice(
 
     // Sub headings (country titles) - row below heading
     const bankSubHeadingRow = bankSectionStartRow + 1;
-    const leftBank = bankAccounts[0];
-    const rightBank = bankAccounts[1];
+    // (leftBank/rightBank already defined above for sizing logic)
     await addHeader(
       sheet,
       `A${bankSubHeadingRow}:D${bankSubHeadingRow}`,
@@ -947,44 +1072,6 @@ export default async function generateInvoice(
       { pattern: 'solid', fgColor: { argb: 'C4D79B' } },
     );
     sheet.getRow(bankSubHeadingRow).height = pxToPoints(20);
-
-    // Build ordered label/value pairs using provided field_labels arrays
-    const LABEL_TO_KEY: Record<string, string> = {
-      'Bank Name': 'bank_name',
-      'Beneficiary Name': 'beneficiary_name',
-      'Account Number': 'account_number',
-      'SWIFT Code': 'swift_code',
-      'Routing Number': 'routing_number',
-      Branch: 'branch',
-      'Bank Address': 'bank_address',
-      IBAN: 'iban',
-      BIC: 'bic',
-      'Sort Code': 'sort_code',
-      'Routing Number (ABA)': 'routing_number_aba',
-      'Account Type': 'account_type',
-      'Branch Code (BSB)': 'branch_code_bsb',
-    };
-
-    function buildPairs(bank: any): [string, string | undefined][] {
-      const labels: string[] = Array.isArray(bank.field_labels)
-        ? bank.field_labels
-        : [];
-      return labels
-        .map(label => {
-          const key =
-            LABEL_TO_KEY[label] ||
-            label
-              .toLowerCase()
-              .replace(/\s*\(.*?\)/g, '')
-              .replace(/\s+/g, '_');
-          const value = bank[key];
-          return [label + ': ', value as string | undefined] as [
-            string,
-            string | undefined,
-          ];
-        })
-        .filter(([, v]) => v !== undefined && v !== null && v !== '');
-    }
 
     const leftPairs = buildPairs(leftBank);
     const rightPairs = buildPairs(rightBank);
