@@ -517,8 +517,6 @@ export default async function generateInvoice(
     // Dynamically decide whether Bank Details can fit on the current page.
     // Goal: Keep bank details + closing/footer on the same page as the bill summary IF they fit entirely.
     // Otherwise, push them to the next page (single block) without artificial filler padding.
-    // Heuristic approach based on row counts (simpler & fast). If needed we could
-    // later refine using accumulated row heights in points for higher fidelity.
 
     // --- Two-pass pagination ---
     const {
@@ -541,10 +539,8 @@ export default async function generateInvoice(
     const DEFAULT_ROW_HEIGHT_POINTS = 15;
     // Gap rules (dynamic):
     // We attempt to keep the bank section on the same page using the LARGEST acceptable gap first.
-    // Requirement: "if I can afford 2 gaps while having space to fit in the same page then give the gap else keep it 1 row gap".
-    // Implementation:
-    //   1. If user explicitly sets samePageBankGapRows, we honor that value only (no fallback).
-    //   2. Otherwise we try gap=2, then gap=1. If neither fits, we move the bank section to a new page (gap=0).
+    // If user explicitly sets samePageBankGapRows, we honor that value only (no fallback).
+    // Otherwise we try gap=2, then gap=1. If neither fits, we move the bank section to a new page (gap=0).
     // NEW_PAGE_GAP_ROWS always 0 because heading should start at the top of the new page.
     const NEW_PAGE_GAP_ROWS = 0;
 
@@ -846,7 +842,6 @@ export default async function generateInvoice(
     };
 
     // Write the workbook to a Blob and create a download link
-    // const fileName = `invoice_studioclickhouse_${invoiceData.customer.invoice_number}.xlsx`;
     const data = await workbook.xlsx.writeBuffer();
     console.log(data);
     const blob = new Blob([data], {
