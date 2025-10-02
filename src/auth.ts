@@ -44,7 +44,6 @@ async function getUser(
 
     const accessToken = jwt.sign(
       {
-        sub: user.db_id,
         db_id: user.db_id,
         real_name: user.real_name,
         cred_name: user.cred_name,
