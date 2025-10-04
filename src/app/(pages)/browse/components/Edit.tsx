@@ -83,8 +83,8 @@ const EditButton: React.FC<PropsType> = props => {
   const popupRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const clientNames = props.clientsData.map(client => client.client_name);
-  const clientCodes = props.clientsData.map(client => client.client_code);
+  const clientNames = props.clientsData?.map(client => client.client_name);
+  const clientCodes = props.clientsData?.map(client => client.client_code);
 
   let clientNameOptions = (clientNames || []).map(clientName => ({
     value: clientName,
