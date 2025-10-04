@@ -5,9 +5,10 @@ import { UserSessionType } from './auth';
 
 // Extend the default User type
 declare module 'next-auth' {
-  interface Session {
+  interface Session extends DefaultSession {
     user: UserSessionType;
-    // & DefaultSession['user'];
+    accessToken?: string;
+    accessTokenExpires?: number; // epoch ms
   }
 
   interface User {
@@ -17,7 +18,6 @@ declare module 'next-auth' {
     permissions: PermissionValue[];
     role: string;
     db_role_id: string;
-    accessToken: string;
   }
 }
 
@@ -30,6 +30,7 @@ declare module 'next-auth/jwt' {
     permissions: PermissionValue[];
     role: string;
     db_role_id: string;
-    accessToken: string;
+    accessToken?: string;
+    accessTokenExpires?: number; // epoch ms
   }
 }

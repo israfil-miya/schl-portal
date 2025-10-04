@@ -89,4 +89,5 @@ export const config = {
   matcher: [
     '/((?!api|_next/static|_next/image|icon.ico|sitemap.xml|robots.txt|images).*)',
   ],
+  runtime: 'nodejs',
 };

@@ -19,11 +19,19 @@ export const hasAnyPerm = (
 ) => userPermissions?.some(item => perms.includes(item));
 
 export const fetchApi = async (
-  url: string,
-  options: {},
+  url: string | URL,
+  options: RequestInit,
 ): Promise<{ data: any; ok: boolean }> => {
   try {
-    const response = await fetch(url, options);
+    const authSession = await import('next-auth/react').then(m =>
+      m.getSession(),
+    );
+    const headers = {
+      Authorization: `Bearer ${authSession?.accessToken ?? ''}`,
+      ...(options.headers || {}),
+    };
+
+    const response = await fetch(url, { ...options, headers });
     const data = await response.json();
     return { data: data, ok: response.ok };
   } catch (error) {
