@@ -6,7 +6,7 @@ import { UserSessionType } from './auth';
 const ACCESS_TOKEN_TTL_SECONDS = 5 * 60; // 5 minutes
 
 function signAccessToken(
-  payload: Pick<UserSessionType, 'db_id' | 'role' | 'permissions'>,
+  payload: Pick<UserSessionType, 'db_id' | 'db_role_id' | 'permissions'>,
 ) {
   const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
   if (!secret)
@@ -16,7 +16,7 @@ function signAccessToken(
   return jwt.sign(
     {
       sub: payload.db_id,
-      role: payload.role,
+      role: payload.db_role_id,
       perms: payload.permissions,
     },
     secret,
@@ -48,7 +48,7 @@ export const authConfig: NextAuthConfig = {
         try {
           token.accessToken = signAccessToken({
             db_id: (user as any).db_id,
-            role: (user as any).role,
+            db_role_id: (user as any).db_role_id,
             permissions: (user as any).permissions,
           });
           token.accessTokenExpires =
@@ -67,7 +67,7 @@ export const authConfig: NextAuthConfig = {
         try {
           token.accessToken = signAccessToken({
             db_id: token.db_id as string,
-            role: token.role as string,
+            db_role_id: token.db_role_id as string,
             permissions: (token.permissions as any) || [],
           });
           token.accessTokenExpires =
