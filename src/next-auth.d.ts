@@ -13,11 +13,10 @@ declare module 'next-auth' {
 
   interface User {
     db_id: string;
-    real_name: string | null;
-    cred_name: string;
-    permissions: PermissionValue[];
-    role: string;
     db_role_id: string;
+    permissions: PermissionValue[];
+    real_name: string;
+    e_id: string;
   }
 }
 
@@ -25,11 +24,10 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT {
     db_id: string;
-    real_name: string | null;
-    cred_name: string;
-    permissions: PermissionValue[];
-    role: string;
     db_role_id: string;
+    permissions: PermissionValue[];
+    real_name: string;
+    e_id: string;
     accessToken?: string;
     accessTokenExpires?: number; // epoch ms
   }

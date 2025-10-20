@@ -1,14 +1,14 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { UserDataType } from '@/models/Users';
+import { FullyPopulatedUserType, UserDataType } from '@/models/Users';
 import { Trash2, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import React, { useState } from 'react';
 
 interface PropsType {
-  userData: UserDataType;
-  submitHandler: (userData: UserDataType) => Promise<void>;
+  userData: FullyPopulatedUserType;
+  submitHandler: (userData: FullyPopulatedUserType) => Promise<void>;
 }
 const DeleteButton: React.FC<PropsType> = props => {
   const [isOpen, setIsOpen] = useState<boolean>(false);

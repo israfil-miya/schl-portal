@@ -95,20 +95,47 @@ export const handleGetAllUsers = async (
 
       if (paginated) {
         const pipeline: any[] = [
-          { $match: searchQuery },
-          { $sort: sortQuery },
+          { $match: searchQuery }, // use indexed fields here
+          { $sort: sortQuery }, // ideally on an indexed field
           { $skip: skip },
           { $limit: ITEMS_PER_PAGE },
+
+          // only lookup after pagination
           {
             $lookup: {
-              from: 'roles', // the MongoDB collection name, usually lowercase plural of the model
+              from: 'roles',
               localField: 'role_id',
               foreignField: '_id',
-              as: 'role',
+              as: 'role_id',
+              pipeline: [
+                { $project: { _id: 1, name: 1, permissions: 1 } }, // pick only what you need
+              ],
             },
           },
-          { $unwind: '$role' }, // optional: flattens role array if only one role per user
+          {
+            $lookup: {
+              from: 'employees',
+              localField: 'employee_id',
+              foreignField: '_id',
+              as: 'employee_id',
+              pipeline: [
+                {
+                  $project: {
+                    _id: 1,
+                    company_provided_name: 1,
+                    real_name: 1,
+                    e_id: 1,
+                  },
+                },
+              ],
+            },
+          },
+
+          // flatten if exactly one match expected
+          { $unwind: { path: '$role', preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: '$employee', preserveNullAndEmptyArrays: true } },
         ];
+
         if (!viewerIsSuper) {
           pipeline.push({
             $match: { 'role.permissions': { $ne: 'settings:the_super_admin' } },

@@ -26,6 +26,7 @@ export const handleLogin = async (
     // find and populate role_id
     const userData = await User.findOne({ name: username, password: password })
       .populate('role_id', 'name permissions')
+      .populate('employee_id', 'real_name e_id company_provided_name')
       .lean<PopulatedUser>()
       .exec();
 

@@ -1,6 +1,6 @@
 import { fetchApi } from '@/lib/utils';
 import { ClientDataType } from '@/models/Clients';
-import { UserDataType } from '@/models/Users';
+import { PopulatedByEmployeeUserType, UserDataType } from '@/models/Users';
 import moment from 'moment-timezone';
 import React, { Suspense } from 'react';
 import InputForm from './components/Form';
@@ -21,8 +21,10 @@ async function getAllMarketers() {
     let response = await fetchApi(url, options);
 
     if (response.ok) {
-      let marketers = response.data as UserDataType[];
-      marketerNames = marketers.map(marketer => marketer.provided_name!);
+      let marketers = response.data as PopulatedByEmployeeUserType[];
+      marketerNames = marketers.map(
+        marketer => marketer.employee_id.company_provided_name,
+      );
     } else {
       console.error('Unable to fetch marketers');
     }

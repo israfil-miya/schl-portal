@@ -7,11 +7,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 export interface UserSessionType {
   db_id: string;
-  real_name: string | null;
-  cred_name: string;
-  permissions: PermissionValue[];
-  role: string;
   db_role_id: string;
+  permissions: PermissionValue[];
+  real_name: string;
+  e_id: string;
 }
 
 async function getUser(
@@ -29,11 +28,10 @@ async function getUser(
     const data = await res.json();
     return {
       db_id: data._id,
-      real_name: data.real_name,
-      cred_name: data.name,
-      permissions: data.role_id.permissions || [],
-      role: data.role_id.name,
       db_role_id: data.role_id._id,
+      permissions: data.role_id.permissions || [],
+      real_name: data.employee_id.real_name,
+      e_id: data.employee_id.e_id,
     };
   } catch (e) {
     console.error(e);

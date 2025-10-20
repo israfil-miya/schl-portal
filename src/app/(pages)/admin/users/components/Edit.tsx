@@ -4,6 +4,7 @@ import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/component
 import { cn, generatePassword, hasPerm } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { RoleDataType } from '@/models/Roles';
+import { FullyPopulatedUserType } from '@/models/Users';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -14,22 +15,29 @@ import 'flowbite';
 import { initFlowbite } from 'flowbite';
 import { KeySquare, SquarePen, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
-import { UserDataType, validationSchema } from '../schema';
+import { ZodPopulatedUserDataType, populatedUserSchema } from '../schema';
 
 const baseZIndex = 50; // 52
 
 interface PropsType {
   loading: boolean;
-  userData: UserDataType;
+  userData: ZodPopulatedUserDataType;
   employeesData: EmployeeDataType[];
   rolesData: RoleDataType[];
   submitHandler: (
-    editedUserData: UserDataType,
-    previousUserData: UserDataType,
+    editedUserData: ZodPopulatedUserDataType,
+    previousUserData: ZodPopulatedUserDataType,
   ) => Promise<void>;
 }
 
@@ -84,7 +92,46 @@ const EditButton: React.FC<PropsType> = props => {
 
   const [employeeId, setEmployeeId] = useState<string>('');
 
-  const getEmployeeNameOnFocus = () => {
+  // const getEmployeeProvidedNameOnFocus = () => {
+  //   try {
+  //     const e_id: string = employeeId;
+
+  //     if (e_id === '') return;
+
+  //     const employee = props.employeesData.find(
+  //       employee => employee.e_id === e_id,
+  //     );
+
+  //     if (employee) {
+  //       setValue('provided_name', employee.company_provided_name || '');
+  //     } else {
+  //       toast.info('No employee found with the code provided');
+  //     }
+  //   } catch (e) {
+  //     console.error(
+  //       'An error occurred while retrieving employee provided name on input focus',
+  //     );
+  //   } finally {
+  //     return;
+  //   }
+  // };
+
+  const {
+    watch,
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<ZodPopulatedUserDataType>({
+    resolver: zodResolver(populatedUserSchema),
+    defaultValues: {
+      ...props.userData,
+    },
+  });
+
+  const fillEmployeeData = useCallback(() => {
     try {
       const e_id: string = employeeId;
 
@@ -95,7 +142,12 @@ const EditButton: React.FC<PropsType> = props => {
       );
 
       if (employee) {
-        setValue('real_name', employee.real_name);
+        setValue('employee_id.real_name', employee.real_name || '');
+        setValue('employee_id._id', employee._id.toString() || '');
+        setValue(
+          'employee_id.company_provided_name',
+          employee.company_provided_name || '',
+        );
       } else {
         toast.info('No employee found with the code provided');
       }
@@ -106,52 +158,9 @@ const EditButton: React.FC<PropsType> = props => {
     } finally {
       return;
     }
-  };
+  }, [employeeId, props.employeesData, setValue]);
 
-  const getEmployeeProvidedNameOnFocus = () => {
-    try {
-      const e_id: string = employeeId;
-
-      if (e_id === '') return;
-
-      const employee = props.employeesData.find(
-        employee => employee.e_id === e_id,
-      );
-
-      if (employee) {
-        setValue('provided_name', employee.company_provided_name || '');
-      } else {
-        toast.info('No employee found with the code provided');
-      }
-    } catch (e) {
-      console.error(
-        'An error occurred while retrieving employee provided name on input focus',
-      );
-    } finally {
-      return;
-    }
-  };
-
-  const {
-    watch,
-    register,
-    handleSubmit,
-    control,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<UserDataType>({
-    resolver: zodResolver(validationSchema),
-    defaultValues: {
-      ...props.userData,
-    },
-  });
-
-  useEffect(() => {
-    initFlowbite();
-  }, []);
-
-  const onSubmit = async (data: UserDataType) => {
+  const onSubmit = async (data: ZodPopulatedUserDataType) => {
     await props.submitHandler(data, props.userData);
   };
 
@@ -161,6 +170,10 @@ const EditButton: React.FC<PropsType> = props => {
     }
     console.log(props.userData);
   }, [isOpen, props.userData, reset]);
+
+  useEffect(() => {
+    fillEmployeeData();
+  }, [employeeId, fillEmployeeData]);
 
   return (
     <>
@@ -232,14 +245,15 @@ const EditButton: React.FC<PropsType> = props => {
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Real Name*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.real_name && errors.real_name.message}
+                    {errors.employee_id?.real_name &&
+                      errors.employee_id?.real_name.message}
                   </span>
                 </label>
                 <input
-                  onFocus={getEmployeeNameOnFocus}
-                  {...register('real_name')}
+                  {...register('employee_id.real_name')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   placeholder="Enter employee real name"
+                  disabled={true}
                 />
               </div>
 
@@ -247,11 +261,11 @@ const EditButton: React.FC<PropsType> = props => {
                 <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                   <span className="uppercase">Username*</span>
                   <span className="text-red-700 text-wrap block text-xs">
-                    {errors.name && errors.name.message}
+                    {errors.username && errors.username.message}
                   </span>
                 </label>
                 <input
-                  {...register('name')}
+                  {...register('username')}
                   className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   placeholder="Enter username"
                 />
@@ -276,10 +290,10 @@ const EditButton: React.FC<PropsType> = props => {
                       setValue(
                         'password',
                         generatePassword(
-                          watch('real_name').split(' ')[
-                            watch('real_name').split(' ').length - 1
+                          watch('employee_id.real_name').split(' ')[
+                            watch('employee_id.real_name').split(' ').length - 1
                           ],
-                          watch('name'),
+                          watch('username'),
                         ),
                       );
                     }}
@@ -315,16 +329,17 @@ const EditButton: React.FC<PropsType> = props => {
                           styles={setCalculatedZIndex(baseZIndex)}
                           value={
                             roleOptions.find(
-                              option => String(option.value) === field.value,
+                              option =>
+                                String(option.value) === String(field.value),
                             ) || null
                           }
                           onChange={option => {
                             field.onChange(option ? option.value : '');
                             setValue(
-                              'permissions',
+                              'role_id.permissions',
                               props.rolesData.find(
                                 role => role._id === option?.value,
-                              )?.permissions,
+                              )?.permissions || [],
                             );
                           }}
                         />
@@ -334,19 +349,20 @@ const EditButton: React.FC<PropsType> = props => {
                 </div>
               )}
 
-              {watch('permissions')?.includes('login:crm') && (
+              {watch('role_id.permissions')?.includes('login:crm') && (
                 <div>
                   <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
                     <span className="uppercase">Provided Name*</span>
                     <span className="text-red-700 text-wrap block text-xs">
-                      {errors.provided_name && errors.provided_name.message}
+                      {errors.employee_id?.company_provided_name &&
+                        errors.employee_id.company_provided_name.message}
                     </span>
                   </label>
                   <input
-                    onFocus={getEmployeeProvidedNameOnFocus}
-                    {...register('provided_name')}
+                    {...register('employee_id.company_provided_name')}
                     className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                     placeholder="Enter employee provided name"
+                    disabled={true}
                   />
                 </div>
               )}

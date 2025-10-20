@@ -8,16 +8,17 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import moment from 'moment-timezone';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
-import { UserDataType, validationSchema } from '../../schema';
+import { ZodPopulatedUserDataType, userSchema } from '../../schema';
 
 import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { RoleDataType } from '@/models/Roles';
 import { KeySquare } from 'lucide-react';
+import mongoose from 'mongoose';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 interface PropsType {
@@ -81,20 +82,29 @@ const Form: React.FC<PropsType> = props => {
     setValue,
     reset,
     formState: { errors },
-  } = useForm<UserDataType>({
-    resolver: zodResolver(validationSchema),
+  } = useForm<ZodPopulatedUserDataType>({
+    resolver: zodResolver(userSchema),
     defaultValues: {
-      name: '',
-      real_name: '',
-      provided_name: null,
+      username: '',
       password: '',
       comment: '',
+      role_id: {
+        _id: '',
+        name: '',
+        permissions: [],
+      },
+      employee_id: {
+        _id: '',
+        e_id: '',
+        company_provided_name: '',
+        real_name: '',
+      },
     },
   });
 
   const [employeeId, setEmployeeId] = useState<string>('');
 
-  const getEmployeeNameOnFocus = () => {
+  const fillEmployeeData = useCallback(() => {
     try {
       const e_id: string = employeeId;
 
@@ -105,7 +115,12 @@ const Form: React.FC<PropsType> = props => {
       );
 
       if (employee) {
-        setValue('real_name', employee.real_name);
+        setValue('employee_id.real_name', employee.real_name || '');
+        setValue('employee_id._id', employee._id.toString() || '');
+        setValue(
+          'employee_id.company_provided_name',
+          employee.company_provided_name || '',
+        );
       } else {
         toast.info('No employee found with the code provided');
       }
@@ -116,35 +131,11 @@ const Form: React.FC<PropsType> = props => {
     } finally {
       return;
     }
-  };
+  }, [employeeId, props.employeesData, setValue]);
 
-  const getEmployeeProvidedNameOnFocus = () => {
+  async function createUser(userData: ZodPopulatedUserDataType) {
     try {
-      const e_id: string = employeeId;
-
-      if (e_id === '') return;
-
-      const employee = props.employeesData.find(
-        employee => employee.e_id === e_id,
-      );
-
-      if (employee) {
-        setValue('provided_name', employee.company_provided_name || '');
-      } else {
-        toast.info('No employee found with the code provided');
-      }
-    } catch (e) {
-      console.error(
-        'An error occurred while retrieving employee provided name on input focus',
-      );
-    } finally {
-      return;
-    }
-  };
-
-  async function createUser(userData: UserDataType) {
-    try {
-      const parsed = validationSchema.safeParse(userData);
+      const parsed = userSchema.safeParse(userData);
 
       if (!parsed.success) {
         console.error(parsed.error.issues.map(issue => issue.message));
@@ -154,7 +145,15 @@ const Form: React.FC<PropsType> = props => {
 
       setLoading(true);
 
-      delete parsed.data.permissions;
+      const userCreateData = {
+        username: parsed.data.username,
+        password: parsed.data.password,
+        employee_id: new mongoose.Types.ObjectId(parsed.data.employee_id._id),
+        role_id: new mongoose.Types.ObjectId(parsed.data.role_id._id),
+        comment: parsed.data.comment,
+      };
+
+      console.log('Edited user data to submit:', userData);
 
       if (hasPerm('admin:create_user', userPermissions)) {
         let url: string =
@@ -213,9 +212,13 @@ const Form: React.FC<PropsType> = props => {
     }
   }
 
-  const onSubmit = async (data: UserDataType) => {
+  const onSubmit = async (data: ZodPopulatedUserDataType) => {
     await createUser(data);
   };
+
+  useEffect(() => {
+    fillEmployeeData();
+  }, [employeeId, fillEmployeeData]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -245,14 +248,15 @@ const Form: React.FC<PropsType> = props => {
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
             <span className="uppercase">Real Name*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.real_name && errors.real_name.message}
+              {errors.employee_id?.real_name &&
+                errors.employee_id.real_name.message}
             </span>
           </label>
           <input
-            onFocus={getEmployeeNameOnFocus}
-            {...register('real_name')}
+            {...register('employee_id.real_name')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             placeholder="Enter employee real name"
+            disabled={true}
           />
         </div>
 
@@ -260,11 +264,11 @@ const Form: React.FC<PropsType> = props => {
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
             <span className="uppercase">Username*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.name && errors.name.message}
+              {errors.username && errors.username.message}
             </span>
           </label>
           <input
-            {...register('name')}
+            {...register('username')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
             placeholder="Enter username"
           />
@@ -289,10 +293,10 @@ const Form: React.FC<PropsType> = props => {
                 setValue(
                   'password',
                   generatePassword(
-                    watch('real_name').split(' ')[
-                      watch('real_name').split(' ').length - 1
+                    watch('employee_id.real_name').split(' ')[
+                      watch('employee_id.real_name').split(' ').length - 1
                     ],
-                    watch('name'),
+                    watch('username'),
                   ),
                 );
               }}
@@ -325,13 +329,13 @@ const Form: React.FC<PropsType> = props => {
                   menuPortalTarget={setMenuPortalTarget}
                   value={
                     roleOptions.find(
-                      option => String(option.value) === field.value,
+                      option => String(option.value) === String(field.value),
                     ) || null
                   }
                   onChange={option => {
                     field.onChange(option ? option.value : '');
                     setValue(
-                      'permissions',
+                      'role_id.permissions',
                       props.rolesData.find(role => role._id === option?.value)
                         ?.permissions || [],
                     );
@@ -342,19 +346,20 @@ const Form: React.FC<PropsType> = props => {
           />
         </div>
 
-        {watch('permissions')?.includes('login:crm') && (
+        {watch('role_id.permissions')?.includes('login:crm') && (
           <div>
             <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
               <span className="uppercase">Provided Name*</span>
               <span className="text-red-700 text-wrap block text-xs">
-                {errors.provided_name && errors.provided_name.message}
+                {errors.employee_id?.company_provided_name &&
+                  errors.employee_id.company_provided_name.message}
               </span>
             </label>
             <input
-              onFocus={getEmployeeProvidedNameOnFocus}
-              {...register('provided_name')}
+              {...register('employee_id.company_provided_name')}
               className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
               placeholder="Enter employee provided name"
+              disabled={true}
             />
           </div>
         )}

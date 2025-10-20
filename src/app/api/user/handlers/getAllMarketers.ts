@@ -5,7 +5,9 @@ export async function handleGetAllMarketers(
   req: NextRequest,
 ): Promise<{ data: string | Object; status: number }> {
   try {
-    const marketersData = await User.find({ role: 'marketer' }).lean();
+    const marketersData = await User.find({ role: 'marketer' })
+      .populate('employee_id', 'real_name e_id company_provided_name')
+      .lean();
     if (marketersData.length) return { data: marketersData, status: 200 };
     return { data: 'Unable to retrieve marketers data', status: 400 };
   } catch (e) {

@@ -38,18 +38,17 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user }) {
       // Initial sign-in: copy user info + create short-lived access token
       if (user) {
-        token.db_id = (user as any).db_id;
-        token.real_name = (user as any).real_name;
-        token.cred_name = (user as any).cred_name;
-        token.permissions = (user as any).permissions;
-        token.role = (user as any).role;
-        token.db_role_id = (user as any).db_role_id;
+        token.db_id = user.db_id;
+        token.db_role_id = user.db_role_id;
+        token.real_name = user.real_name;
+        token.permissions = user.permissions;
+        token.e_id = user.e_id;
 
         try {
           token.accessToken = signAccessToken({
-            db_id: (user as any).db_id,
-            db_role_id: (user as any).db_role_id,
-            permissions: (user as any).permissions,
+            db_id: user.db_id,
+            db_role_id: user.db_role_id,
+            permissions: user.permissions,
           });
           token.accessTokenExpires =
             Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;
@@ -60,15 +59,12 @@ export const authConfig: NextAuthConfig = {
       }
 
       // Subsequent calls: rotate if expired (silent refresh on usage)
-      if (
-        token.accessTokenExpires &&
-        Date.now() > (token.accessTokenExpires as number)
-      ) {
+      if (token.accessTokenExpires && Date.now() > token.accessTokenExpires) {
         try {
           token.accessToken = signAccessToken({
-            db_id: token.db_id as string,
-            db_role_id: token.db_role_id as string,
-            permissions: (token.permissions as any) || [],
+            db_id: token.db_id,
+            db_role_id: token.db_role_id,
+            permissions: token.permissions || [],
           });
           token.accessTokenExpires =
             Date.now() + ACCESS_TOKEN_TTL_SECONDS * 1000;
@@ -83,11 +79,10 @@ export const authConfig: NextAuthConfig = {
       if (token) {
         session.user = {
           db_id: token.db_id,
-          real_name: token.real_name,
-          cred_name: token.cred_name,
-          permissions: token.permissions,
-          role: token.role,
           db_role_id: token.db_role_id,
+          real_name: token.real_name,
+          permissions: token.permissions,
+          e_id: token.e_id,
         };
         session.accessToken = token.accessToken; // expose short-lived access token
         session.accessTokenExpires = token.accessTokenExpires;

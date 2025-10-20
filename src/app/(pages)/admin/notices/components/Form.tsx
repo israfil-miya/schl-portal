@@ -96,7 +96,7 @@ const Form: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          updated_by: session?.user.real_name,
+          updated_by: session?.user.real_name || '',
         },
         body: JSON.stringify(parsed.data),
       };

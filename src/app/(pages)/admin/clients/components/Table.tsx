@@ -2,7 +2,7 @@
 
 import ExtendableTd from '@/components/ExtendableTd';
 import { cn, fetchApi, hasPerm } from '@/lib/utils';
-import { UserDataType } from '@/models/Users';
+import { PopulatedByEmployeeUserType, UserDataType } from '@/models/Users';
 
 import NoData, { Type } from '@/components/NoData';
 import Pagination from '@/components/Pagination';
@@ -203,8 +203,10 @@ const Table: React.FC = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        let marketers = response.data as UserDataType[];
-        let marketerNames = marketers.map(marketer => marketer.provided_name!);
+        let marketers = response.data as PopulatedByEmployeeUserType[];
+        let marketerNames = marketers.map(
+          marketer => marketer.employee_id.company_provided_name,
+        );
         setMarketerNames(marketerNames);
       } else {
         toast.error(response.data as string);

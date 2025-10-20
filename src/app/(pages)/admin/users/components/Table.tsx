@@ -10,13 +10,14 @@ import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { cn } from '@/lib/utils';
 import { RoleDataType } from '@/models/Roles';
-import { UserDataType } from '@/models/Users';
+import { FullyPopulatedUserType, UserDataType } from '@/models/Users';
 import {
   ChevronLeft,
   ChevronRight,
   CirclePlus,
   ClipboardCopy,
 } from 'lucide-react';
+import mongoose from 'mongoose';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'nextjs-toploader/app';
 import React, {
@@ -28,7 +29,7 @@ import React, {
   useState,
 } from 'react';
 import { toast } from 'sonner';
-import { validationSchema, UserDataType as zod_UserDataType } from '../schema';
+import { populatedUserSchema, ZodPopulatedUserDataType } from '../schema';
 import DeleteButton from './Delete';
 import EditButton from './Edit';
 import FilterButton from './Filter';
@@ -38,7 +39,7 @@ type UsersState = {
     count: number;
     pageCount: number;
   };
-  items: UserDataType[];
+  items: FullyPopulatedUserType[];
 };
 
 const Table: React.FC<{
@@ -50,7 +51,7 @@ const Table: React.FC<{
       count: 0,
       pageCount: 0,
     },
-    items: [] as UserDataType[],
+    items: [] as FullyPopulatedUserType[],
   });
 
   const router = useRouter();
@@ -148,7 +149,7 @@ const Table: React.FC<{
     [filters],
   );
 
-  const deleteUser = async (userData: UserDataType) => {
+  const deleteUser = async (userData: FullyPopulatedUserType) => {
     try {
       let url: string =
         process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
@@ -181,11 +182,11 @@ const Table: React.FC<{
   };
 
   const editUser = async (
-    editedUserData: zod_UserDataType,
-    previousUserData: zod_UserDataType,
+    editedUserData: ZodPopulatedUserDataType,
+    previousUserData: ZodPopulatedUserDataType,
   ) => {
     try {
-      const parsed = validationSchema.safeParse(editedUserData);
+      const parsed = populatedUserSchema.safeParse(editedUserData);
 
       if (!parsed.success) {
         console.error(parsed.error.issues.map(issue => issue.message));
@@ -195,27 +196,36 @@ const Table: React.FC<{
 
       setLoading(true);
 
-      delete parsed.data.permissions;
-
-      let url: string =
-        process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=edit-user';
-      let options: {} = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(parsed.data),
+      const userData = {
+        username: parsed.data.username,
+        password: parsed.data.password,
+        employee_id: new mongoose.Types.ObjectId(parsed.data.employee_id._id),
+        role_id: new mongoose.Types.ObjectId(parsed.data.role_id._id),
+        comment: parsed.data.comment,
       };
 
-      const response = await fetchApi(url, options);
+      console.log('Edited user data to submit:', userData);
 
-      if (response.ok) {
-        toast.success('Updated the user data');
+      // let url: string =
+      //   process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=edit-user';
+      // let options: {} = {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(parsed.data),
+      // };
 
-        await fetchUsers();
-      } else {
-        toast.error(response.data as string);
-      }
+      // const response = await fetchApi(url, options);
+
+      // if (response.ok) {
+      //   toast.success('Updated the user data');
+
+      //   await fetchUsers();
+      // } else {
+      //   toast.error(response.data as string);
+      // }
+      await fetchUsers();
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while updating the user');
@@ -350,8 +360,10 @@ const Table: React.FC<{
                   .map((user, index) => (
                     <tr key={String(user._id)}>
                       <td>{index + 1 + itemPerPage * (page - 1)}</td>
-                      <td className="text-wrap">{user.real_name}</td>
-                      <td className="text-wrap">{user.name}</td>
+                      <td className="text-wrap">
+                        {user.employee_id.real_name}
+                      </td>
+                      <td className="text-wrap">{user.username}</td>
                       <td
                         // className="text-center"
                         style={{ verticalAlign: 'middle' }}
@@ -392,7 +404,7 @@ const Table: React.FC<{
                               {/* Edit allowed only with edit perm, and not on super-admin unless viewer is super */}
                               {hasPerm('admin:edit_user', userPermissions) && (
                                 <EditButton
-                                  userData={user as unknown as zod_UserDataType}
+                                  userData={user}
                                   employeesData={props.employeesData}
                                   rolesData={props.rolesData}
                                   submitHandler={editUser}
@@ -408,7 +420,7 @@ const Table: React.FC<{
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(
-                                      `${user.name} ${(user as any).password}`,
+                                      `${user.username} ${(user as any).password}`,
                                     );
                                     toast.info('Copied to clipboard', {
                                       position: 'bottom-right',
