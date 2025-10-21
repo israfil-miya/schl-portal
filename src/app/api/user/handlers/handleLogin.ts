@@ -28,11 +28,16 @@ export const handleLogin = async (
 
   try {
     // find and populate role_id
-    const userData = await User.findOne({ name: username, password: password })
+    const userData = await User.findOne({
+      username: username,
+      password: password,
+    })
       .populate('role_id', 'name permissions _id')
       .populate('employee_id', 'real_name e_id company_provided_name _id')
       .lean<FullyPopulatedUserType>()
       .exec();
+
+    console.log('userData', userData, username, password);
 
     if (userData) {
       if (!hasPerm('login:portal', userData.role_id.permissions)) {

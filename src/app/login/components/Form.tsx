@@ -22,7 +22,7 @@ const Form: React.FC = () => {
 
     try {
       const result = await signIn('credentials', {
-        redirect: false,
+        redirect: true,
         username: creds.username,
         password: creds.password,
         callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
