@@ -34,8 +34,7 @@ const Form: React.FC = props => {
   } = useForm<ChangePasswordInputsType>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
-      username: session?.user.cred_name || '',
-      old_password: '',
+      current_password: '',
       new_password: '',
       confirm_password: '',
     },
@@ -92,40 +91,19 @@ const Form: React.FC = props => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4">
-        <div>
-          <label
-            className="uppercase tracking-wide text-gray-700 text-sm font-bold flex gap-2 mb-2"
-            htmlFor="grid-password"
-          >
-            Username
-            <span className="cursor-pointer has-tooltip">
-              &#9432;
-              <span className="tooltip italic font-medium rounded-md text-xs shadow-lg p-1 px-2 bg-gray-100 ml-2">
-                Filled automatically by session
-              </span>
-            </span>
-          </label>
-          <input
-            type="text"
-            disabled={true}
-            {...register('username')}
-            className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-            placeholder="Username"
-          />
-        </div>
-
+      <div className="grid grid-cols-1 gap-x-3 mb-4 gap-y-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 mb-4 gap-y-4"> */}
         <div>
           <label className="tracking-wide text-gray-700 text-sm font-bold block mb-2 ">
-            <span className="uppercase">Old Password*</span>
+            <span className="uppercase">Current Password*</span>
             <span className="text-red-700 text-wrap block text-xs">
-              {errors.old_password && errors.old_password.message}
+              {errors.current_password && errors.current_password.message}
             </span>
           </label>
           <input
             type="password"
-            placeholder="Enter old password"
-            {...register('old_password')}
+            placeholder="Enter current password"
+            {...register('current_password')}
             className="appearance-none block w-full bg-gray-50 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
           />
         </div>
@@ -156,7 +134,10 @@ const Form: React.FC = props => {
             />
             <button
               onClick={() => {
-                setValue('new_password', generatePassword(watch('username')));
+                setValue(
+                  'new_password',
+                  generatePassword(session?.user.real_name ?? ''),
+                );
               }}
               type="button"
               className="bg-gray-100 disabled:cursor-not-allowed border-gray-200 border enabled:hover:bg-gray-200 text-gray-600 py-[0.75rem] px-4 rounded-r enabled:focus:outline-none enabled:transition duration-100 delay-100"

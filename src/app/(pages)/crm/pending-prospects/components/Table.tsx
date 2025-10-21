@@ -7,7 +7,7 @@ import Pagination from '@/components/Pagination';
 import { usePaginationManager } from '@/hooks/usePaginationManager';
 import { fetchApi, hasAnyPerm, hasPerm } from '@/lib/utils';
 import { ReportDataType } from '@/models/Reports';
-import { UserDataType } from '@/models/Users';
+import { PopulatedByEmployeeUserType, UserDataType } from '@/models/Users';
 import { formatDate } from '@/utility/date';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -201,8 +201,10 @@ const Table = () => {
       let response = await fetchApi(url, options);
 
       if (response.ok) {
-        let marketers = response.data as UserDataType[];
-        let marketerNames = marketers.map(marketer => marketer.provided_name!);
+        let marketers = response.data as PopulatedByEmployeeUserType[];
+        let marketerNames = marketers.map(
+          marketer => marketer.employee_id.company_provided_name,
+        );
         setMarketerNames(marketerNames);
       } else {
         toast.error(response.data as string);

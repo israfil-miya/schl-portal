@@ -11,7 +11,7 @@ import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
-import { ZodPopulatedUserDataType, userSchema } from '../../schema';
+import { ZodPopulatedUserDataType, populatedUserSchema } from '../../schema';
 
 import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { generatePassword } from '@/lib/utils';
@@ -83,7 +83,7 @@ const Form: React.FC<PropsType> = props => {
     reset,
     formState: { errors },
   } = useForm<ZodPopulatedUserDataType>({
-    resolver: zodResolver(userSchema),
+    resolver: zodResolver(populatedUserSchema),
     defaultValues: {
       username: '',
       password: '',
@@ -135,7 +135,7 @@ const Form: React.FC<PropsType> = props => {
 
   async function createUser(userData: ZodPopulatedUserDataType) {
     try {
-      const parsed = userSchema.safeParse(userData);
+      const parsed = populatedUserSchema.safeParse(userData);
 
       if (!parsed.success) {
         console.error(parsed.error.issues.map(issue => issue.message));
@@ -153,57 +153,55 @@ const Form: React.FC<PropsType> = props => {
         comment: parsed.data.comment,
       };
 
-      console.log('Edited user data to submit:', userData);
+      console.log('Edited user data to submit:', userCreateData);
 
-      if (hasPerm('admin:create_user', userPermissions)) {
-        let url: string =
-          process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
-        let options: {} = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(parsed.data),
-        };
+      // if (hasPerm('admin:create_user', userPermissions)) {
+      //   let url: string =
+      //     process.env.NEXT_PUBLIC_BASE_URL + '/api/user?action=create-user';
+      //   let options: {} = {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify(parsed.data),
+      //   };
 
-        const response = await fetchApi(url, options);
+      //   const response = await fetchApi(url, options);
 
-        if (response.ok) {
-          toast.success('Created new user successfully');
-          reset();
-          // reset the form after successful submission
-        } else {
-          toast.error(response.data as string);
-        }
-      } else if (hasPerm('admin:create_user_approval', userPermissions)) {
-        let url: string =
-          process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
-        let options: {} = {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'create',
-            target_model: 'User',
-            new_data: parsed.data,
-            req_by: session?.user.db_id,
-          }),
-        };
+      //   if (response.ok) {
+      //     toast.success('Created new user successfully');
+      //     reset();
+      //     // reset the form after successful submission
+      //   } else {
+      //     toast.error(response.data as string);
+      //   }
+      // } else if (hasPerm('admin:create_user_approval', userPermissions)) {
+      //   let url: string =
+      //     process.env.NEXT_PUBLIC_BASE_URL + '/api/approval?action=new-request';
+      //   let options: {} = {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify({
+      //       action: 'create',
+      //       target_model: 'User',
+      //       new_data: parsed.data,
+      //       req_by: session?.user.db_id,
+      //     }),
+      //   };
 
-        let response = await fetchApi(url, options);
+      //   let response = await fetchApi(url, options);
 
-        if (response.ok) {
-          toast.success('Request sent for approval');
-        } else {
-          toast.error(response.data.message);
-        }
-      } else {
-        toast.error('You do not have permission to create users');
-        return;
-      }
-
-      console.log('data', parsed.data, userData);
+      //   if (response.ok) {
+      //     toast.success('Request sent for approval');
+      //   } else {
+      //     toast.error(response.data.message);
+      //   }
+      // } else {
+      //   toast.error('You do not have permission to create users');
+      //   return;
+      // }
     } catch (error) {
       console.error(error);
       toast.error('An error occurred while creating new user');

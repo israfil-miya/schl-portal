@@ -1,7 +1,11 @@
 import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { hasAnyPerm, hasPerm } from '@/lib/utils';
 import Role from '@/models/Roles';
-import User, { UserDataType, UserDocType } from '@/models/Users';
+import User, {
+  FullyPopulatedUserType,
+  UserDataType,
+  UserDocType,
+} from '@/models/Users';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -25,9 +29,9 @@ export const handleLogin = async (
   try {
     // find and populate role_id
     const userData = await User.findOne({ name: username, password: password })
-      .populate('role_id', 'name permissions')
-      .populate('employee_id', 'real_name e_id company_provided_name')
-      .lean<PopulatedUser>()
+      .populate('role_id', 'name permissions _id')
+      .populate('employee_id', 'real_name e_id company_provided_name _id')
+      .lean<FullyPopulatedUserType>()
       .exec();
 
     if (userData) {

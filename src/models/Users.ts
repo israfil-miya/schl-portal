@@ -1,3 +1,4 @@
+import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import mongoose from 'mongoose';
 import Employee, { EmployeeType } from './Employees';
 import Role, { RoleType } from './Roles';
@@ -29,7 +30,7 @@ export interface PopulatedByRoleUserType extends Omit<UserDataType, 'role_id'> {
   role_id: {
     _id: string;
     name: string;
-    permissions: string[];
+    permissions: PermissionValue[];
   };
 }
 

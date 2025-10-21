@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import User from '@/models/Users';
+import User, { PopulatedByEmployeeUserType } from '@/models/Users';
 import jwt from 'jsonwebtoken';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
@@ -10,19 +10,22 @@ export const handleVerifyUser = async (
   data: string | { token: string; redirect_path: string };
   status: number;
 }> => {
-  const { name, password } = await req.json();
+  const { username, password } = await req.json();
   const headersList = await headers();
   const redirect_path = headersList.get('redirect_path') || '/';
   const session = await auth();
 
   try {
     const userData = await User.findOne({
-      name,
+      username,
       password,
-    });
+    })
+      .populate('employee_id', 'real_name e_id company_provided_name _id')
+      .lean<PopulatedByEmployeeUserType>()
+      .exec();
 
     if (userData) {
-      if (userData.name === session?.user?.cred_name) {
+      if (userData.employee_id.e_id === session?.user?.e_id) {
         const token = jwt.sign(
           { userId: userData._id, exp: Date.now() + 10 * 1000 },
           process.env.AUTH_SECRET as string,
