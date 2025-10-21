@@ -1,19 +1,34 @@
 import { NextResponse } from 'next/server';
-import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
 import { auth as authMiddleware } from './auth';
+import { PermissionValue } from './permissions';
 import {
   allAuthorizedRoutes,
   AuthorizedRoute,
   isRouteAuthorized,
 } from './route';
 
-const PUBLIC_ROUTES = ['/login', '/forbidden'];
-const ROOT = '/login';
+const LOGIN_ROUTE = '/login';
+const PUBLIC_ROUTES = [LOGIN_ROUTE, '/forbidden'];
+const SSO_LOGIN_TARGET = process.env.SSO_LOGIN_URL;
 const FORBIDDEN_REDIRECT = '/forbidden';
 const ALLOWED_IPS = process.env.ALLOWED_IPS?.split(',') || [];
 
 // Using cached flattened route list from route.ts (includes containers & leaves)
 const ALL_ROUTES: AuthorizedRoute[] = allAuthorizedRoutes;
+
+function resolveLoginRedirect(nextUrl: URL) {
+  if (SSO_LOGIN_TARGET) {
+    try {
+      return new URL(SSO_LOGIN_TARGET);
+    } catch (error) {
+      console.error(
+        'Invalid SSO_LOGIN_URL value, falling back to /login',
+        error,
+      );
+    }
+  }
+  return new URL(LOGIN_ROUTE, nextUrl);
+}
 
 export default authMiddleware((req: any) => {
   const { nextUrl } = req;
@@ -41,7 +56,7 @@ export default authMiddleware((req: any) => {
   // 1. Protected routes
   if (!isPublicRoute) {
     if (!isAuthenticated) {
-      return NextResponse.redirect(new URL(ROOT, nextUrl));
+      return NextResponse.redirect(resolveLoginRedirect(nextUrl));
     }
 
     if (
@@ -64,7 +79,7 @@ export default authMiddleware((req: any) => {
 
   // 2. Forbidden page handling
   if (!isAuthenticated && pathname === FORBIDDEN_REDIRECT) {
-    return NextResponse.redirect(new URL(ROOT, nextUrl));
+    return NextResponse.redirect(resolveLoginRedirect(nextUrl));
   }
 
   if (
@@ -77,7 +92,7 @@ export default authMiddleware((req: any) => {
   }
 
   // 3. Login page handling
-  if (isAuthenticated && pathname === ROOT) {
+  if (isAuthenticated && pathname === LOGIN_ROUTE) {
     return NextResponse.redirect(new URL('/', nextUrl));
   }
 

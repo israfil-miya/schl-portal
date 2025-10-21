@@ -1,7 +1,7 @@
 import NextAuth, { DefaultSession, DefaultUser } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
-import { PermissionValue } from './app/(pages)/admin/roles/create-role/components/Form';
 import { UserSessionType } from './auth';
+import { PermissionValue } from './permissions';
 
 // Extend the default User type
 declare module 'next-auth' {

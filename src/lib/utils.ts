@@ -1,4 +1,4 @@
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
+import { PermissionValue } from '@/permissions';
 import { ClassValue, clsx } from 'clsx';
 import jwt from 'jsonwebtoken';
 import moment from 'moment-timezone';

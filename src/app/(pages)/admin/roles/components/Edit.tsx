@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { PermissionValue } from '@/permissions';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,
@@ -14,7 +15,6 @@ import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
 import { permissionOptions } from '../../../../../permissions';
-import { PermissionValue } from '../create-role/components/Form';
 import { RoleDataType, validationSchema } from '../schema';
 
 const baseZIndex = 50;

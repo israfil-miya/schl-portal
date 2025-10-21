@@ -1,23 +1,32 @@
+import { UserSession } from '@shared/auth/types';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { UserSession } from '../shared/auth/types';
 import { authConfig } from './auth.config';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL as string;
+const PORTAL_API_BASE_URL =
+  process.env.PORTAL_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_PORTAL_API_BASE_URL;
 
-export type UserSessionType = UserSession;
+if (!PORTAL_API_BASE_URL) {
+  throw new Error('PORTAL_API_BASE_URL is not configured for the SSO service.');
+}
 
 async function getUser(
   username: string,
   password: string,
 ): Promise<UserSession | null> {
   try {
-    const res = await fetch(`${BASE_URL}/api/user?action=handle-login`, {
-      method: 'GET',
-      headers: { username, password },
-    });
+    const res = await fetch(
+      `${PORTAL_API_BASE_URL}/api/user?action=handle-login`,
+      {
+        method: 'GET',
+        headers: { username, password },
+      },
+    );
 
-    if (res.status !== 200) return null;
+    if (res.status !== 200) {
+      return null;
+    }
 
     const data = await res.json();
     return {
@@ -27,8 +36,8 @@ async function getUser(
       real_name: data.employee_id.real_name,
       e_id: data.employee_id.e_id,
     };
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error('Failed to fetch user', error);
     return null;
   }
 }
@@ -48,11 +57,11 @@ export const {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const user = await getUser(
+        const user = (await getUser(
           credentials?.username as string,
           credentials?.password as string,
-        );
-        return user ?? null;
+        )) as unknown as UserSession | null;
+        return (user ?? null) as any;
       },
     }),
   ],

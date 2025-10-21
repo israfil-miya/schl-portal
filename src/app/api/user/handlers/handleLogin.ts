@@ -1,4 +1,3 @@
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { hasAnyPerm, hasPerm } from '@/lib/utils';
 import Role from '@/models/Roles';
 import User, {
@@ -6,6 +5,7 @@ import User, {
   UserDataType,
   UserDocType,
 } from '@/models/Users';
+import { PermissionValue } from '@/permissions';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 

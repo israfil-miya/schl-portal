@@ -1,10 +1,10 @@
 'use client';
 
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { cn, generatePassword, hasPerm } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { RoleDataType } from '@/models/Roles';
 import { FullyPopulatedUserType } from '@/models/Users';
+import { PermissionValue } from '@/permissions';
 import {
   setCalculatedZIndex,
   setClassNameAndIsDisabled,

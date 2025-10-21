@@ -1,6 +1,6 @@
 'use client';
 
-import type { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
+import type { PermissionValue } from '@/permissions';
 
 import { cn, hasAnyPerm, hasPerm } from '@/lib/utils';
 import 'flowbite';

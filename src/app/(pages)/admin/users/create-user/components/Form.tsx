@@ -13,10 +13,10 @@ import { Controller, useForm } from 'react-hook-form';
 import Select from 'react-select';
 import { ZodPopulatedUserDataType, populatedUserSchema } from '../../schema';
 
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { generatePassword } from '@/lib/utils';
 import { EmployeeDataType } from '@/models/Employees';
 import { RoleDataType } from '@/models/Roles';
+import { PermissionValue } from '@/permissions';
 import { KeySquare } from 'lucide-react';
 import mongoose from 'mongoose';
 import { useMemo } from 'react';

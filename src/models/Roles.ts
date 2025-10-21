@@ -1,4 +1,4 @@
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
+import { PermissionValue } from '@/permissions';
 import mongoose from 'mongoose';
 
 export interface RoleType {

@@ -1,6 +1,6 @@
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { auth } from '@/auth';
 import { hasPerm } from '@/lib/utils';
+import { PermissionValue } from '@/permissions';
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';

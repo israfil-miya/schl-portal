@@ -1,6 +1,6 @@
-import { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { auth } from '@/auth';
 import Role from '@/models/Roles';
+import { PermissionValue } from '@/permissions';
 import { NextRequest } from 'next/server';
 
 export async function handleCreateRole(req: NextRequest): Promise<{

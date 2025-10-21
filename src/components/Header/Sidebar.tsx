@@ -1,7 +1,7 @@
 'use client';
 
-import type { PermissionValue } from '@/app/(pages)/admin/roles/create-role/components/Form';
 import { cn, hasAnyPerm, hasPerm } from '@/lib/utils';
+import type { PermissionValue } from '@/permissions';
 import {
   Building,
   Building2,
