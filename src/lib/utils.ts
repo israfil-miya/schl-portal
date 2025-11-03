@@ -45,7 +45,7 @@ export const dbConnect = async (): Promise<void> => {
 
     const connectionOptions: mongoose.ConnectOptions = {
       maxPoolSize: 10,
-      dbName: 'SCHL_PORTAL',
+      dbName: 'SCHL_PORTAL_BACK',
     };
 
     await mongoose.connect(process.env?.MONGODB_URI || '', connectionOptions);
